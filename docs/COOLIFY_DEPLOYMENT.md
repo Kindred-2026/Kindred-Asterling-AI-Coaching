@@ -105,11 +105,17 @@ The final image contains compiled output, browser assets, and production
 Configure the two core Coolify checks:
 
 - **Application liveness:** `GET /api/healthz` expects HTTP 200. The Docker image
-  also defines this check. It proves Express can accept requests without making
-  deployment availability depend on MongoDB.
+  also defines this check. It proves the Express server is running and can accept
+  requests. **Important:** The application initializes MongoDB **before** starting
+  the HTTP listener. If MongoDB is unavailable during startup, the Node process
+  exits before the HTTP listener starts, so `/api/healthz` cannot respond. Any
+  restart is controlled by Coolify's container restart behavior; the Docker
+  `HEALTHCHECK` only evaluates a container that remains running. This endpoint
+  does not query MongoDB; it only confirms the HTTP server is alive.
 - **Database readiness:** `GET /api/healthz/db` expects HTTP 200. A database
   failure returns 503. Use it for alerts/readiness verification, not an aggressive
-  restart loop, because restarting the application cannot repair MongoDB.
+  restart loop, because restarting the application cannot repair MongoDB. This
+  endpoint actively pings the MongoDB connection.
 
 ## 3. Domain, Cloudflare, and TLS
 
