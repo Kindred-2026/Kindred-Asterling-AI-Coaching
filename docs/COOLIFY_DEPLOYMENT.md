@@ -14,7 +14,7 @@ target; a healthy API alone does not prove the new sign-in flow works.
 
 For the Coolify screen shown when adding a **GitHub App** repository:
 
-1. Select `Griffixchips15/Kindred-Asterling-AI-Coaching`, then click **Load repository**. Loading
+1. Select `Kindred-2026/Kindred-Asterling-AI-Coaching`, then click **Load repository**. Loading
    the repository lets Coolify validate the branch and discover the root
    `Dockerfile`.
 2. Set **Branch** to `main`, **Build pack** to `Dockerfile`, and **Base

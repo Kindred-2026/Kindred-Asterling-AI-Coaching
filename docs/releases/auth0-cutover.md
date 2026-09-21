@@ -268,7 +268,7 @@ mapping/restore rehearsal, CI capacity, container validation, and production rel
 - Latest successful deployment remains `9980553b0a316fe5dbe60f6daf5c421d8c5e217f`.
   The same image is listed as available for rollback. Rollback itself was not run.
 - Git Source is Kindred-Gitlab, repository
-  `kindred-asterling-ai-group/Kindred-Asterling-AI-Coaching`, branch `main`,
+  `Kindred-2026/Kindred-Asterling-AI-Coaching`, branch `main`,
   commit selector `HEAD`. A fresh GitLab fetch still resolves main to
   `2205b982401cd809fd0a297eb9cd378e5e0c0159`.
 - No `AUTH0_*` or `VITE_AUTH0_*` variables are present in the 50-row hosting
@@ -463,7 +463,7 @@ source and CI were moved to the GitHub repository.
   `eslint-plugin-react`/`eslint` version incompatibility); these are not
   deployed and do not block the production build.
 - Coolify must be repointed to the GitHub repository
-  (`Griffixchips15/Kindred-Asterling-AI-Coaching`, branch `main`) before the
+  (`Kindred-2026/Kindred-Asterling-AI-Coaching`, branch `main`) before the
   next deploy. This repointing was not performed from the repository.
 
 Not performed: Coolify repointing, deployment, live account-security

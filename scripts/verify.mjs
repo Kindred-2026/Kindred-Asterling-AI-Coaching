@@ -1,6 +1,6 @@
 // `pnpm verify` — one verification command for the production workspace.
 //
-// Runs the same components as the production GitLab CI path in a fixed order,
+// Runs the same components as the production GitHub Actions path in a fixed order,
 // from an isolated safe child environment that never requires or forwards
 // production secrets. It fails fast: the first failing component stops the run
 // with the component name and its exit code, and temporary resources are
@@ -97,7 +97,7 @@ export function buildChildEnv(parent = process.env, { synthetic = false } = {}) 
 }
 
 // Safe child environment for one component: the secret-stripping baseline plus
-// synthetic public build config for components that need it. The GitLab runner
+// synthetic public build config for components that need it. The GitHub Actions runner
 // (scripts/ci-run.mjs) calls this same function, so CI and local verify cannot
 // drift.
 export function componentEnv(component, parent = process.env) {
