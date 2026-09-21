@@ -136,7 +136,7 @@ export function collectPublished({ state }) {
     },
     ci: {
       verified: false,
-      detail: "pending GitLab pipeline evidence for the pushed SHA (requires remote access)",
+      detail: "pending GitHub Actions workflow evidence for the pushed SHA (requires remote access)",
     },
     merge: {
       verified: merged,
@@ -254,11 +254,11 @@ export function printReport({ state, evidence, evidenceStatus, config, published
   lines.push("--- remaining human steps (unless already verified above) ---");
   const steps = [];
   if (!published.push.verified)
-    steps.push("push the candidate and note the SHA/GitLab pipeline URL");
+    steps.push("push the candidate and note the SHA/GitHub Actions workflow URL");
   if (!published.ci.verified)
-    steps.push("confirm GitLab pipeline for the pushed SHA is green and record evidence");
+    steps.push("confirm GitHub Actions workflow for the pushed SHA is green and record evidence");
   if (!published.merge.verified)
-    steps.push("merge into main (GitLab merge request) and record the merge SHA");
+    steps.push("merge into main (GitHub pull request) and record the merge SHA");
   if (!published.deployed.verified)
     steps.push("deploy via Coolify and record the deployed revision from the dashboard");
   if (!published.acceptance.verified)

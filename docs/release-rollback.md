@@ -2,15 +2,15 @@
 
 This page records Kindred's **current** Coolify release/rollback responsibilities
 and how release evidence is captured. Do not guess dashboard/provider state here;
-record only what an operator can see in the Coolify dashboard, GitLab pipeline,
+record only what an operator can see in the Coolify dashboard, GitHub Actions,
 or provider dashboards.
 
 ## Responsibilities
 
 - The repository-root **`Dockerfile`** is the only supported production
   deployment artifact (`docs/COOLIFY_DEPLOYMENT.md`); Coolify builds it from
-  GitLab `main`.
-- **Before promotion:** GitLab CI validates the monorepo, the MongoDB backup /
+  GitHub `main`.
+- **Before promotion:** GitHub Actions validates the monorepo, the MongoDB backup /
   restore gate must have passed, and the exact commit is built and verified.
   `pnpm run release:check` (read-only) is the local pre-push report for the
   candidate.
@@ -36,15 +36,15 @@ Keep at least two known-good application images and their configuration.
 | Check | Proof kind | Where the evidence lives |
 | ----- | ---------- | ------------------------ |
 | `pnpm verify` passed | local | `.verify-evidence.json` (git-ignored) + recorded output |
-| GitLab pipeline green | CI | GitLab pipeline URL for the pushed SHA |
-| Push + merge into `main` | CI | GitLab commit/merge record |
+| GitHub Actions green | CI | GitHub Actions URL for the pushed SHA |
+| Push + merge into `main` | CI | GitHub commit/PR record |
 | Coolify deployment succeeded | production | Coolify dashboard deployed revision/digest |
 | `/api/healthz` and `/api/healthz/db` return HTTP 200 | production | curl/runner output |
 | Auth0 sign-in/sign-out works against the production tenant | production | authorized human acceptance |
 | One synthetic AI coaching message responded | production | authorized human acceptance (no real health data) |
 | Stored deployed SHA + digest + health checks | production | this release note/report |
 
-Local proof (running checks locally) and CI proof (GitLab pipeline) are distinct
+Local proof (running checks locally) and CI proof (GitHub Actions) are distinct
 from production proof (Coolify + live sign-in). `pnpm run release:check` reports
 each field separately and marks remote fields unverified when it cannot observe
 them.

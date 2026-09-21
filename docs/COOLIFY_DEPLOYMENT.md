@@ -10,11 +10,11 @@ For the Clerk-to-Auth0 release, complete the [Auth0 cutover checklist](releases/
 before redeploying. The old Clerk image and its configuration remain the rollback
 target; a healthy API alone does not prove the new sign-in flow works.
 
-## GitLab application setup (the new-resource screen)
+## GitHub application setup (the new-resource screen)
 
-For the Coolify screen shown when adding a **Private GitLab App** repository:
+For the Coolify screen shown when adding a **GitHub App** repository:
 
-1. Select `kindred-asterling-ai-group/Kindred-Asterling-AI-Coaching`, then click **Load repository**. Loading
+1. Select `Griffixchips15/Kindred-Asterling-AI-Coaching`, then click **Load repository**. Loading
    the repository lets Coolify validate the branch and discover the root
    `Dockerfile`.
 2. Set **Branch** to `main`, **Build pack** to `Dockerfile`, and **Base
@@ -31,12 +31,12 @@ For the Coolify screen shown when adding a **Private GitLab App** repository:
    `GET /api/healthz`; verify `GET /api/healthz/db` separately after the database
    has been initialized.
 
-Do not select the GitLab CI build pack or add a `.gitlab-ci.yml` merely to deploy
-through Coolify. The GitLab App grants Coolify repository access and enables
+Do not select a CI build pack or add a `.github/workflows/ci.yml` merely to deploy
+through Coolify. The GitHub App grants Coolify repository access and enables
 deployments/webhooks, while the repository's root `Dockerfile` remains the build
 definition. If `main` does not appear after **Load repository**, confirm that the
-GitLab App has access to this project, refresh the repository list, and verify
-that `main` has been pushed to GitLab.
+GitHub App has access to this repository, refresh the repository list, and verify
+that `main` has been pushed to GitHub.
 
 ### Confirm the Coolify configuration
 
@@ -165,8 +165,8 @@ and record the deployed Git SHA/image digest.
 
 ## 6. Deploy and rollback
 
-Before promotion, GitLab CI validates the Node 24/pnpm 10.28.1 monorepo. Coolify
-separately builds the root `/Dockerfile` from GitLab `main`. Build the exact
+Before promotion, GitHub Actions validates the Node 24/pnpm 10.28.1 monorepo. Coolify
+separately builds the root `/Dockerfile` from GitHub `main`. Build the exact
 commit, complete the backup and MongoDB migration gate, and
 deploy. Verify both health endpoints, mapped Auth0 login, one response from the configured
 Bedrock provider using synthetic test data, and webhook delivery. Private Ollama

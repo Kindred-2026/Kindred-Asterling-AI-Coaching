@@ -29,7 +29,7 @@ hot-reloaded — restart `pnpm dev` after editing API code.
 
 ## Verification
 
-One command runs the same components as GitLab CI in the same order, from a
+One command runs the same components as GitHub Actions in the same order, from a
 sanitised child environment (no secrets or `VITE_*` values are forwarded, and
 nothing outside the repository is touched):
 
