@@ -463,7 +463,7 @@ source and CI were moved to the GitHub repository.
   `eslint-plugin-react`/`eslint` version incompatibility); these are not
   deployed and do not block the production build.
 - Coolify must be repointed to the GitHub repository
-  (`Griffixchips15/Kindred-Asterling-AI-Coaching`, branch `main`) before the
+  (`Kindred-2026/Kindred-Asterling-AI-Coaching`, branch `main`) before the
   next deploy. This repointing was not performed from the repository.
 
 Not performed: Coolify repointing, deployment, live account-security

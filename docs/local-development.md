@@ -124,7 +124,7 @@ surfaced with a clear reason and the other child is cleaned up.
 ## Full verification: `pnpm verify`
 
 When you are unsure whether your local change is releasable, run the full gate —
-it executes the same components as GitLab CI, in the same order, from a
+it executes the same components as GitHub Actions, in the same order, from a
 sanitized child environment (no secrets or `VITE_*` build values are forwarded,
 so applications resolve their own committed dev values):
 
