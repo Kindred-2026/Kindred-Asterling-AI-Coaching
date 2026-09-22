@@ -1,31 +1,50 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
+  AIUseDisclosure,
+  CookieNotice,
   HealthDisclaimer,
+  MarketingConsent,
   PrivacyPolicy,
   TermsAndConditions,
 } from "./legal";
 
-describe("legal document publication state", () => {
+describe("approved legal documents", () => {
   it.each([
-    ["Privacy Policy", PrivacyPolicy],
-    ["Terms and Conditions", TermsAndConditions],
-  ])("renders %s as published", (_title, Component) => {
+    [PrivacyPolicy, "privacy-policy.pdf", "1. Organization & Privacy Officer"],
+    [
+      TermsAndConditions,
+      "terms-and-conditions-of-service.pdf",
+      "1. Agreement to Terms & Eligibility",
+    ],
+    [
+      HealthDisclaimer,
+      "health-information-and-non-clinical-disclaimer.pdf",
+      "1. Non-Medical and Non-Clinical Nature of the Service",
+    ],
+    [AIUseDisclosure, "ai-use-and-transparency-disclosure.pdf", "1. Scope & Purpose"],
+    [CookieNotice, "cookie-and-tracking-technologies-notice.pdf", "1. Scope & Commitment"],
+    [
+      MarketingConsent,
+      "marketing-consent-and-casl-compliance-protocol.pdf",
+      "1. Statutory Background & Standards",
+    ],
+  ])("publishes document %# with its supplied PDF", (Component, filename, firstHeading) => {
     const html = renderToStaticMarkup(<Component />);
+    const document = new DOMParser().parseFromString(html, "text/html");
 
+    expect(document.body.textContent).toContain(firstHeading);
     expect(html).toContain("Legal information");
     expect(html).toContain("Published");
-    expect(html).not.toContain("Final Review Draft");
-    expect(html).not.toContain("Working draft");
-    expect(html).not.toContain("not for distribution");
-  });
+    expect(html).not.toMatch(
+      /Final Review Draft|Working draft|not for distribution|confirmation required/i,
+    );
+    expect(
+      document.querySelector(`a[href="/legal-documents/${filename}"]`)?.hasAttribute("download"),
+    ).toBe(true);
 
-  it("keeps documents without the flag in draft review state", () => {
-    const html = renderToStaticMarkup(<HealthDisclaimer />);
-
-    expect(html).toContain("Working draft — not legal advice");
-    expect(html).toContain("1.0 (Final Review Draft)");
-    expect(html).toContain("Subject to Final Legal Counsel Approval");
-    expect(html).toContain("not for distribution");
+    const pdf = readFileSync(`${process.cwd()}/public/legal-documents/${filename}`);
+    expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
   });
 });

@@ -163,7 +163,7 @@ const ROUTES = [
     [
       "marketing-consent",
       "Marketing Consent Language",
-      "Draft consent language for Kindred communications.",
+      "Marketing consent and unsubscribe information for Kindred communications.",
     ],
   ].map(([slug, label, description]) => ({
     path: `/legal/${slug}`,
@@ -172,12 +172,7 @@ const ROUTES = [
     description,
     ogTitle: `${label} | ${SITE_NAME}`,
     ogDescription: description,
-    // Privacy and Terms are approved for publication; remaining templates
-    // require founder/legal review before search indexing.
-    robots:
-      slug === "privacy" || slug === "terms"
-        ? "index, follow"
-        : "noindex, follow",
+    robots: "index, follow",
   })),
 ];
 

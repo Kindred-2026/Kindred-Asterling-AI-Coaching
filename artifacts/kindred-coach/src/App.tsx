@@ -254,7 +254,7 @@ function LegalShell() {
 function App() {
   // Serve legal pages without loading authentication at all.
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-  const pathname = window.location.pathname;
+  const [pathname] = useLocation();
   const pathWithoutBase = base ? pathname.replace(base, "") || "/" : pathname;
   if (Object.keys(LEGAL_ROUTES).some((r) => pathWithoutBase === r)) {
     return <LegalShell />;

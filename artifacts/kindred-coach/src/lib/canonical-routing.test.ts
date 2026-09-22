@@ -268,3 +268,27 @@ describe("canonical signed-in routing through App", () => {
     },
   );
 });
+
+describe("public legal navigation", () => {
+  it.each([
+    ["privacy", "Privacy Policy"],
+    ["terms", "Terms and Conditions"],
+    ["health-disclaimer", "Health Information Disclaimer"],
+    ["ai-disclosure", "AI Use Disclosure"],
+    ["cookies", "Cookie and Analytics Notice"],
+    ["marketing-consent", "Marketing Consent Language"],
+  ])("opens %s through client navigation and returns home", async (slug, title) => {
+    auth.isSignedIn = false;
+    await renderAt("/");
+    await act(async () => {
+      window.history.pushState(null, "", `/legal/${slug}`);
+    });
+    expect(container.querySelector("h1")?.textContent).toBe(title);
+    expect(container.querySelector('a[download]')).not.toBeNull();
+    await act(async () => {
+      window.history.pushState(null, "", "/");
+    });
+    expect(container.querySelector("h1")).toBeNull();
+    expectPage("Landing");
+  });
+});

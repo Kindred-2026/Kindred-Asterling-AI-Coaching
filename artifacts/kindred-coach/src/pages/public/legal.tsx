@@ -20,17 +20,6 @@ interface LegalPageProps {
   sections: LegalSection[];
 }
 
-const confirmationClass =
-  "rounded-lg border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100";
-
-function Confirmation({ children }: { children: ReactNode }) {
-  return (
-    <div className={confirmationClass}>
-      <strong>Founder/legal confirmation required:</strong> {children}
-    </div>
-  );
-}
-
 const paragraph = (content: ReactNode): LegalBlock => ({
   type: "paragraph",
   content,
@@ -168,7 +157,7 @@ function LegalPage({
             href={pdfHref}
             download
           >
-            Download the supplied PDF
+            Download PDF
           </a>
         ) : null}
       </header>
@@ -713,6 +702,7 @@ export function PrivacyPolicy() {
       title="Privacy Policy"
       summary="This Privacy Policy explains how Kindred Asterling AI Coaching collects, uses, safeguards, and discloses personal information."
       governingLaw="Alberta PIPA, PIPEDA & Canadian Privacy Law"
+      pdfHref="/legal-documents/privacy-policy.pdf"
       sections={privacySections}
     />
   );
@@ -725,6 +715,7 @@ export function TermsAndConditions() {
       title="Terms and Conditions"
       summary="These Terms and Conditions govern access to and use of the Kindred Asterling AI Coaching service."
       governingLaw="Province of Alberta & Federal Laws of Canada"
+      pdfHref="/legal-documents/terms-and-conditions-of-service.pdf"
       sections={termsSections}
     />
   );
@@ -733,72 +724,11 @@ export function TermsAndConditions() {
 export function HealthDisclaimer() {
   return (
     <LegalPage
+      published
       title="Health Information Disclaimer"
       summary="Kindred is an informational wellness and coaching tool. It is not a healthcare provider or emergency service."
-      sections={[
-        {
-          heading: "Not medical care",
-          content: (
-            <p>
-              Kindred does not diagnose, treat, cure, or prevent any condition.
-              Its assessments, summaries, and AI responses are not clinical
-              evaluations and are not a substitute for a physician, therapist,
-              pharmacist, or other qualified professional.
-            </p>
-          ),
-        },
-        {
-          heading: "Medication information",
-          content: (
-            <p>
-              Medication features are for personal organization and reflection.
-              Kindred does not prescribe, recommend dose changes, verify
-              interactions, or determine whether a medication is safe. Questions
-              about starting, stopping, missing, or changing medication belong
-              with a qualified professional or pharmacist.
-            </p>
-          ),
-        },
-        {
-          heading: "Emergencies and urgent concerns",
-          content: (
-            <p>
-              Kindred is not monitored as an emergency channel. For immediate
-              danger or urgent medical concerns, contact local emergency
-              services or an appropriate local crisis or health service.
-            </p>
-          ),
-        },
-        {
-          heading: "No guaranteed outcome",
-          content: (
-            <p>
-              AI and self-reported data can be incomplete or wrong. Users should
-              verify important information and use professional judgment before
-              acting on any output.
-            </p>
-          ),
-        },
-        {
-          heading: "Adults only",
-          content: (
-            <p>
-              Kindred Asterling AI is intended only for people who are at least
-              18 years old. It is not designed for or offered to minors.
-            </p>
-          ),
-        },
-        {
-          heading: "Required review",
-          content: (
-            <Confirmation>
-              Confirm clinical-risk review, supported launch locations,
-              emergency wording, medication feature boundaries, accessibility,
-              and any regulated-health obligations for this adult-only service.
-            </Confirmation>
-          ),
-        },
-      ]}
+      pdfHref="/legal-documents/health-information-and-non-clinical-disclaimer.pdf"
+      sections={healthSections}
     />
   );
 }
@@ -806,78 +736,11 @@ export function HealthDisclaimer() {
 export function AIUseDisclosure() {
   return (
     <LegalPage
+      published
       title="AI Use Disclosure"
-      summary="This page explains where Kindred uses AI, what context may be supplied, and why outputs require judgment."
-      sections={[
-        {
-          heading: "Where AI is used",
-          content: (
-            <p>
-              AI generates coaching-chat replies and may help form summaries or
-              contextual guidance. The server can provide recent morning and
-              evening assessments, body scans, habit information, medication
-              status, and profile details when those sources are relevant to the
-              current message. Google Calendar context is no longer used.
-            </p>
-          ),
-        },
-        {
-          heading: "Context minimization",
-          content: (
-            <p>
-              Kindred's context assembler selects source categories using the
-              current interaction instead of injecting all stored data into
-              every conversation. Retrieval is scoped to the signed-in user and
-              bounded by item and character limits.
-            </p>
-          ),
-        },
-        {
-          heading: "Limitations",
-          content: list([
-            "AI output is probabilistic and may be inaccurate, incomplete, inconsistent, or inappropriate.",
-            "Kindred does not have human feelings, professional credentials, or independent knowledge of facts outside the information and tools supplied to it.",
-            "Important health, legal, financial, safety, or other consequential information requires a qualified human source.",
-          ]),
-        },
-        {
-          heading: "Providers and data use",
-          content: (
-            <>
-              <p>
-                Production AI inference is provided through AWS Bedrock. The
-                server also supports locally operated Ollama and a configured
-                OpenAI-compatible service, but those alternatives should not be
-                described as production processors unless actually enabled.
-              </p>
-              <Confirmation>
-                Confirm the AWS Bedrock model and processing region, retention,
-                abuse monitoring, training policy, human-review access, and
-                opt-out or consent choices. Confirm whether any alternative AI
-                provider is enabled in production.
-              </Confirmation>
-            </>
-          ),
-        },
-        {
-          heading: "Canadian privacy guidance",
-          content: (
-            <p>
-              The disclosure should be reviewed against the{" "}
-              <a
-                className="text-primary underline"
-                href="https://www.priv.gc.ca/en/privacy-topics/technology/artificial-intelligence/gd_principles_ai"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Canadian privacy regulators' principles for generative AI
-              </a>
-              , including meaningful consent, appropriate purposes, openness,
-              safeguards, and limits on retention and secondary use.
-            </p>
-          ),
-        },
-      ]}
+      summary="This disclosure explains where Kindred uses AI, what context may be supplied, and the limitations of AI-generated output."
+      pdfHref="/legal-documents/ai-use-and-transparency-disclosure.pdf"
+      sections={transparencySections}
     />
   );
 }
@@ -885,60 +748,11 @@ export function AIUseDisclosure() {
 export function CookieNotice() {
   return (
     <LegalPage
+      published
       title="Cookie and Analytics Notice"
-      summary="The current repository uses essential authentication and preference storage without a third-party browser analytics or error-reporting SDK. No advertising tracker is evident in the application source reviewed for this draft."
-      sections={[
-        {
-          heading: "Essential technologies",
-          content: list([
-            "Auth0 authentication/session technologies used to keep users signed in and protect account requests.",
-            "Browser storage used for interface preferences such as theme, where supported.",
-            "Security, load-balancing, or hosting cookies that may be set by the production platform and must be inventoried before launch.",
-          ]),
-        },
-        {
-          heading: "Diagnostics and advertising",
-          content: (
-            <>
-              <p>
-                Kindred does not load a third-party browser analytics or
-                error-reporting SDK. Technical server and hosting logs may still
-                be processed to operate, secure, and troubleshoot the service;
-                their production retention and storage behavior must be
-                verified.
-              </p>
-              <p>
-                No Google Analytics, Meta Pixel, advertising network, or similar
-                advertising tracker was found in the reviewed repository. This
-                notice must be updated before any such technology is enabled.
-                Social links in the footer are ordinary outbound links; the site
-                does not embed social feeds or pixels.
-              </p>
-            </>
-          ),
-        },
-        {
-          heading: "Controls",
-          content: (
-            <p>
-              Users can use browser controls to remove or block cookies, but
-              blocking essential authentication storage may prevent sign-in or
-              secure features from working.
-            </p>
-          ),
-        },
-        {
-          heading: "Required deployment inventory",
-          content: (
-            <Confirmation>
-              Inspect production response headers and browser storage, identify
-              cookie names, providers, and lifetimes, confirm Auth0 and hosting
-              behavior, and determine whether a consent manager is required in
-              each supported launch location.
-            </Confirmation>
-          ),
-        },
-      ]}
+      summary="This notice explains the essential browser storage technologies, security cookies, and diagnostic tools used by Kindred."
+      pdfHref="/legal-documents/cookie-and-tracking-technologies-notice.pdf"
+      sections={cookieSections}
     />
   );
 }
@@ -946,81 +760,11 @@ export function CookieNotice() {
 export function MarketingConsent() {
   return (
     <LegalPage
+      published
       title="Marketing Consent Language"
-      summary="This is implementation-ready draft wording for an optional marketing checkbox and consent record. It is not a substitute for a CASL review."
-      sections={[
-        {
-          heading: "Suggested unchecked checkbox",
-          content: (
-            <div className="rounded-lg border border-border bg-card p-4 text-foreground">
-              “Yes, I would like to receive occasional Kindred Asterling AI
-              product news, pilot updates, and offers by email. I can
-              unsubscribe at any time. Messages will identify the sender and
-              include contact and unsubscribe information.”
-            </div>
-          ),
-        },
-        {
-          heading: "Consent record",
-          content: list([
-            "Store the exact language/version shown, timestamp, channel, source form, recipient address, jurisdiction information if collected, and proof of the affirmative action.",
-            "Keep marketing consent separate from service terms, account creation, reminders, and sensitive wellness-data consent.",
-            "Do not pre-check the box. Record withdrawal and suppress future marketing sends across providers.",
-          ]),
-        },
-        {
-          heading: "Message requirements",
-          content: (
-            <p>
-              Canadian government guidance describes three main CASL
-              requirements for commercial electronic messages: consent, sender
-              identification, and a working unsubscribe mechanism. Unsubscribe
-              requests must be processed promptly and, according to ISED
-              guidance, within 10 business days and at no cost.
-            </p>
-          ),
-        },
-        {
-          heading: "Official references",
-          content: (
-            <p>
-              Review{" "}
-              <a
-                className="text-primary underline"
-                href="https://ised-isde.canada.ca/site/canada-anti-spam-legislation/en/getting-consent-send-email"
-                target="_blank"
-                rel="noreferrer"
-              >
-                ISED's consent guidance
-              </a>{" "}
-              and the{" "}
-              <a
-                className="text-primary underline"
-                href="https://www.crtc.gc.ca/eng/com500/faq500.htm"
-                target="_blank"
-                rel="noreferrer"
-              >
-                CRTC CASL FAQ
-              </a>{" "}
-              before implementation.
-            </p>
-          ),
-        },
-        {
-          heading: "Required confirmation",
-          content: (
-            <Confirmation>
-              Proposed sender: Kindred Asterling AI. Proposed contact and
-              unsubscribe destination:
-              kindred_support@kindred-asterling-ai-coaching.com. Confirm whether
-              marketing email is enabled, provide a public business mailing
-              address, approve the sender name and unsubscribe method, and set
-              message categories, consent ownership, proof-retention period, and
-              treatment of any implied consents.
-            </Confirmation>
-          ),
-        },
-      ]}
+      summary="This document explains optional marketing consent, unsubscribe choices, and Kindred's commercial email requirements."
+      pdfHref="/legal-documents/marketing-consent-and-casl-compliance-protocol.pdf"
+      sections={marketingSections}
     />
   );
 }
