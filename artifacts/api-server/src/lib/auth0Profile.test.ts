@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createAuth0ProfileLoader } from "./auth0Profile";
+import { Auth0UserinfoRequestFailed, Auth0SubjectMismatch } from "./auth0Profile";
 
 function fixture() {
   let time = 1_000_000;
@@ -70,16 +71,56 @@ describe("Auth0 UserInfo request cache", () => {
   it("does not cache failures or mismatched subjects", async () => {
     const { load, profileFetch } = fixture();
     profileFetch.mockResolvedValueOnce(new Response("", { status: 429 }));
-    await expect(load("one", "auth0|one", 2_000_000)).rejects.toThrow("429");
+    await expect(load("one", "auth0|one", 2_000_000)).rejects.toBeInstanceOf(
+      Auth0UserinfoRequestFailed,
+    );
     profileFetch.mockResolvedValueOnce(
       new Response(JSON.stringify({ sub: "auth0|other" })),
     );
-    await expect(load("one", "auth0|one", 2_000_000)).rejects.toThrow(
-      "subject mismatch",
+    await expect(load("one", "auth0|one", 2_000_000)).rejects.toBeInstanceOf(
+      Auth0SubjectMismatch,
     );
     await expect(load("one", "auth0|one", 2_000_000)).resolves.toMatchObject({
       id: "auth0|one",
     });
     expect(profileFetch).toHaveBeenCalledTimes(3);
+  });
+  it("classifies non-2xx /userinfo response as auth0_userinfo_request_failed", async () => {
+    const { load, profileFetch } = fixture();
+    profileFetch.mockResolvedValueOnce(new Response("", { status: 502 }));
+    try {
+      await load("one", "auth0|one", 2_000_000);
+    } catch (err) {
+      expect(err).toBeInstanceOf(Auth0UserinfoRequestFailed);
+      expect((err as Auth0UserinfoRequestFailed).category).toBe(
+        "auth0_userinfo_request_failed",
+      );
+    }
+  });
+  it("classifies thrown fetch failure as auth0_userinfo_request_failed", async () => {
+    const { load, profileFetch } = fixture();
+    profileFetch.mockRejectedValueOnce(new Error("fetch failed"));
+    try {
+      await load("one", "auth0|one", 2_000_000);
+    } catch (err) {
+      expect(err).toBeInstanceOf(Auth0UserinfoRequestFailed);
+      expect((err as Auth0UserinfoRequestFailed).category).toBe(
+        "auth0_userinfo_request_failed",
+      );
+    }
+  });
+  it("classifies profile sub mismatch as auth0_subject_mismatch", async () => {
+    const { load, profileFetch } = fixture();
+    profileFetch.mockResolvedValueOnce(
+      new Response(JSON.stringify({ sub: "auth0|other" })),
+    );
+    try {
+      await load("one", "auth0|one", 2_000_000);
+    } catch (err) {
+      expect(err).toBeInstanceOf(Auth0SubjectMismatch);
+      expect((err as Auth0SubjectMismatch).category).toBe(
+        "auth0_subject_mismatch",
+      );
+    }
   });
 });

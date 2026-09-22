@@ -1,6 +1,22 @@
 import { createHash } from "node:crypto";
 import type { AuthIdentity } from "./auth0Identity";
 
+export class Auth0UserinfoRequestFailed extends Error {
+  readonly category = "auth0_userinfo_request_failed" as const;
+  constructor() {
+    super("Auth0 userinfo request failed");
+    this.name = "Auth0UserinfoRequestFailed";
+  }
+}
+
+export class Auth0SubjectMismatch extends Error {
+  readonly category = "auth0_subject_mismatch" as const;
+  constructor() {
+    super("Auth0 subject mismatch");
+    this.name = "Auth0SubjectMismatch";
+  }
+}
+
 // Cache only verified UserInfo claims, never bearer tokens or application
 // authorization. The middleware still validates every JWT and syncs each user.
 export function createAuth0ProfileLoader(options: {
@@ -28,18 +44,22 @@ export function createAuth0ProfileLoader(options: {
     const cached = cache.get(key);
     if (cached) return cached.value;
     const value = (async () => {
-      const response = await (options.profileFetch ?? fetch)(
-        new URL("userinfo", options.issuerBaseURL).href,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: AbortSignal.timeout(5000),
-          redirect: "error",
-        },
-      );
-      if (!response.ok)
-        throw new Error(`Auth0 profile unavailable (${response.status})`);
+      let response: Response;
+      try {
+        response = await (options.profileFetch ?? fetch)(
+          new URL("userinfo", options.issuerBaseURL).href,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            signal: AbortSignal.timeout(5000),
+            redirect: "error",
+          },
+        );
+      } catch {
+        throw new Auth0UserinfoRequestFailed();
+      }
+      if (!response.ok) throw new Auth0UserinfoRequestFailed();
       const profile = (await response.json()) as Record<string, unknown>;
-      if (profile.sub !== subject) throw new Error("Auth0 subject mismatch");
+      if (profile.sub !== subject) throw new Auth0SubjectMismatch();
       const string = (value: unknown) =>
         typeof value === "string" ? value : null;
       return {
