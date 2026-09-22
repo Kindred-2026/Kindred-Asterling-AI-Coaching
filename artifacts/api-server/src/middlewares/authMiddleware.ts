@@ -7,6 +7,62 @@ import {
   syncAuth0Identity,
   type AuthIdentity,
 } from "../lib/auth0Identity";
+import {
+  Auth0UserinfoRequestFailed,
+  Auth0SubjectMismatch,
+} from "../lib/auth0Profile";
+
+export { IdentityLinkRequiredError } from "../lib/auth0Identity";
+
+export class Auth0IdentitySyncFailed extends Error {
+  readonly category = "auth0_identity_sync_failed" as const;
+  constructor() {
+    super("Auth0 identity synchronization failed");
+    this.name = "Auth0IdentitySyncFailed";
+  }
+}
+
+export function classifyAuth0IdentityError(err: unknown): {
+  status: number;
+  errorCategory: string;
+} {
+  if (err instanceof IdentityLinkRequiredError) {
+    return { status: 409, errorCategory: "account_link_required" };
+  }
+  if (err instanceof Auth0UserinfoRequestFailed) {
+    return { status: 503, errorCategory: "auth0_userinfo_request_failed" };
+  }
+  if (err instanceof Auth0SubjectMismatch) {
+    return { status: 503, errorCategory: "auth0_subject_mismatch" };
+  }
+  return { status: 503, errorCategory: "auth0_identity_sync_failed" };
+}
+
+type ErrorResponseBody =
+  | { error: "account_link_required"; message: string }
+  | { error: "Authentication temporarily unavailable" };
+
+export function createAuth0ErrorResponse(err: unknown): {
+  status: number;
+  body: ErrorResponseBody;
+} {
+  const { status, errorCategory } = classifyAuth0IdentityError(err);
+  if (errorCategory === "account_link_required") {
+    return {
+      status: 409,
+      body: {
+        error: "account_link_required",
+        message:
+          "Your existing Kindred account needs to be linked. Contact support to retain your history.",
+      },
+    };
+  }
+  logger.warn({ errorCategory }, "Auth0 identity resolution failed");
+  return {
+    status: 503,
+    body: { error: "Authentication temporarily unavailable" },
+  };
+}
 
 declare global {
   namespace Express {
@@ -103,19 +159,7 @@ async function resolveIdentity(
     };
     next();
   } catch (err) {
-    if (err instanceof IdentityLinkRequiredError) {
-      res.status(409).json({
-        error: "account_link_required",
-        message:
-          "Your existing Kindred account needs to be linked. Contact support to retain your history.",
-      });
-      return;
-    }
-    // Never log a bearer token or the identity response.
-    logger.warn(
-      { errorName: err instanceof Error ? err.name : "UnknownError" },
-      "Auth0 identity resolution failed",
-    );
-    res.status(503).json({ error: "Authentication temporarily unavailable" });
+    const { status, body } = createAuth0ErrorResponse(err);
+    res.status(status).json(body);
   }
 }
