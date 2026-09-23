@@ -35,6 +35,6 @@ export interface AIResponse {
 }
 
 export interface AIProvider {
-  readonly name: "bedrock" | "ollama" | "openai";
+  readonly name: "ollama" | "openai";
   chat(request: AIRequest): Promise<AIResponse>;
 }

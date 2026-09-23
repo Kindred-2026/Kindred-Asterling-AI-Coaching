@@ -4,7 +4,7 @@
 
 ## Current canonical-main contract
 
-The API uses MongoDB (`MONGODB_URI` / `MONGODB_DATABASE`) and Auth0 (`AUTH0_DOMAIN` / `AUTH0_AUDIENCE`); the frontend builds with three public Auth0 `VITE_*` values. Helcim is conditional on `HELCIM_PAYMENTS_ENABLED=true`. AI defaults to Ollama if no provider is specified, with OpenAI and Bedrock alternatives. Resend is a production startup requirement. These are **code contracts**, not verified facts about a live provider account or deployment. The repository has historical Coolify, Clerk, PostgreSQL-migration and Calendar artifacts; their presence does not prove those services are currently in use. No current production secret store can be confirmed from this checkout.
+The API uses MongoDB (`MONGODB_URI` / `MONGODB_DATABASE`) and Auth0 (`AUTH0_DOMAIN` / `AUTH0_AUDIENCE`); the frontend builds with three public Auth0 `VITE_*` values. Helcim is conditional on `HELCIM_PAYMENTS_ENABLED=true`. AI supports Ollama and an OpenAI-compatible provider; Cloudflare AI Gateway is the target route, not a verified live integration. Bedrock runtime support has been removed. Resend is a production startup requirement. These are **code contracts**, not verified facts about a live provider account or deployment. The repository has historical Coolify, Clerk, PostgreSQL-migration and Calendar artifacts; their presence does not prove those services are currently in use. No current production secret store can be confirmed from this checkout.
 
 In the tables, **S** = secret (including sensitive identifiers such as access-key IDs/SIDs), **P** = public, browser-exposed configuration, **N** = non-secret server/build configuration. **Dev** `local secret` means developer-controlled secret injection (actual store unverified); `local config` means shell or local development configuration (including documented `.env.dev`; actual source unverified). **Current prod** `unverified` means the code requires/consumes the name but neither injection location nor population is established; `not runtime` means a job/legacy-only name. **Target** `DO secret` / `DO config` / `DO build` means proposed DigitalOcean App Platform encrypted runtime secret / ordinary runtime setting / public build setting; `job secret` / `job config` means isolated operator migration/deployment job, not app runtime. These target locations are proposals, not deployed resources. **Status** `verify/rotate` means check use and rotate at cutover as appropriate, not already rotated; `verify/retain` means confirm configuration during cutover; `verify/remove` means confirm no remaining consumer or stored data before revocation/removal. All entries have owner **Kindred owner**; no rotation or removal is claimed complete.
 
@@ -23,17 +23,13 @@ In the tables, **S** = secret (including sensitive identifiers such as access-ke
 | `VITE_AUTH0_DOMAIN` | P; browser Auth0 tenant; required by frontend build validator | local config | unverified | DO build | verify/retain |
 | `VITE_AUTH0_CLIENT_ID` | P; browser Auth0 public client ID; required by frontend build validator | local config | unverified | DO build | verify/retain |
 | `VITE_AUTH0_AUDIENCE` | P; browser API audience; required by frontend build validator | local config | unverified | DO build | verify/retain |
-| `AI_PROVIDER` | N; provider switch (Ollama default, OpenAI, Bedrock or disabled); optional | local config | unverified | DO config; re-evaluate for Cloudflare gateway | verify/retain or replace |
+| `AI_PROVIDER` | N; provider switch (Ollama default, OpenAI-compatible or disabled); optional | local config | unverified | DO config; `openai` for Gateway route after approval | verify/retain or replace |
 | `AI_REQUEST_TIMEOUT_MS` | N; chat request timeout; optional | local config | unverified | DO config | verify/retain |
 | `OLLAMA_BASE_URL` | N; Ollama endpoint; required when provider is Ollama | local config | unverified | DO config only if retained | verify/remove if replaced |
 | `OLLAMA_MODEL` | N; Ollama model; required when provider is Ollama | local config | unverified | DO config only if retained | verify/remove if replaced |
 | `OPENAI_API_KEY` | S; OpenAI provider auth; required when `AI_PROVIDER=openai` | local secret | unverified | DO secret or gateway credential if chosen | verify/rotate or remove |
-| `OPENAI_BASE_URL` | N; OpenAI-compatible endpoint override; optional | local config | unverified | DO config; gateway URL only after code verification | verify/retain or replace |
+| `OPENAI_BASE_URL` | N; OpenAI-compatible endpoint override; optional | local config | unverified | DO config; Cloudflare AI Gateway endpoint after account setup | verify/retain or replace |
 | `OPENAI_MODEL` | N; OpenAI model; required when `AI_PROVIDER=openai` | local config | unverified | DO config | verify/retain |
-| `AWS_REGION` | N; Bedrock region; required when `AI_PROVIDER=bedrock` | local config | unverified | DO config if retained | verify/retain or remove |
-| `BEDROCK_MODEL_ID` | N; Bedrock model; required when `AI_PROVIDER=bedrock` | local config | unverified | DO config if retained | verify/retain or remove |
-| `AWS_ACCESS_KEY_ID` | S; optional AWS SDK credential identifier for Bedrock (prefer workload identity) | local secret | unverified | DO secret only if static credentials unavoidable | verify/rotate or remove |
-| `AWS_SECRET_ACCESS_KEY` | S; optional AWS SDK credential for Bedrock | local secret | unverified | DO secret only if needed | verify/rotate or remove |
 | `AWS_SESSION_TOKEN` | S; optional temporary AWS credential | local secret | unverified | DO secret only if needed | verify/rotate or remove |
 | `HELCIM_PAYMENTS_ENABLED` | N; payments feature gate; optional, CI explicitly disables | local config | unverified | DO config | verify/retain |
 | `HELCIM_API_KEY` | S; Helcim API; required if payments enabled | local secret | unverified | DO secret | verify/rotate |
@@ -140,7 +136,7 @@ The desired destination is **DigitalOcean App Platform + managed PostgreSQL + Cl
 ## Provider-console questions for Kindred owner
 
 1. Which production and development accounts/projects actually supply MongoDB, Auth0, Helcim, Resend, AI, Twilio and ElevenLabs, and where are their runtime values injected today? Is Coolify still serving any production traffic?
-2. Are Helcim payments and any OpenAI/Bedrock/Ollama, SMS or voice features enabled in production, and which credentials/endpoints are live?
+2. Are Helcim payments and any OpenAI-compatible AI/Ollama, SMS or voice features enabled in production, and which credentials/endpoints are live?
 3. Are Clerk webhook/admin access or Google Calendar stored tokens still needed for cleanup or revocation before removing credentials (especially `CALENDAR_TOKEN_ENCRYPTION_KEY`)?
 4. Which DigitalOcean app and managed PostgreSQL instance are the approved target, and what is the verified migration/rollback and secret-rotation schedule?
 5. Which Cloudflare AI Gateway account, authentication mode, upstream provider and server-side credential contract are intended?

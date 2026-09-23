@@ -39,6 +39,26 @@ describe("normalized AI provider contract", () => {
     );
   });
 
+  it("disables Cloudflare AI Gateway payload logging for coaching conversations", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ choices: [{ message: { content: "Hi" } }] }),
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    await new OpenAIProvider(
+      "secret",
+      "model",
+      "https://gateway.ai.cloudflare.com/v1/account/gateway/openai",
+    ).chat(request);
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect((init.headers as Record<string, string>)["cf-aig-collect-log-payload"]).toBe("false");
+    expect(JSON.parse(init.body as string).store).toBe(false);
+  });
+
   it("normalizes Ollama tool calls", async () => {
     vi.stubGlobal(
       "fetch",

@@ -240,8 +240,8 @@ const privacySections: LegalSection[] = [
         "To deliver our secure cloud platform, personal information may be transferred to and processed by vetted third-party service providers. In accordance with Section 13.1 of Alberta PIPA, please note that personal data transferred across provincial or international borders may be accessible to foreign regulatory or law enforcement authorities under lawful orders in the jurisdictions where those facilities are located:",
       ),
       list([
-        "AI Inference Engine: Amazon Web Services (AWS) Bedrock (USA / Canada) - zero-retention enterprise inference for model execution.",
-        "Cloud Hosting & Infrastructure: Contabo GmbH (Munich, Germany) - secure VPS infrastructure and database management.",
+        "AI Processing: The model provider and processing region must be confirmed against the live deployment before this disclosure is published. The planned route is an OpenAI-compatible model through Cloudflare AI Gateway.",
+        "Cloud Hosting & Infrastructure: The live hosting provider and database location must be confirmed before this disclosure is published. DigitalOcean App Platform and managed PostgreSQL are the planned target.",
         "Authentication & Identity: Auth0 (USA / Global) - secure session management.",
         "Payment Processing: Helcim (Calgary, AB, Canada) - PCI-DSS compliant checkout and subscription billing.",
         "Communications: Resend (transactional email), Twilio (SMS reminders, where enabled), and ElevenLabs (voice synthesis, where enabled).",
@@ -519,7 +519,7 @@ const transparencySections: LegalSection[] = [
       list([
         "Interaction-Scoped Context: The context assembly engine retrieves only data categories relevant to the immediate user prompt rather than injecting complete historical archives into each AI prompt.",
         "User-Isolated Tenancy: All retrieval operations are strictly bounded to the authenticated user's account and governed by character and item limits.",
-        "Zero Model Training Commitment: Personal user reflections, journal logs, habit metrics, and chat conversations are processed via dedicated enterprise inference (AWS Bedrock) and are never used to train, retrain, fine-tune, or improve public or proprietary foundational AI models.",
+        "Provider Data Use: Personal reflections, journal logs, habit metrics, and chat conversations may be sent to the AI provider configured for the service. The applicable model provider's retention and training terms must be verified and disclosed before production use.",
       ]),
     ],
   },
@@ -540,8 +540,8 @@ const transparencySections: LegalSection[] = [
     heading: "5. Technical Infrastructure & Providers",
     blocks: [
       list([
-        "Production AI Inference: Enterprise inference is executed via Amazon Web Services (AWS) Bedrock in designated secure cloud environments under zero-data-retention terms for model training.",
-        "Supplementary Infrastructure: Local experimental or fallback engines are isolated to development environments and are not deployed in production without explicit disclosure and security validation.",
+        "Production AI Inference: The actual model provider, hosting region, and retention controls must be confirmed from the live service configuration before this disclosure is published.",
+        "Planned AI Route: OpenAI-compatible inference through Cloudflare AI Gateway, with the upstream model provider selected after privacy, contract, and quality review. This planned route is not evidence of a completed provider cutover.",
       ]),
     ],
   },

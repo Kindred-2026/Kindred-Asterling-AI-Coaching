@@ -1,13 +1,20 @@
-# AI provider data and privacy policy
+# AI provider data and privacy plan
 
-After the production approval gate below is complete, `AI_PROVIDER=bedrock` is the
-explicit production setting and sends the bounded coaching request to the
-configured AWS Bedrock model. `AI_PROVIDER=disabled`
-prevents chat content from leaving the application. Private `ollama` is only a
-temporary, approved rollback option. `openai` sends data to the configured
-OpenAI-compatible hosted endpoint. Hosted-provider credentials must be injected only
-into the API container's secret store. They must never be placed in browser builds,
-`VITE_*` variables, client logs, or source control.
+**Status: target architecture; not evidence of a live provider cutover.** The
+application keeps the existing OpenAI-compatible provider interface. The target
+hosted route is OpenAI-compatible inference through Cloudflare AI Gateway, with
+the model vendor and account selected after quality, privacy, and contract review.
+Use `OPENAI_BASE_URL` for the Gateway endpoint and keep `OPENAI_API_KEY` only in
+the runtime secret store. The application sends
+`cf-aig-collect-log-payload: false` to disable Gateway payload logging; the
+operator must also disable payload logging in Gateway settings. Keep AI Gateway
+caching off for personalized coaching. `AI_PROVIDER=disabled` prevents requests
+from leaving the application. Local Ollama remains a development option.
+
+The Gateway routes requests; it does not include model inference in its free
+feature tier. The selected upstream model provider bills inference separately.
+Do not describe Cloudflare as the model processor until the actual Gateway and
+upstream provider are configured and verified.
 
 ## Data that may be sent
 
@@ -27,7 +34,9 @@ are size bounded.
 
 The OpenAI-compatible request sets `store: false`. This requests no provider-side
 storage where supported, but it is not a substitute for contractual controls and
-does not make every compatible endpoint honor the option.
+does not make every compatible endpoint honor the option. The Gateway request
+header only disables Gateway payload collection; it does not govern upstream
+provider retention, abuse monitoring, or legal access.
 
 ## Production approval gate
 
@@ -35,6 +44,7 @@ Before enabling any hosted provider with production health-related information,
 the organization must document privacy/security and legal review, including data
 processing terms, retention and training terms, subprocessors and data residency,
 incident handling, deletion, access controls, and whether an appropriate healthcare
-agreement is required. Keep `AI_PROVIDER=disabled` (or private Ollama) until that
-review and contract are approved. Re-review before changing provider, model, base
-URL, fields, tools, or provider account settings.
+agreement is required. Keep the hosted provider disabled until that review,
+contract, payload logging configuration, spend alerts, and staging checks are
+approved. Re-review before changing provider, model, base URL, fields, tools, or
+provider account settings.

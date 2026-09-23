@@ -1,7 +1,6 @@
 import type { AIProvider } from "./types";
 import { OllamaProvider } from "./ollamaProvider";
 import { OpenAIProvider } from "./openAIProvider";
-import { BedrockProvider } from "./bedrockProvider";
 
 export * from "./types";
 export * from "./errors";
@@ -18,11 +17,6 @@ export function getAIProvider(): AIProvider | null {
       process.env.OPENAI_API_KEY || "",
       process.env.OPENAI_MODEL || "",
       process.env.OPENAI_BASE_URL,
-    );
-  if (selection === "bedrock")
-    return new BedrockProvider(
-      process.env.AWS_REGION || "",
-      process.env.BEDROCK_MODEL_ID || "",
     );
   if (selection === "ollama")
     return new OllamaProvider(

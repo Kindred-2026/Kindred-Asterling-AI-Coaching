@@ -1,10 +1,14 @@
-# Production deployment on Coolify
+# Legacy deployment record: Coolify
 
-The repository-root `Dockerfile` is the **only supported production deployment
-artifact**. Do not use Nixpacks, Docker Compose generated from this repository,
-PM2, Replit workflows, or a host-side Node process. Coolify builds the Dockerfile,
-runs one non-root application container, and connects it to separately managed
-MongoDB and AWS Bedrock.
+**Status:** Historical current-state runbook. The approved target is DigitalOcean
+App Platform with managed PostgreSQL and Cloudflare AI Gateway. Keep Coolify and
+MongoDB available until the database rehearsal, backup restore, staging checks,
+production health/sign-in/API/AI checks, and rollback retention gates pass. Do not
+use the Bedrock instructions below; Bedrock support has been removed from the app.
+
+The repository-root `Dockerfile` is the historical Coolify production artifact.
+It builds the production app and connects it to separately managed MongoDB. It is
+retained for rollback until the replacement is verified.
 
 For the Clerk-to-Auth0 release, complete the [Auth0 cutover checklist](releases/auth0-cutover.md)
 before redeploying. The old Clerk image and its configuration remain the rollback
@@ -71,9 +75,9 @@ browser or the relevant provider dashboard:
 1. Provision a MongoDB Atlas cluster or replica set and retain its private
    application connection URL. Standalone MongoDB is unsupported because
    Kindred's multi-document writes require transactions.
-2. Configure AWS Bedrock for production as described in
-   [aws-bedrock-coolify.md](aws-bedrock-coolify.md). Private Ollama is only a
-   temporary, approved rollback option, not the production provider.
+2. AI provider details are tracked in [ai-provider-privacy.md](ai-provider-privacy.md).
+   Bedrock support was removed. Do not enable a hosted AI route until the provider,
+   privacy, logging, spend, and staging gates are verified.
 3. Create an application from this Git repository. Select **Dockerfile** with
    path `/Dockerfile`, port `8080`, and the production branch.
 4. Add `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, and `VITE_AUTH0_AUDIENCE`
@@ -169,8 +173,7 @@ Before promotion, GitHub Actions validates the Node 24/pnpm 10.28.1 monorepo. Co
 separately builds the root `/Dockerfile` from GitHub `main`. Build the exact
 commit, complete the backup and MongoDB migration gate, and
 deploy. Verify both health endpoints, mapped Auth0 login, one response from the configured
-Bedrock provider using synthetic test data, and webhook delivery. Private Ollama
-may be used only under the approved rollback procedure.
+configured hosted AI provider using synthetic test data, and webhook delivery.
 
 For application rollback, select the preceding successful Coolify deployment (or
 its immutable image digest) and redeploy it, then verify both health checks. Do not

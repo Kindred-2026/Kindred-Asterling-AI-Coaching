@@ -20,8 +20,6 @@ function baseEnv(): void {
   delete process.env.OLLAMA_MODEL;
   delete process.env.OPENAI_API_KEY;
   delete process.env.OPENAI_MODEL;
-  delete process.env.AWS_REGION;
-  delete process.env.BEDROCK_MODEL_ID;
 }
 
 describe("AI provider configuration", () => {
@@ -38,19 +36,10 @@ describe("AI provider configuration", () => {
     expect(validateRuntimeConfig).not.toThrow();
   });
 
-  it("accepts Bedrock with a region and inference profile model ID", () => {
+  it("rejects retired Bedrock configuration", () => {
     baseEnv();
     process.env.AI_PROVIDER = "bedrock";
-    process.env.AWS_REGION = "us-east-1";
-    process.env.BEDROCK_MODEL_ID =
-      "us.anthropic.claude-sonnet-4-5-20250929-v1:0";
-    expect(validateRuntimeConfig).not.toThrow();
-  });
-
-  it("requires both Bedrock variables", () => {
-    baseEnv();
-    process.env.AI_PROVIDER = "bedrock";
-    expect(validateRuntimeConfig).toThrow(/AWS_REGION, BEDROCK_MODEL_ID/);
+    expect(validateRuntimeConfig).toThrow(/ollama, openai, disabled/);
   });
 
   it("reports only the selected provider's missing variables", () => {
