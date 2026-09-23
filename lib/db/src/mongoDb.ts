@@ -701,12 +701,33 @@ class UpdateQuery<TableRow extends Row> implements PromiseLike<TableRow[]> {
       if (matches.length === 0) return [];
       const ids = storedQueryIds(matches, "_id");
       await target.updateMany(
-        { _id: { $in: ids } },
+        {
+          _id: {
+            $in: ids.map((id) => {
+              if (typeof id === "string" && id.length > 0) return String(id);
+              if (typeof id === "number" && Number.isSafeInteger(id))
+                return Number(id);
+              throw new Error("Invalid stored query identifier");
+            }),
+          },
+        },
         { $set: changes },
         { session: this.session },
       );
       const updated = await target
-        .find({ _id: { $in: ids } }, { session: this.session })
+        .find(
+          {
+            _id: {
+              $in: ids.map((id) => {
+                if (typeof id === "string" && id.length > 0) return String(id);
+                if (typeof id === "number" && Number.isSafeInteger(id))
+                  return Number(id);
+                throw new Error("Invalid stored query identifier");
+              }),
+            },
+          },
+          { session: this.session },
+        )
         .toArray();
       return updated.map((document) =>
         project(stripMongoId(document), this.selection),
@@ -779,7 +800,16 @@ async function cascadeDelete(
     await current
       .collection(messages.collectionName)
       .deleteMany(
-        { conversationId: { $in: conversationIds } },
+        {
+          conversationId: {
+            $in: conversationIds.map((id) => {
+              if (typeof id === "string" && id.length > 0) return String(id);
+              if (typeof id === "number" && Number.isSafeInteger(id))
+                return Number(id);
+              throw new Error("Invalid stored query identifier");
+            }),
+          },
+        },
         { session },
       );
     await current

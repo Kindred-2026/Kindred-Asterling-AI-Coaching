@@ -107,6 +107,7 @@ describe("database-derived query identifiers", () => {
     ["operator document", { $ne: null }],
     ["null", null],
     ["array", ["unexpected"]],
+    ["non-integer number", 1.5],
   ] as const) {
     it(`rolls back account deletion when a stored conversation ID is a ${label}`, async () => {
       const mongo = await getMongoDatabase();
@@ -188,5 +189,84 @@ describe("database-derived query identifiers", () => {
     ).toMatchObject({
       conversationId: `${marker}-other-chat`,
     });
+  });
+
+  it("deletes a regex-looking conversation ID literally without touching another owner's messages", async () => {
+    const mongo = await getMongoDatabase();
+    const owner = `${marker}-owner`;
+    const survivor = `${marker}-survivor`;
+    await mongo.collection<FixtureRow>("users").insertMany([
+      { _id: owner, id: owner, queryIdTest: marker },
+      { _id: survivor, id: survivor, queryIdTest: marker },
+    ]);
+    await mongo.collection<FixtureRow>("conversations").insertMany([
+      {
+        _id: `${marker}-literal-chat`,
+        id: ".*",
+        userId: owner,
+        queryIdTest: marker,
+      },
+      {
+        _id: `${marker}-other-chat`,
+        id: survivor,
+        userId: survivor,
+        queryIdTest: marker,
+      },
+    ]);
+    await mongo.collection<FixtureRow>("messages").insertMany([
+      {
+        _id: `${marker}-literal-message`,
+        conversationId: ".*",
+        queryIdTest: marker,
+      },
+      {
+        _id: `${marker}-other-message`,
+        conversationId: survivor,
+        queryIdTest: marker,
+      },
+    ]);
+
+    await db.delete(usersTable).where(eq(usersTable.id, owner));
+
+    expect(
+      await mongo.collection<FixtureRow>("messages").findOne({ conversationId: ".*" }),
+    ).toBeNull();
+    expect(
+      await mongo.collection<FixtureRow>("messages").findOne({ conversationId: survivor }),
+    ).not.toBeNull();
+    expect(
+      await mongo.collection<FixtureRow>("conversations").findOne({ userId: survivor }),
+    ).not.toBeNull();
+  });
+
+  it("deletes messages for a safe-integer conversation ID on account deletion", async () => {
+    const mongo = await getMongoDatabase();
+    const owner = `${marker}-owner`;
+    const conversationId = 81234567;
+    await mongo.collection<FixtureRow>("users").insertOne({
+      _id: owner,
+      id: owner,
+      queryIdTest: marker,
+    });
+    await mongo.collection<FixtureRow>("conversations").insertOne({
+      _id: `${marker}-numeric-chat`,
+      id: conversationId,
+      userId: owner,
+      queryIdTest: marker,
+    });
+    await mongo.collection<FixtureRow>("messages").insertOne({
+      _id: `${marker}-numeric-message`,
+      conversationId,
+      queryIdTest: marker,
+    });
+
+    await db.delete(usersTable).where(eq(usersTable.id, owner));
+
+    expect(
+      await mongo.collection<FixtureRow>("messages").findOne({ queryIdTest: marker }),
+    ).toBeNull();
+    expect(
+      await mongo.collection<FixtureRow>("conversations").findOne({ queryIdTest: marker }),
+    ).toBeNull();
   });
 });
