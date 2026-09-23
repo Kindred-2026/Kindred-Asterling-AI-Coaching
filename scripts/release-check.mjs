@@ -136,7 +136,8 @@ export function collectPublished({ state }) {
     },
     ci: {
       verified: false,
-      detail: "pending GitHub Actions workflow evidence for the pushed SHA (requires remote access)",
+      detail:
+        "pending GitHub Actions workflow evidence for the pushed SHA (requires remote access)",
     },
     merge: {
       verified: merged,

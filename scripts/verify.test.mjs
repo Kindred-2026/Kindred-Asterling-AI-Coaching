@@ -235,10 +235,9 @@ describe("formatting boundary", () => {
     }
   });
 
-  test("never includes lockfiles, prose docs, env files, generated output or the experiment", async () => {
+  test("never includes lockfiles, prose docs, env files, or generated output", async () => {
     const files = await formatCheck.collectBoundaryFiles();
     for (const rel of files) {
-      assert.ok(!rel.startsWith("frontend/"), `experiment must stay out: ${rel}`);
       assert.ok(!rel.startsWith("docs/"), `prose docs are outside: ${rel}`);
       assert.ok(!/\/generated\//.test(rel), `generated output is outside: ${rel}`);
       assert.ok(!/\.env/.test(rel), `env files are outside: ${rel}`);

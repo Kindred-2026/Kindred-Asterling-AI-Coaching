@@ -3,8 +3,7 @@
 //
 // Starts the production React/Vite frontend (artifacts/kindred-coach) and the
 // Express API (artifacts/api-server) together, after documented first-time
-// configuration (.env.dev). The Next.js experiment is intentionally NOT part
-// of this command; run `pnpm dev:experiment` for that.
+// configuration (.env.dev).
 //
 // Configuration precedence: inherited process environment > root `.env.dev` >
 // built-in defaults.

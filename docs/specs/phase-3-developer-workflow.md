@@ -39,7 +39,6 @@ GitLab CI checks the same production packages and contracts as local verificatio
   require neither production credentials nor changes to production providers.
 - Document which features need provider credentials. Do not bypass authentication
   or silently send real payments, emails, SMS, or reminders during automated tests.
-- Keep the Next experiment runnable only through an explicit experiment command.
 
 Acceptance: from a clean checkout, following the setup guide once then running
 `pnpm dev` opens the Vite product, reaches the API, and supports a development
@@ -97,9 +96,6 @@ does not claim that passing local checks proves a live deployment.
 
 - Publish architecture, first-run, command-reference, troubleshooting, verification,
   and release documentation for the Auth0/MongoDB product.
-- Label `frontend/` as experimental in place first. Moving or deleting it requires
-  a separate reviewed change with import/workspace checks; it is not necessary
-  to complete Phase 3.
 - Document MongoDB initialization, restore validation and identity-mapping tools,
   including read/write behavior, explicit target guards and dry-run defaults.
   Keep historical migration identifiers and rollback tools unchanged. Do not

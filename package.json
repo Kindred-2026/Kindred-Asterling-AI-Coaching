@@ -12,10 +12,9 @@
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "start": "pnpm --filter @workspace/api-server run start",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm --filter @workspace/db run typecheck:scripts && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --filter frontend --if-present run typecheck",
+    "typecheck": "pnpm run typecheck:libs && pnpm --filter @workspace/db run typecheck:scripts && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
     "typecheck:production": "pnpm run typecheck:libs && pnpm --filter @workspace/db run typecheck:scripts && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
     "dev": "node scripts/dev.mjs",
-    "dev:experiment": "pnpm --filter frontend dev",
     "test:dev-supervisor": "node --check scripts/dev.mjs && node --check scripts/dev-supervisor.mjs && node --check scripts/dev-db-worker.mjs && node --test scripts/dev-supervisor.test.mjs",
     "test:verify": "node --test scripts/verify.test.mjs",
     "test:release-check": "node --test scripts/release-check.test.mjs",
@@ -23,10 +22,7 @@
     "format:check": "node scripts/format-check.mjs",
     "verify": "node scripts/verify.mjs",
     "generate:check": "node scripts/verify-generated.mjs",
-    "release:check": "node scripts/release-check.mjs",
-    "frontend:build": "pnpm --filter frontend build",
-    "frontend:start": "pnpm --filter frontend start",
-    "codex:nextjs": "node scripts/run_codex_nextjs.js"
+    "release:check": "node scripts/release-check.mjs"
   },
   "devDependencies": {
     "mongodb-memory-server": "^10.4.3",

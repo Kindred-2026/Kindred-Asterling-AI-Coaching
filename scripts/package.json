@@ -6,7 +6,6 @@
   "scripts": {
     "clerk:admin": "tsx ./src/clerk-admin.ts",
     "hello": "tsx ./src/hello.ts",
-    "test:codex-driver": "node --test ./run_codex_nextjs.test.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

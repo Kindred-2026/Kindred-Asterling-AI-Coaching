@@ -41,8 +41,6 @@ later, scope-refreshed phase:
   root Dockerfile as the only supported production artifact).
 - **`scripts/test-local.sh`** — legacy local script not referenced by any
   package script.
-- **Experimental-nextjs tooling** — `frontend/` and `scripts/run_codex_nextjs.js`
-  are retained as the designated experiment and its driver.
 
 Do not remove any of the above as part of Phases 4–7 planning; refresh that scope
 against the completed Auth0/MongoDB work first.

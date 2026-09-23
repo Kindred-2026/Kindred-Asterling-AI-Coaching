@@ -611,7 +611,6 @@ test("build phase failure: launcher exits nonzero before starting runtime childr
 test("root package.json dev wiring stays on the product stack", () => {
   const pkg = JSON.parse(readFileSync(path.join(repoRoot, "package.json"), "utf8"));
   assert.equal(pkg.scripts.dev, "node scripts/dev.mjs");
-  assert.equal(pkg.scripts["dev:experiment"], "pnpm --filter frontend dev");
   assert.match(
     pkg.scripts["test:dev-supervisor"],
     /--test scripts\/dev-supervisor\.test\.mjs/,

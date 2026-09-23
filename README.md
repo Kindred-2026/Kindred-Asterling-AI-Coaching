@@ -8,8 +8,6 @@ Monorepo for the Kindred Asterling AI Coaching product.
 - API server: `artifacts/api-server` (Express, `@workspace/api-server`)
 - Database: MongoDB (replica set — multi-document writes require transactions)
 - Authentication: Auth0 (see [docs/auth0-migration.md](docs/auth0-migration.md))
-- The `frontend/` directory is a **Next.js experiment** only; it is not part of the
-  production stack and is not built by production jobs. See `frontend/README.md`.
 
 ## Quick start
 

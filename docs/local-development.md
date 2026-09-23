@@ -6,9 +6,6 @@
 - the Express API (`artifacts/api-server`) on the same `/api` origin (the Vite dev
   server proxies `/api` to the API), backed by a disposable MongoDB.
 
-The legacy Next.js experiment is **not** part of this command. Use
-`pnpm dev:experiment` if you still need it.
-
 ## Prerequisites
 
 - Node 24+ and pnpm (the repo pins `pnpm@10.28.1`; use it if you can: `corepack enable` + `pnpm i`).

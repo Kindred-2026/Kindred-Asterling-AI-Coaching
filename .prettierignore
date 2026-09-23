@@ -31,8 +31,3 @@ yarn.lock
 # Prose documentation is maintained by hand; prettier reflow is not enforced.
 docs/
 **/*.md
-
-# The experimental Next.js app is labeled experimental and excluded from the
-# production formatting boundary until it either joins the product path or is
-# archived.
-frontend/
