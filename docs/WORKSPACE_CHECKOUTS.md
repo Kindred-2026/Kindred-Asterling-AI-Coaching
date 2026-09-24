@@ -4,29 +4,24 @@
 `7c264f6e5fecdee0739075bd66d432bb9fa6ba85`. The former stale outer checkout
 was aligned after its only unique commit was archived; the separate clean
 canonical clone was moved intact to a sibling archive. Other user-owned
-worktrees were preserved.
+worktrees with unrelated or uncommitted state were preserved. Clean delegated
+worktrees whose changes were integrated were removed after review.
 
 | Local checkout | Branch / HEAD | State | Disposition |
 | --- | --- | --- | --- |
 | `Kindred-Asterling-AI-Coaching` | local `main`, `7c264f6e5fecdee0739075bd66d432bb9fa6ba85` | Aligned to canonical GitHub `origin/main`; clean | Its former unique `40c8841` commit was reviewed, not ported, and preserved at local ref `archive/kindred-local-main-40c8841`. It included a broken self-gitlink, a reversed AI privacy statement, a placeholder pnpm workspace value, and inventory edits superseded by this finalization. |
 | `Kindred-Canonical-Checkout-Archive-7c264f6` | separate nested clone, `main` at `7c264f6e5fecdee0739075bd66d432bb9fa6ba85` | Clean, no ignored or untracked files | Moved intact out of the stale parent checkout after verifying it exactly matched canonical `main`; preserved as a local snapshot. |
 | `Kindred-Finalization` | `codex/kindred-finalization`, based on canonical `main` | Finalization implementation branch | Keep as the review branch until PR and CI disposition are complete. |
-| `Kindred-OpenCode-Fly-Audit` | `codex/opencode-fly-runbook`, based on finalization `407185f` | OpenCode-authored Fly staging runbook committed as `8b67f0a` and integrated here as `335508b`; docs-only diff reviewed, `git diff --check` passed | Keep the clean isolated checkout and delegation commit until the runbook review and this task close; no provider actions were performed. |
-| `Kindred-OpenCode-Secrets` | `codex/opencode-secret-inventory` | Inventory change committed and integrated | Retain branch commit as delegation evidence; remove the temporary worktree after final review if clean. |
-| `Kindred-Snyk-Fix` | `codex/snyk-nosql-findings` | Query-ID fix committed and integrated | Retain branch commit as delegation evidence; remove the temporary worktree after Snyk confirms on the PR. |
-| `Kindred-Devin-Audit` | `codex/devin-finalization-audit` | Next.js cleanup committed and integrated | Retain branch commit as delegation evidence; remove the temporary worktree after final review if clean. |
-| `Kindred-OpenCode-Workflow` | `codex/opencode-workflow` | Workflow hardening committed and integrated | Retain branch commit as delegation evidence; remove the temporary worktree after final review if clean. |
-| `Kindred-OpenCode-Postgres` | `codex/opencode-postgres-target` | Delegated PostgreSQL rehearsal implementation integrated and reviewed | Retain branch commit as delegation evidence; remove the temporary worktree after final review if clean. |
-| `Kindred-Devin-Postgres` | `codex/devin-postgres-target` | Empty worktree; Devin exhausted its daily usage quota | No changes to integrate; preserve until this task closes, then remove the empty worktree. |
-| `Kindred-OpenCode-Foundation-Audit` | detached at finalization baseline | Scratch-file cleanup and SEO brief relocation integrated; workflow audit completed | Temporary worktree removed after integration; commits remain in the finalization branch. |
-| `Kindred-Devin-Foundation-Audit` | detached at finalization baseline | No changes; Devin could not start because its daily usage quota was exhausted | Empty temporary worktree removed; no changes to integrate. |
-| `kindred-auth0-migration` | `codex/auth0-rules-to-actions`, `0e072f5` | Two modified files | Preserve; this checkout was not changed or inspected for content. |
-| `copilot-worktrees/.../griffixchips15-bookish-sniffle` | registered worktree reference | Git could not open it as a valid checkout | Preserve the registration until its owner confirms the path can be retired. |
+| Delegated temporary worktrees (12) | OpenCode, Devin, and Snyk task branches | Removed on 2026-09-24 after clean-status checks and confirming each task change was an ancestor, patch-equivalent, or exact file-content match in `codex/kindred-finalization` | Local branch refs remain for review evidence. The Fly runbook commit `8b67f0a` is integrated as `335508b`; no provider actions were performed. Devin delivered no changes because its Free-tier daily quota was exhausted. |
+| `kindred-auth0-migration` | `codex/auth0-rules-to-actions` at `0e072f53` | Preserved user-owned checkout; modified `pnpm-workspace.yaml` and untracked `auth0-deploy/` remain | Untouched. Review and disposition these local Auth0 changes separately; do not delete or merge them as part of Fly finalization. |
+| `copilot-worktrees/.../griffixchips15-bookish-sniffle` | Registered branch `auth0-deploy-integration` | Directory exists, but `git -C` fails because its worktree metadata is invalid | Preserve the directory and registration until its owner identifies or authorizes repair/removal; no pruning was performed. |
 
 The nested gitlink in the original checkout was part of its unmerged unique
 commit, not a configured submodule in canonical `main`. The clone it pointed to
 was clean and exactly matched canonical `main`; it was moved to the archive path
 above before aligning the original checkout. The unique parent commit remains
-reachable through its archive branch. Clean up only temporary worktrees created
-for this task after their branches are integrated and their working trees are
-clean.
+reachable through its archive branch. The remaining checkouts are the canonical
+main checkout, this finalization checkout, the preserved Auth0 migration
+checkout with local changes, and the invalid Copilot worktree registration.
+Delegation branch refs remain available even though their clean temporary
+directories were removed.
