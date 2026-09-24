@@ -55,3 +55,13 @@ The new Kindred context assembler reuses the existing event fetch only when a me
 3. Add disconnect/revocation and reconnect-required states.
 4. Normalize using the user's IANA timezone and test date boundaries.
 5. Add pagination and the missing OAuth/token tests.
+
+## Follow-up configuration check — 2026-09-24
+
+The tracked `.env.1password` now declares the Calendar configuration names:
+`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALENDAR_REDIRECT_URI`,
+`CALENDAR_OAUTH_STATE_SECRET`, and `CALENDAR_TOKEN_ENCRYPTION_KEY`. The
+secret-valued entries are unresolved `op://` references; no vault values were
+read. This supersedes the earlier template-missing observation only. The
+referenced 1Password items, Google Cloud OAuth client, and deployed runtime
+configuration remain unverified.
