@@ -1,6 +1,6 @@
 # Kindred recurring cost baseline
 
-**As of:** 2026-09-24. **Status:** planning inventory; no provider invoices or
+**As of:** 2026-09-23. **Status:** planning inventory; no provider invoices or
 billing dashboards were inspected. The under-$50/month target excludes Helcim
 payment-processing charges and remains unverified until every applicable row
 has a current bill or usage export.
