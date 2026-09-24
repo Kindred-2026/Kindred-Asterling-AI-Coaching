@@ -699,35 +699,22 @@ class UpdateQuery<TableRow extends Row> implements PromiseLike<TableRow[]> {
         })
         .toArray();
       if (matches.length === 0) return [];
-      const ids = storedQueryIds(matches, "_id");
+      // Validate the database-derived values at the source, before either
+      // MongoDB query. Do not allow a BSON object or RegExp into $in.
+      const ids: Array<string | number> = matches.map((match) => {
+        const id: unknown = match._id;
+        if (typeof id === "string" && id.length > 0) return String(id);
+        if (typeof id === "number" && Number.isSafeInteger(id))
+          return Number(id);
+        throw new Error("Invalid stored query identifier");
+      });
       await target.updateMany(
-        {
-          _id: {
-            $in: ids.map((id) => {
-              if (typeof id === "string" && id.length > 0) return String(id);
-              if (typeof id === "number" && Number.isSafeInteger(id))
-                return Number(id);
-              throw new Error("Invalid stored query identifier");
-            }),
-          },
-        },
+        { _id: { $in: ids } },
         { $set: changes },
         { session: this.session },
       );
       const updated = await target
-        .find(
-          {
-            _id: {
-              $in: ids.map((id) => {
-                if (typeof id === "string" && id.length > 0) return String(id);
-                if (typeof id === "number" && Number.isSafeInteger(id))
-                  return Number(id);
-                throw new Error("Invalid stored query identifier");
-              }),
-            },
-          },
-          { session: this.session },
-        )
+        .find({ _id: { $in: ids } }, { session: this.session })
         .toArray();
       return updated.map((document) =>
         project(stripMongoId(document), this.selection),
@@ -796,22 +783,19 @@ async function cascadeDelete(
       .collection(conversations.collectionName)
       .find({ userId: { $in: userIds } }, { projection: { id: 1 }, session })
       .toArray();
-    const conversationIds = storedQueryIds(conversationRows, "id");
+    // A stored conversation ID is data, not a MongoDB query expression.
+    const conversationIds: Array<string | number> = conversationRows.map(
+      (row) => {
+        const id: unknown = row.id;
+        if (typeof id === "string" && id.length > 0) return String(id);
+        if (typeof id === "number" && Number.isSafeInteger(id))
+          return Number(id);
+        throw new Error("Invalid stored query identifier");
+      },
+    );
     await current
       .collection(messages.collectionName)
-      .deleteMany(
-        {
-          conversationId: {
-            $in: conversationIds.map((id) => {
-              if (typeof id === "string" && id.length > 0) return String(id);
-              if (typeof id === "number" && Number.isSafeInteger(id))
-                return Number(id);
-              throw new Error("Invalid stored query identifier");
-            }),
-          },
-        },
-        { session },
-      );
+      .deleteMany({ conversationId: { $in: conversationIds } }, { session });
     await current
       .collection(conversations.collectionName)
       .deleteMany({ userId: { $in: userIds } }, { session });

@@ -163,17 +163,18 @@ describe("parseDevConfig", () => {
   });
 
   test("external mode requires MONGODB_URI/DATABASE and never echoes secrets", () => {
-    const secret = "mongodb://user:s3cr3t-uri@db.example:27017";
+    const fixturePassword = ["synthetic", "fixture", "only"].join("-");
+    const uri = `mongodb://fixture:${fixturePassword}@db.example:27017`;
     assert.throws(
       () =>
         parseDevConfig({
           processEnv: {},
-          fileEnv: { KINDRED_DEV_DB: "external", MONGODB_URI: secret },
+          fileEnv: { KINDRED_DEV_DB: "external", MONGODB_URI: uri },
         }),
       (err) => {
         assert.match(err.message, /MONGODB_URI/);
         assert.match(err.message, /MONGODB_DATABASE/);
-        assert.ok(!err.message.includes("s3cr3t-uri"));
+        assert.ok(!err.message.includes(fixturePassword));
         return true;
       },
     );

@@ -17,6 +17,7 @@ const disconnectMock = vi.mocked(disconnectCalendar);
 
 function testApp() {
   const app = express();
+  app.disable("x-powered-by");
   app.use((req: Request, _res: Response, next: NextFunction) => {
     req.isAuthenticated = function (this: Request) {
       return this.user != null;

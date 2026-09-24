@@ -102,6 +102,32 @@ describe("database-derived query identifiers", () => {
     ).toBe(2);
   });
 
+  it("rejects a non-integer stored _id before either update or return lookup", async () => {
+    const mongo = await getMongoDatabase();
+    await mongo.collection<FixtureRow>("users").insertMany([
+      { _id: marker, id: marker, firstName: "before", bio: marker, queryIdTest: marker },
+      {
+        _id: 1.5,
+        id: `${marker}-fractional`,
+        firstName: "before",
+        bio: marker,
+        queryIdTest: marker,
+      },
+    ]);
+    await expect(
+      db
+        .update(usersTable)
+        .set({ firstName: "after" })
+        .where(eq(usersTable.bio, marker))
+        .returning(),
+    ).rejects.toThrow("Invalid stored query identifier");
+    expect(
+      await mongo
+        .collection<FixtureRow>("users")
+        .countDocuments({ queryIdTest: marker, firstName: "before" }),
+    ).toBe(2);
+  });
+
   for (const [label, invalidId] of [
     ["regular expression", /.*/],
     ["operator document", { $ne: null }],
