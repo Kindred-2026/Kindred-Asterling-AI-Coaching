@@ -5,8 +5,8 @@
 //   * `scripts/*.{js,mjs,ts}` and `scripts/src/*.{ts,tsx}` — new files added
 //     later are automatically included, so new violations cannot silently slip
 //     past a formatting change.
-//   * The workspace/GitLab config: root and `scripts/` package/tsconfig JSON,
-//     `pnpm-workspace.yaml`, `.gitlab-ci.yml`, `.prettierrc.json`.
+//   * The workspace and CI config: root and `scripts/` package/tsconfig JSON,
+//     `pnpm-workspace.yaml`, `.prettierrc.json`.
 //   * The generated-client contract: `lib/api-spec/orval.config.ts` and the
 //     hand-authored `lib/api-client-react` / `lib/api-zod` entrypoints.
 //
@@ -30,7 +30,6 @@ const write = process.argv.includes("--write");
 const EXPLICIT_CONFIG_FILES = [
   "package.json",
   "pnpm-workspace.yaml",
-  ".gitlab-ci.yml",
   ".prettierrc.json",
   "tsconfig.json",
   "tsconfig.base.json",

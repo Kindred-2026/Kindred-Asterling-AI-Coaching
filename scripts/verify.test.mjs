@@ -229,7 +229,6 @@ describe("formatting boundary", () => {
       "scripts/verify-generated.mjs",
       "scripts/format-check.mjs",
       "package.json",
-      ".gitlab-ci.yml",
       "pnpm-workspace.yaml",
       "lib/api-spec/orval.config.ts",
     ]) {
@@ -705,20 +704,14 @@ describe("generated output normalization", () => {
 // ---------------------------------------------------------------------------
 
 describe("CI rules and shared safe execution path", () => {
-  test(".gitlab-ci.yml uses the correct 'schedule' source and never 'scheduled'", () => {
-    const yaml = readFileSync(join(ROOT, ".gitlab-ci.yml"), "utf8");
-    assert.match(yaml, /CI_PIPELINE_SOURCE\s*==\s*"schedule"/);
-    assert.doesNotMatch(yaml, /CI_PIPELINE_SOURCE\s*==\s*"scheduled"/);
-  });
-
-  test("every CI job runs through scripts/ci-run.mjs with a known component name", () => {
-    const yaml = readFileSync(join(ROOT, ".gitlab-ci.yml"), "utf8");
-    const names = [...yaml.matchAll(/node scripts\/ci-run\.mjs (\S+)/g)].map((m) => m[1]);
-    assert.ok(names.length >= COMPONENTS.length, "each component should have a CI job");
-    const known = new Set(COMPONENTS.map((c) => c.name));
-    for (const name of names) {
-      assert.ok(known.has(name), `unknown ci-run component: ${name}`);
+  test("GitHub Actions CI defines the maintained test and build jobs", () => {
+    const yaml = readFileSync(join(ROOT, ".github/workflows/ci.yml"), "utf8");
+    for (const job of ["typecheck:", "test-api-server:", "test-kindred-coach:", "build:"]) {
+      assert.match(yaml, new RegExp(`\\n  ${job}`), `CI workflow must include ${job}`);
     }
+    assert.match(yaml, /pnpm run typecheck/);
+    assert.match(yaml, /pnpm --filter @workspace\/db run test:api/);
+    assert.match(yaml, /pnpm --filter @workspace\/kindred-coach run test/);
   });
 
   test("ci-run rejects an unknown component with exit 2", () => {
