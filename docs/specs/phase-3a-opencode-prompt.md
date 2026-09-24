@@ -1,5 +1,10 @@
 # OpenCode assignment — Phase 3A: start the real Kindred product
 
+> **Historical document.** This assignment prompt is superseded operational guidance.
+> GitLab is confirmed unused by the owner; GitHub Actions is the sole active CI path.
+> Current instructions and source of truth are in `docs/FINALIZATION_RECORD.md`
+> and the current release/rollback documentation. No Fly.io deployment is claimed.
+
 You are implementing Part 3A only. Complete the authorized code, tests and local
 documentation; do not stop at a proposed plan. Founder/Codex will review the diff
 and handle provider configuration, release integration and deployment. Do not

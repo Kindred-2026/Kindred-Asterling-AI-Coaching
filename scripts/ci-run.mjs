@@ -1,6 +1,6 @@
 // Shared CI component runner: executes exactly one `pnpm verify` component with
 // the same safe child environment local verify uses (scripts/verify.mjs
-// componentEnv). This keeps GitLab provider variables from leaking into
+// componentEnv). This keeps CI-provider variables from leaking into
 // tests/builds and guarantees local and CI behavior match, without duplicating
 // the command strings or the secret-stripping logic. Usage:
 //
