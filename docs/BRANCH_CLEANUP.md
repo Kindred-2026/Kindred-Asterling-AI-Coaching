@@ -1,44 +1,39 @@
 # GitHub branch cleanup record
 
-**Audit date:** 2026-09-23; refreshed 2026-09-23. **Canonical repository:**
-`Kindred-2026/Kindred-Asterling-AI-Coaching`. The audit inspected all 18 remote
-branch refs and queried GitHub pull requests. No PRs were returned, so there is
-no PR merge record to use as proof of incorporation.
+**Audit date:** 2026-09-24. **Canonical repository:**
+`Kindred-2026/Kindred-Asterling-AI-Coaching`.
 
-The initial 18-ref count predates this finalization work. GitHub later listed 19
-refs including `codex/kindred-finalization`; draft PR
-[#146](https://github.com/Kindred-2026/Kindred-Asterling-AI-Coaching/pull/146)
-is open against `main`. On 2026-09-24, the merged
-`codex/auth0-identity-resolution-observability-20260921` branch was deleted
-after confirming PR #145 was merged and its exact tip was an ancestor of
-canonical `main`. GitHub now lists 18 refs. The canonical `main` SHA is still
-`7c264f6e5fecdee0739075bd66d432bb9fa6ba85`.
+GitHub listed 18 active branch refs: `main`, the finalization branch, and 16
+historical work branches. Draft PR [#146](https://github.com/Kindred-2026/Kindred-Asterling-AI-Coaching/pull/146)
+was the only open PR; none of the 16 historical branches was protected. Each
+historical branch had exactly one commit outside canonical `main`. All 16 exact
+tips were archived as annotated GitHub tags and verified against the live
+branch SHAs before the old branch names were deleted. GitHub now has two active
+branches: `main` and `codex/kindred-finalization`. No unique commit was lost.
 
-Only `main` is currently ancestor-equivalent to canonical `main`. Every other
-branch has unique commits not reachable from `main` or is the active finalization
-review branch. Do not delete or force-update any of these refs until its changes
-are reviewed and either incorporated or explicitly archived by the owner.
+Canonical `main` remains at `7c264f6e5fecdee0739075bd66d432bb9fa6ba85`. Each archive
+tag retains its original branch tip and history:
 
-| Remote branch | Last commit date | Tip subject | Disposition |
+| Original branch | Archived tip commit | GitHub archive tag | Remaining disposition |
 | --- | --- | --- | --- |
-| `add-helcim-client-tests-18084520937674059310` | 2026-08-05 | Add tests for helcimClient | Preserve; compare tests with current Helcim coverage |
-| `clerk-deploy` | 2026-08-07 | Forward Clerk tokens to API requests | Preserve as historical auth rollback work until Clerk retirement is confirmed |
-| `feature/test-requireAuth-middleware-16430618777044322343` | 2026-07-30 | fix(pnpm): Update package.json and lockfile to resolve pnpm lock mismatch in CI | Preserve; verify whether lockfile change remains relevant |
-| `fix/profile-tab-and-calendar-1705918431524620065` | 2026-08-09 | Fix dock profile dynamic update and add Google Calendar sync to Profile tab | Preserve; Calendar integration is currently retired and branch has unique code |
-| `jules-16422388435627167883-1a1e47ad` | 2026-08-04 | chore(deps): apply pnpm overrides for security vulnerabilities | Preserve; compare overrides with current lockfile |
-| `jules-5339671808958995687-30f3b816` | 2026-07-28 | Add tests for daily quota tracking | Preserve; compare test coverage |
-| `jules-add-temporary-debug-clerk-token-rejection-14625095024357557856` | 2026-08-24 | Update Bedrock dependency for fast-xml-parser vulnerabilities | Preserve until dependency/security effect is confirmed; Bedrock runtime is removed in this branch |
-| `jules-add-tests-for-is-rate-limit-error-2942310381242336347` | 2026-07-30 | Fix lockfile mismatch for vitest by adding to catalog | Preserve; verify current lockfile makes it obsolete |
-| `jules-testing-improvement-voice-api-8345765860717744160` | 2026-07-30 | Add tests for voice-api appendTranscript | Preserve; compare voice coverage |
-| `palette-accessibility-improvement-5932597615083319181` | 2026-08-01 | Add aria labels to habit toggle and delete buttons | Preserve; review accessibility change for incorporation |
-| `palette-focus-states-5302378551670806211` | 2026-08-05 | Add keyboard focus states to chat interface buttons | Preserve; review accessibility change for incorporation |
-| `palette-ux-habit-delete-alert-8005619291881855247` | 2026-08-08 | Add confirmation dialog for deleting habits | Preserve; review UX change for incorporation |
-| `perf/habit-streaks-n-plus-1-6665839726205118531` | 2026-08-24 | Resolve CodeQL warnings and upgrade fast-xml-parser | Preserve; re-run current CodeQL/dependency checks before disposition |
-| `perf/optimize-mood-trend-queries-3907283663464276802` | 2026-08-24 | Update Bedrock dependency for fast-xml-parser vulnerabilities | Preserve until dependency/security effect is confirmed; Bedrock runtime is removed in this branch |
-| `remove-clerk-debug-log-5059122180911178513` | 2026-08-24 | chore: ignore issue as codebase is clean | Preserve; inspect commit diff before disposition |
-| `sentinel-fix-admin-users-wildcard-12420624341382487021` | 2026-08-04 | Fix SQL wildcard injection in /admin/users | Preserve and review for applicability to the current MongoDB query layer |
+| `add-helcim-client-tests-18084520937674059310` | `a980fcc9330861e5f23db979366dcf44ced6097b` | `refs/tags/archive/kindred-finalization-2026-09-24/add-helcim-client-tests-18084520937674059310` | Compare Helcim tests with current coverage before incorporating. |
+| `clerk-deploy` | `fd13463043cd7e2f9d9967c1ce87c624186ec0d0` | `refs/tags/archive/kindred-finalization-2026-09-24/clerk-deploy` | Historical Clerk/Ollama integration; retain until auth/AI archive review is complete. |
+| `feature/test-requireAuth-middleware-16430618777044322343` | `f0d5718fd63f1bd5012ea199e309ba3202e7b1b7` | `refs/tags/archive/kindred-finalization-2026-09-24/feature/test-requireAuth-middleware-16430618777044322343` | Verify whether its pnpm lockfile change is already obsolete. |
+| `fix/profile-tab-and-calendar-1705918431524620065` | `6f1439d47ec0b136e96107fc275cc309a88e7297` | `refs/tags/archive/kindred-finalization-2026-09-24/fix/profile-tab-and-calendar-1705918431524620065` | Calendar is retired; keep its unique feature change available for later product disposition. |
+| `jules-16422388435627167883-1a1e47ad` | `e842129dbe780afee37bb18dd5c453aa99a3371e` | `refs/tags/archive/kindred-finalization-2026-09-24/jules-16422388435627167883-1a1e47ad` | Compare dependency overrides with the current lockfile. |
+| `jules-5339671808958995687-30f3b816` | `dcf49a5ec3cc7fffb263b109bff6616824b3daab` | `refs/tags/archive/kindred-finalization-2026-09-24/jules-5339671808958995687-30f3b816` | Compare daily quota tests with current coverage. |
+| `jules-add-temporary-debug-clerk-token-rejection-14625095024357557856` | `e31061f9d9919b947f037c6a42b2ee592cea20cb` | `refs/tags/archive/kindred-finalization-2026-09-24/jules-add-temporary-debug-clerk-token-rejection-14625095024357557856` | Confirm dependency/security relevance; Bedrock runtime is removed. |
+| `jules-add-tests-for-is-rate-limit-error-2942310381242336347` | `ea6414c31e65a5ad0489fc4c000efff10175e519` | `refs/tags/archive/kindred-finalization-2026-09-24/jules-add-tests-for-is-rate-limit-error-2942310381242336347` | Verify whether the Vitest catalog change is already obsolete. |
+| `jules-testing-improvement-voice-api-8345765860717744160` | `72320468684677ffb4e745ce3489f87408a4095c` | `refs/tags/archive/kindred-finalization-2026-09-24/jules-testing-improvement-voice-api-8345765860717744160` | Compare voice API tests with current coverage. |
+| `palette-accessibility-improvement-5932597615083319181` | `be216f32bc2b46aafe358c0dc8f3569a39778326` | `refs/tags/archive/kindred-finalization-2026-09-24/palette-accessibility-improvement-5932597615083319181` | Review accessibility changes for later incorporation. |
+| `palette-focus-states-5302378551670806211` | `ad0bbdf869b4c12544a9f6f2a83f8cfa7e42526b` | `refs/tags/archive/kindred-finalization-2026-09-24/palette-focus-states-5302378551670806211` | Review chat keyboard-focus changes for later incorporation. |
+| `palette-ux-habit-delete-alert-8005619291881855247` | `969074e7e3ea14a132b701b800c7d5a4857ae457` | `refs/tags/archive/kindred-finalization-2026-09-24/palette-ux-habit-delete-alert-8005619291881855247` | Review habit-delete confirmation change for later incorporation. |
+| `perf/habit-streaks-n-plus-1-6665839726205118531` | `a74b07e3032487f8c607110b9b270b55c76123e6` | `refs/tags/archive/kindred-finalization-2026-09-24/perf/habit-streaks-n-plus-1-6665839726205118531` | Re-run current CodeQL/dependency checks before disposition. |
+| `perf/optimize-mood-trend-queries-3907283663464276802` | `6f73f554aaee5f4f85a9b70b96441264f2ad6682` | `refs/tags/archive/kindred-finalization-2026-09-24/perf/optimize-mood-trend-queries-3907283663464276802` | Confirm dependency/security relevance; Bedrock runtime is removed. |
+| `remove-clerk-debug-log-5059122180911178513` | `a646c3a8b6f3e1f0c6f4e87b2bd90cbe6963e13d` | `refs/tags/archive/kindred-finalization-2026-09-24/remove-clerk-debug-log-5059122180911178513` | Inspect its unique commit before final disposition. |
+| `sentinel-fix-admin-users-wildcard-12420624341382487021` | `47a35d305371f7c2466ecfee1cfd5a52d0189223` | `refs/tags/archive/kindred-finalization-2026-09-24/sentinel-fix-admin-users-wildcard-12420624341382487021` | Review against the current MongoDB admin query layer. |
 
-These refs remain available in GitHub. A future branch-pruning pass should compare
-the exact path-level diffs with `main`, confirm no open or draft review depends
-on each branch, record incorporated/archived changes, and only then delete refs
-whose complete work is already represented in canonical history.
+To inspect an archived tip, fetch tags and use `git show <archive-tag>`; to
+continue its work, create a new branch from the tag after reviewing it. Do not
+delete an archive tag until its unique work is incorporated or its disposition
+is explicitly resolved.
