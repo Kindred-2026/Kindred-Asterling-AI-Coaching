@@ -1,6 +1,6 @@
 # Kindred credential and configuration inventory
 
-**Canonical checkout:** `7c264f6` (2026-09-23). **Owner for every entry:** Kindred owner. This is a value-free inventory of names and code requirements, not an attestation that an account, vault item, production deployment, or GitHub secret is populated. Evidence: root and `auth0-deploy/` `.env.example` **names only**, `artifacts/api-server/src/lib/validateConfig.ts`, application consumers, migration scripts, frontend build validator, and `.github/workflows/`. Secret values must never enter Git or browser `VITE_*` builds.
+**Canonical source baseline:** `7c264f6` (2026-09-23); inventory reflects this finalization branch's current code. **Owner for every entry:** Kindred owner unless marked unknown. This is a value-free inventory of names and code requirements, not an attestation that an account, vault item, production deployment, or GitHub secret is populated. Evidence: root and `auth0-deploy/` `.env.example` **names only**, `artifacts/api-server/src/lib/validateConfig.ts`, application consumers, migration scripts, frontend build validator, `.github/workflows/`, and redacted Gitleaks scans of the current tree and Git history. Secret values must never enter Git or browser `VITE_*` builds.
 
 ## Current canonical-main contract
 
@@ -111,7 +111,7 @@ These are **workflow references only**; all are **verify-in-GitHub** for presenc
 | Name | Kind; consumer / purpose; requirement | Dev | Current production / Actions source | Proposed target | Owner / status |
 | --- | --- | --- | --- | --- | --- |
 | `SNYK_TOKEN` | S; Snyk workflow scans, required for that workflow | GitHub Actions secret reference | `secrets.SNYK_TOKEN`; verify-in-GitHub | GitHub Actions secret if scan retained | Kindred owner; verify-in-GitHub, rotate if needed |
-| `OPENCODE_API_KEY` | S; OpenCode workflow auth, required for that workflow | GitHub Actions secret reference | `secrets.OPENCODE_API_KEY`; verify-in-GitHub | GitHub Actions secret if workflow retained | Kindred owner; verify-in-GitHub, rotate if needed |
+| `OPENCODE_API_KEY` | S; OpenCode workflow auth, required for that workflow | GitHub Actions secret reference | `secrets.OPENCODE_API_KEY`; verify-in-GitHub | GitHub Actions secret while the comment-triggered workflow is used | Kindred owner; limited to trusted-member comments; verify-in-GitHub, rotate if needed |
 | `GITHUB_TOKEN` | S; OpenCode workflow GitHub API access | GitHub-managed workflow token | `secrets.GITHUB_TOKEN`; verify-in-GitHub (GitHub-provided) | GitHub-managed token | Kindred owner; verify-in-GitHub, no manual secret rotation assumed |
 
 
@@ -123,11 +123,29 @@ A read-only GitHub metadata query returned these repository-level Actions secret
 | --- | --- | --- |
 | `CLERK` | S; no current workflow reference found; local Clerk inspection/migration tools remain | Kindred owner; verify any external deployment or identity-recovery use, then remove if unused |
 | `NEON_API_KEY` | S; no current tracked workflow reference found | Kindred owner; verify deploy integrations and project ownership, then remove if unused |
-| `OPENCODE_API_KEY` | S; referenced by `.github/workflows/opencode.yml` | Kindred owner; retain only while workflow is used; review its token permissions and action pin |
+| `OPENCODE_API_KEY` | S; referenced by pinned `.github/workflows/opencode.yml` action | Kindred owner; retain only while workflow is used; action pin and comment permissions hardened; verify secret scope |
 | `SNYK_TOKEN` | S; referenced by `.github/workflows/snyk-security.yml` | Kindred owner; retain while Snyk scanning is active; rotate if exposure or ownership requires it |
 | `NEON_PROJECT_ID` | N; repository Actions variable; no current tracked workflow reference found | Kindred owner; verify deploy integrations and project ownership, then remove if unused |
 
 GitHub lists the deployment environments `Asterling Coach / production`, `Asterling Coaching / production`, and `Asterling Coaching / Staging`. Read-only environment-secret queries returned zero entries for all three at audit time. Recheck before cutover; do not assume this remains current.
+
+### Redacted Git history scan — 2026-09-23
+
+Gitleaks 8.30.1 scanned the current tree and all local Git refs/history (417
+commits); the report was redacted and no secret values were printed. The 8
+current-tree `generic-api-key` matches map to public Auth0 client identifiers,
+test fixtures, and documentation examples. History adds old copies of those
+same categories. No active application token was confirmed by code inspection.
+
+The scan also found a structurally valid, encrypted OpenSSH private-key
+container in commit `900dc255d10666e702c81adf230b1754e9d220ce` (2026-08-02),
+under a historical Windows-profile filename; it is absent from the current
+tree. A public-key fingerprint is recorded in the owner-facing review request,
+not as a credential value. Its owner, passphrase-holder, and whether it remains
+authorized are unknown. Treat it as potentially exposed: identify and revoke it
+where registered, then coordinate a history rewrite across affected refs. Do
+not claim history cleanup complete until owner confirmation, key revocation,
+all-branch rewrite, and collaborator clone instructions are complete.
 
 ## Planned target state — NOT implemented or verified by this checkout
 

@@ -2,7 +2,12 @@
 
 Monorepo for the Kindred Asterling AI Coaching product.
 
-**Production stack:** React/Vite + Express + Auth0 + MongoDB.
+**Current application stack:** React/Vite + Express + Auth0 + MongoDB.
+**Finalization target:** DigitalOcean App Platform + managed PostgreSQL +
+Cloudflare AI Gateway. See [the finalization record](docs/FINALIZATION_RECORD.md)
+and [the DigitalOcean cutover guide](docs/digitalocean-cutover.md). Production
+hosting and database remain on the current providers until their migration gates
+are verified.
 
 - Product UI: `artifacts/kindred-coach` (React/Vite, `@workspace/kindred-coach`)
 - API server: `artifacts/api-server` (Express, `@workspace/api-server`)
@@ -27,9 +32,9 @@ hot-reloaded — restart `pnpm dev` after editing API code.
 
 ## Verification
 
-One command runs the same components as GitHub Actions in the same order, from a
-sanitised child environment (no secrets or `VITE_*` values are forwarded, and
-nothing outside the repository is touched):
+Use one local verification command before review. It runs the maintained local
+checks from a sanitised child environment (no secrets or `VITE_*` values are
+forwarded, and nothing outside the repository is touched):
 
 ```sh
 pnpm verify

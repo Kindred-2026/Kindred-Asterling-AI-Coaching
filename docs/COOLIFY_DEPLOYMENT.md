@@ -3,8 +3,9 @@
 **Status:** Historical current-state runbook. The approved target is DigitalOcean
 App Platform with managed PostgreSQL and Cloudflare AI Gateway. Keep Coolify and
 MongoDB available until the database rehearsal, backup restore, staging checks,
-production health/sign-in/API/AI checks, and rollback retention gates pass. Do not
-use the Bedrock instructions below; Bedrock support has been removed from the app.
+production health/sign-in/API/AI checks, and rollback retention gates pass.
+Historical Bedrock setup instructions are retired because Bedrock support has
+been removed from the app.
 
 The repository-root `Dockerfile` is the historical Coolify production artifact.
 It builds the production app and connects it to separately managed MongoDB. It is

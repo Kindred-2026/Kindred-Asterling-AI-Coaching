@@ -32,8 +32,10 @@ production gates; a checked-in plan is not proof of a live cutover.
 | OpenAI-compatible AI | Retained; Cloudflare Gateway endpoint supported; request payload logging header added | Provider account, upstream model, privacy contract, Gateway settings, and staging verification remain external gates |
 | Snyk | Retained as a required observable scanner; remediation adds literal-ID validation and regression coverage | Snyk must pass on the final integration SHA; no finding suppression is allowed |
 | MongoDB and Coolify | Retained temporarily for production and rollback | Do not retire before all cutover gates pass |
-| GitHub Actions OpenCode bot | Current workflow has broad write permissions and a floating action ref | Pin and scope the action or remove it after confirming it is not an active operator workflow |
+| GitHub Actions OpenCode bot | Hardened: exact action commit pin, comment-only triggers, trusted collaborator gate, job-scoped permissions, no `id-token: write` | Verify the workflow still serves an operator need and confirm `OPENCODE_API_KEY` scope in GitHub |
 | Repository secrets | Inventory rewritten without values; GitHub secret names and environment metadata recorded | Verify production/workflow consumers in provider UI. Remove only confirmed-unused names; rotate any confirmed exposed active credential |
+| Git history secret scan | Current tree and 417 commits scanned with redacted output; generic matches classified as public IDs/examples/tests | A valid encrypted SSH private key is present in reachable history; owner and active registration are unknown. Revoke if registered and coordinate all-ref history rewrite |
+| GitHub branch cleanup | 18 remote refs inspected; no pull requests are currently open | 16 branches have unique commits and one merged branch is only two days old. Preserve all until change review/owner disposition; details in [branch cleanup record](BRANCH_CLEANUP.md) |
 | Old branches and duplicate checkouts | Unique local checkout and branch preserved; canonical GitHub baseline selected | Archive or delete stale remotes only after ancestry/equivalent-change checks |
 
 ## Cutover gates
