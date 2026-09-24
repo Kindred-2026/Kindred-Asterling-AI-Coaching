@@ -17,6 +17,7 @@ import {
   withDatabaseLease,
 } from "./postgresDb";
 import { affirmationsTable, conversations, messages, usersTable } from "./mongoSchema";
+import { requiredPostgresSchemaCatalog } from "./postgresSchema";
 
 const schemaPath = fileURLToPath(new URL("../migrations-postgres/0001_rehearsal_core.sql", import.meta.url));
 
@@ -210,24 +211,61 @@ test("supports deterministic ping, close and reinitialization with an embedded p
   try { await second.api.initialize(); } finally { await second.api.close(); }
 });
 
-test("startup refuses an incomplete PostgreSQL schema", async () => {
-  const complete = await fixture();
-  try {
-    await initializePostgresDatabase({ pool: complete.pool });
-  } finally {
-    await closePostgresDatabase();
-  }
+function catalogPool(catalog: ReturnType<typeof requiredPostgresSchemaCatalog>) {
+  return {
+    async query(sql: string) {
+      if (sql === "SELECT 1") return { rows: [] };
+      if (sql.includes("information_schema.tables")) {
+        return { rows: catalog.tables.map((table_name) => ({ table_name })) };
+      }
+      if (sql.includes("information_schema.columns")) return { rows: catalog.columns };
+      if (sql.includes("FROM pg_constraint")) return { rows: catalog.constraints };
+      throw new Error(`Unexpected PostgreSQL catalog query: ${sql}`);
+    },
+    async end() {},
+  };
+}
 
-  const memory = newDb();
-  memory.public.none("CREATE TABLE users (id text PRIMARY KEY)");
-  const Pg = memory.adapters.createPg();
-  const incompletePool = new Pg.Pool();
-  try {
-    await assert.rejects(
-      initializePostgresDatabase({ pool: incompletePool }),
-      /PostgreSQL schema is incomplete/,
-    );
-  } finally {
-    await closePostgresDatabase();
-  }
+test("startup validates PostgreSQL columns, types, keys and ownership constraints", async () => {
+  const complete = requiredPostgresSchemaCatalog();
+  const completePool = catalogPool(complete);
+  await initializePostgresDatabase({ pool: completePool as any });
+  await closePostgresDatabase();
+
+  const missingColumn = {
+    ...complete,
+    columns: complete.columns.filter((column) => !(column.table_name === "messages" && column.column_name === "content")),
+  };
+  await assert.rejects(
+    initializePostgresDatabase({ pool: catalogPool(missingColumn) as any }),
+    /column messages\.content/,
+  );
+  await closePostgresDatabase();
+
+  const wrongType = {
+    ...complete,
+    columns: complete.columns.map((column) =>
+      column.table_name === "users" && column.column_name === "id"
+        ? { ...column, data_type: "integer", udt_name: "int4" }
+        : column,
+    ),
+  };
+  await assert.rejects(
+    initializePostgresDatabase({ pool: catalogPool(wrongType) as any }),
+    /column users\.id type text/,
+  );
+  await closePostgresDatabase();
+
+  const missingOwnerConstraint = {
+    ...complete,
+    constraints: complete.constraints.filter((constraint) =>
+      !(constraint.table_name === "messages" && constraint.type === "f" &&
+        constraint.columns.join(",") === "user_id,conversation_id"),
+    ),
+  };
+  await assert.rejects(
+    initializePostgresDatabase({ pool: catalogPool(missingOwnerConstraint) as any }),
+    /foreign key messages\(user_id,conversation_id\)/,
+  );
+  await closePostgresDatabase();
 });

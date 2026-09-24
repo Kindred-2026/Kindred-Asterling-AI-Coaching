@@ -8,6 +8,7 @@ import {
   usersTable,
 } from "./mongoSchema";
 import { snakeCase, camelCase } from "./migrationSupport";
+import { validatePostgresSchemaCatalog } from "./postgresSchema";
 
 type Row = Record<string, any>;
 type Queryable = { query: (sql: string, values?: any[]) => Promise<QueryResult<any>>; connect?: () => Promise<any>; release?: () => void; end?: () => Promise<void> };
@@ -133,13 +134,35 @@ function getPool(options?: PostgresOptions): Pool {
 export async function initializePostgresDatabase(options?: PostgresOptions): Promise<void> {
   const current = getPool(options);
   await current.query("SELECT 1");
-  const result = await current.query(
-    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'",
-  );
-  const present = new Set(result.rows.map((row) => row.table_name));
-  const required = [...allTables.map((table) => table.collectionName), "database_leases"];
-  const missing = required.filter((name) => !present.has(name));
-  if (missing.length) throw new Error("PostgreSQL schema is incomplete; required Kindred tables are missing");
+  const [tables, columns, constraints] = await Promise.all([
+    current.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"),
+    current.query("SELECT table_name, column_name, data_type, udt_name FROM information_schema.columns WHERE table_schema = 'public'"),
+    current.query(`SELECT child.relname AS table_name, c.contype AS type,
+      ARRAY(SELECT a.attname FROM unnest(c.conkey) WITH ORDINALITY AS key_column(attnum, ordinal_position)
+        JOIN pg_attribute AS a ON a.attrelid = c.conrelid AND a.attnum = key_column.attnum
+        ORDER BY key_column.ordinal_position) AS columns,
+      parent.relname AS referenced_table,
+      ARRAY(SELECT a.attname FROM unnest(c.confkey) WITH ORDINALITY AS referenced_column(attnum, ordinal_position)
+        JOIN pg_attribute AS a ON a.attrelid = c.confrelid AND a.attnum = referenced_column.attnum
+        ORDER BY referenced_column.ordinal_position) AS referenced_columns,
+      CASE c.confdeltype WHEN 'c' THEN 'CASCADE' WHEN 'n' THEN 'SET NULL' WHEN 'r' THEN 'RESTRICT'
+        WHEN 'd' THEN 'SET DEFAULT' WHEN 'a' THEN 'NO ACTION' END AS delete_action
+      FROM pg_constraint AS c
+      JOIN pg_class AS child ON child.oid = c.conrelid
+      JOIN pg_namespace AS child_schema ON child_schema.oid = child.relnamespace
+      LEFT JOIN pg_class AS parent ON parent.oid = c.confrelid
+      LEFT JOIN pg_namespace AS parent_schema ON parent_schema.oid = parent.relnamespace
+      WHERE child_schema.nspname = 'public' AND (parent.oid IS NULL OR parent_schema.nspname = 'public')
+        AND c.contype IN ('p', 'u', 'f')`),
+  ]);
+  const missing = validatePostgresSchemaCatalog({
+    tables: tables.rows.map((row) => row.table_name),
+    columns: columns.rows,
+    constraints: constraints.rows,
+  });
+  if (missing.length) {
+    throw new Error(`PostgreSQL schema is incomplete; missing schema objects: ${missing.join(", ")}`);
+  }
 }
 export async function getPostgresPool(options?: PostgresOptions): Promise<Pool> { return getPool(options); }
 export async function pingPostgresDatabase(): Promise<void> { await getPool().query("SELECT 1"); }
