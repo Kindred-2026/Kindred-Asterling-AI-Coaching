@@ -41,7 +41,7 @@ const GENERATED_TREES = [
 // api-spec contract/config, the generated-client packages' hand-authored
 // sources, and the root workspace/toolchain config. Secret/operational files
 // (any .env*, SECRET_INVENTORY.md, deploy/, infrastructure/, artifacts/, docs/,
-// frontend/, .github/, patch.diff, ...) are never copied into the sandbox.
+// frontend/, .github/, ...) are never copied into the sandbox.
 const SNAPSHOT_DIRS = ["lib/api-spec", "lib/api-client-react", "lib/api-zod"];
 const SNAPSHOT_FILES = [
   "package.json",

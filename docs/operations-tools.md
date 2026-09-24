@@ -1,8 +1,8 @@
 # Operations tools inventory
 
 Inventory of the MongoDB / identity tools in this repository, taken from their
-**actual implementation**, plus a list of suspected unused or superseded assets
-kept as future-review candidates. Nothing here is deleted.
+**actual implementation**, plus the recorded disposition of suspected unused
+or superseded assets.
 
 ## MongoDB tools
 
@@ -27,20 +27,28 @@ Documented procedures: `docs/mongodb-migration.md` (PostgreSQL cutover) and
 audit and rollback reference; their one-time steps happened out-of-band and are
 not part of normal operations.
 
-## Suspected unused / superseded assets (future-review candidates)
+## Disposition of suspected unused / superseded assets
 
-Kept in place, not removed; these are candidates for an archive decision in a
-later, scope-refreshed phase:
+The following items have been resolved as of this review:
 
-- **Root loose scratch files** — `patch.diff`, `plan.txt`, `pr.json`, `pnpm.yml`,
-  `seo_strategy.md`, `test-db.ts`, `test_db.ts`, `test_perf.ts`, `test_plan.sh`
-  are tracked but referenced nowhere (no import, script, or doc references).
-- **EKS deployment assets** — `infrastructure/eks/*`, `deploy/{karpenter,keda,metrics-server-values.yaml}`,
-  `scripts/{deploy-eks-autoscaling.sh,verify-eks.sh}` predate the Coolify
-  production path and are unused by it (`docs/COOLIFY_DEPLOYMENT.md` names the
-  root Dockerfile as the only supported production artifact).
-- **`scripts/test-local.sh`** — legacy local script not referenced by any
-  package script.
+**Removed (confirmed unreferenced)** — `patch.diff`, `plan.txt`, `pr.json`,
+`test-db.ts`, `test_db.ts`, `test_perf.ts`, `test_plan.sh` were tracked root
+scratch files with no package-script, CI, build, or documentation consumers.
+Deleted.
 
-Do not remove any of the above as part of Phases 4–7 planning; refresh that scope
-against the completed Auth0/MongoDB work first.
+**Moved** — `seo_strategy.md` relocated to `docs/marketing/seo-strategy.md`
+with a note that it is an unfinished strategy brief. Content preserved.
+
+**Deferred** — `pnpm.yml` retained at repository root. It resembles a custom
+AWS CodeBuild `buildspec.yml` and external use is not verified; disposition
+pending AWS project inventory.
+
+**Retained (out of scope for this cleanup)** — EKS deployment assets:
+`infrastructure/eks/*`, `deploy/{karpenter,keda,metrics-server-values.yaml}`,
+`scripts/{deploy-eks-autoscaling.sh,verify-eks.sh}` are not touched per
+instruction.
+
+**Retained (active local workflow)** — `scripts/test-local.sh` is called by the
+Codex project Test action in `.codex/environments/environment.toml`; it runs the
+API test harness with payments disabled. Keep it as part of the documented
+developer workflow.
