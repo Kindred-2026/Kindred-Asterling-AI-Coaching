@@ -8,6 +8,7 @@ export default defineConfig({
     environment: "jsdom",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
     globals: true,
+    maxWorkers: 4,
   },
   resolve: {
     alias: {
