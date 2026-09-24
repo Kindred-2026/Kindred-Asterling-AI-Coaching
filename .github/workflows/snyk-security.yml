@@ -78,7 +78,18 @@ jobs:
 
         # Build the docker image for testing
       - name: Build a Docker image
-        run: docker build -t your/image-to-test .
+        env:
+          # Synthetic public build identifiers let the production image compile
+          # for scanning without granting this security job access to an Auth0 tenant.
+          VITE_AUTH0_DOMAIN: tenant.example.invalid
+          VITE_AUTH0_CLIENT_ID: synthetic-public-client
+          VITE_AUTH0_AUDIENCE: https://api.example.invalid
+        run: >-
+          docker build
+          --build-arg VITE_AUTH0_DOMAIN="$VITE_AUTH0_DOMAIN"
+          --build-arg VITE_AUTH0_CLIENT_ID="$VITE_AUTH0_CLIENT_ID"
+          --build-arg VITE_AUTH0_AUDIENCE="$VITE_AUTH0_AUDIENCE"
+          -t your/image-to-test .
         # Runs Snyk Container (Container and SCA) analysis and uploads result to Snyk.
       - name: Snyk Container monitor
         run: snyk container monitor your/image-to-test --file=Dockerfile
