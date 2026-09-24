@@ -262,23 +262,10 @@ export async function withDatabaseLease<T>(namespace: string, key: string, ttlMs
   const leaseKey = `${namespace}:${key}`;
   const token = randomUUID();
   const leaseTable = identifier("database_leases");
-  const expiration = async () => {
-    const result = await queryable.query("SELECT LOCALTIMESTAMP AS database_now");
-    const timestamp = result.rows[0]?.database_now;
-    const parts = timestamp instanceof Date
-      ? [timestamp.getUTCFullYear(), timestamp.getUTCMonth() + 1, timestamp.getUTCDate(), timestamp.getUTCHours(), timestamp.getUTCMinutes(), timestamp.getUTCSeconds(), timestamp.getUTCMilliseconds()]
-      : typeof timestamp === "string"
-        ? timestamp.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?$/)?.slice(1).map((part, index) => index === 6 ? Number((part ?? "0").padEnd(3, "0").slice(0, 3)) : Number(part))
-        : undefined;
-    const databaseNow = parts?.length === 7
-      ? Date.UTC(parts[0]!, parts[1]! - 1, parts[2]!, parts[3]!, parts[4]!, parts[5]!, parts[6]!)
-      : Number.NaN;
-    if (!Number.isFinite(databaseNow)) throw new Error("PostgreSQL returned an invalid database clock value");
-    return new Date(databaseNow + ttlMs).toISOString().replace(/Z$/, "");
-  };
+  const expirySql = "(clock_timestamp() AT TIME ZONE 'UTC') + ($3 * INTERVAL '1 millisecond')";
   const claim = await queryable.query(
-    `INSERT INTO ${leaseTable} (lease_key, token, expires_at) VALUES ($1, $2, $3) ON CONFLICT (lease_key) DO UPDATE SET token = EXCLUDED.token, expires_at = EXCLUDED.expires_at WHERE ${leaseTable}.expires_at <= LOCALTIMESTAMP RETURNING token`,
-    [leaseKey, token, await expiration()],
+    `INSERT INTO ${leaseTable} (lease_key, token, expires_at) VALUES ($1, $2, ${expirySql}) ON CONFLICT (lease_key) DO UPDATE SET token = EXCLUDED.token, expires_at = EXCLUDED.expires_at WHERE ${leaseTable}.expires_at <= (clock_timestamp() AT TIME ZONE 'UTC') RETURNING token`,
+    [leaseKey, token, ttlMs],
   );
   if (claim.rows.length !== 1 || claim.rows[0]?.token !== token) throw new DatabaseLeaseUnavailableError(`Database lease is already held: ${namespace}`);
 
@@ -286,10 +273,10 @@ export async function withDatabaseLease<T>(namespace: string, key: string, ttlMs
   let renewal: Promise<void> | undefined;
   const timer = setInterval(() => {
     if (renewal) return;
-    renewal = expiration().then((expiresAt) => queryable.query(
-      `UPDATE ${leaseTable} SET expires_at = $3 WHERE lease_key = $1 AND token = $2 RETURNING token`,
-      [leaseKey, token, expiresAt],
-    )).then((result) => { if (result.rows.length !== 1 || result.rows[0]?.token !== token) lost = true; }).catch(() => { lost = true; }).finally(() => { renewal = undefined; });
+    renewal = queryable.query(
+      `UPDATE ${leaseTable} SET expires_at = ${expirySql} WHERE lease_key = $1 AND token = $2 RETURNING token`,
+      [leaseKey, token, ttlMs],
+    ).then((result) => { if (result.rows.length !== 1 || result.rows[0]?.token !== token) lost = true; }).catch(() => { lost = true; }).finally(() => { renewal = undefined; });
   }, Math.max(50, Math.floor(ttlMs / 3)));
   timer.unref();
   try {

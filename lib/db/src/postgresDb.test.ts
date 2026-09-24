@@ -14,6 +14,7 @@ import {
   isNull,
   initializePostgresDatabase,
   closePostgresDatabase,
+  withDatabaseLease,
 } from "./postgresDb";
 import { affirmationsTable, conversations, messages, usersTable } from "./mongoSchema";
 
@@ -134,6 +135,34 @@ test("rolls back failed transactions and serializes database-backed leases", asy
     });
     assert.equal(held, true);
   } finally { await pool.end(); }
+});
+
+test("computes lease claim and renewal expiry in UTC using PostgreSQL time", async () => {
+  const calls: Array<{ sql: string; values?: unknown[] }> = [];
+  const queryable = {
+    async query(sql: string, values?: unknown[]) {
+      calls.push({ sql, values });
+      if (/RETURNING token/.test(sql)) return { rows: [{ token: values?.[1] }], rowCount: 1 };
+      return { rows: [], rowCount: 1 };
+    },
+  };
+
+  await withDatabaseLease("test", "utc-expiry", 100, async () => {
+    await new Promise((resolve) => setTimeout(resolve, 75));
+  }, queryable);
+
+  const claim = calls[0]!;
+  assert.match(claim.sql, /VALUES \(\$1, \$2, \(clock_timestamp\(\) AT TIME ZONE 'UTC'\) \+ \(\$3 \* INTERVAL '1 millisecond'\)\)/);
+  assert.match(claim.sql, /expires_at <= \(clock_timestamp\(\) AT TIME ZONE 'UTC'\)/);
+  assert.deepEqual(claim.values?.slice(0, 1), ["test:utc-expiry"]);
+  assert.equal(claim.values?.[2], 100);
+
+  const renewal = calls.find(({ sql }) => sql.startsWith('UPDATE "database_leases"'))!;
+  assert.match(renewal.sql, /SET expires_at = \(clock_timestamp\(\) AT TIME ZONE 'UTC'\) \+ \(\$3 \* INTERVAL '1 millisecond'\)/);
+  assert.match(renewal.sql, /WHERE lease_key = \$1 AND token = \$2 RETURNING token$/);
+  assert.equal(renewal.values?.[2], 100);
+  assert.equal(calls.some(({ sql }) => /LOCALTIMESTAMP/.test(sql)), false);
+  assert.match(calls.at(-1)!.sql, /^DELETE FROM "database_leases" WHERE lease_key = \$1 AND token = \$2$/);
 });
 
 test("rejects malformed sort values and supports empty logical conditions", async () => {
