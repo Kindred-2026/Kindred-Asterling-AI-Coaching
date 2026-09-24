@@ -40,12 +40,14 @@ CREATE INDEX conversations_owner_status_created_idx ON conversations (user_id, s
 
 CREATE TABLE messages (
   id integer PRIMARY KEY,
-  conversation_id integer NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  conversation_id integer NOT NULL,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   role text NOT NULL,
   content text NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id, conversation_id) REFERENCES conversations(user_id, id) ON DELETE CASCADE
 );
-CREATE INDEX messages_conversation_id_idx ON messages (conversation_id, id DESC);
+CREATE INDEX messages_owner_conversation_id_idx ON messages (user_id, conversation_id, id DESC);
 
 CREATE TABLE habits (
   id integer PRIMARY KEY,

@@ -32,7 +32,7 @@ production gates; a checked-in plan is not proof of a live cutover.
 | Legacy AWS EKS/KEDA assets | No current GitHub workflow or application-runtime consumer found; docs identify them as pre-Coolify tooling | Preserve until the owner confirms no AWS cluster or rollback deployment depends on them; remove the manifests/scripts after that check |
 | TODO/FIXME cleanup | No unresolved TODO, FIXME, XXX, or HACK markers remain in current source; matches are UI `ListTodo` symbols and usage text | Recheck when code changes are finalized |
 | OpenAI-compatible AI | Retained; Cloudflare Gateway endpoint supported; request payload logging header added | Provider account, upstream model, privacy contract, Gateway settings, and staging verification remain external gates |
-| Snyk | Retained as a required observable scanner; literal-ID validation and regression coverage are present. The scan on `8d6e431` still reports one HIGH `javascript/NoSqli` finding at `lib/db/src/mongoDb.ts:850` for database-returned conversation IDs used by the message cascade. OpenCode reviewed the SARIF and confirmed these IDs are restricted to scalar values before the selector; it found no safe code-only change that preserves this cascade and clears the finding. No suppression was added. | **Open:** Snyk and SnykCode fail on this finding. Resolve through an approved ownership-schema/backfill design or Snyk-reviewed remediation, then rerun the full scan; do not merge while this required check fails |
+| Snyk | Retained as a required observable scanner. Messages now carry the stable internal Kindred `userId`; chat reads/writes, account exports, and account deletion use that owner instead of rebuilding message selectors from database-returned conversation IDs. No suppression was added. | Rerun Snyk/SnykCode and require the HIGH to be cleared before merge. Deployment remains blocked until the ownership backfill gates below pass |
 | MongoDB and Coolify | Retained temporarily for production and rollback | Do not retire before all cutover gates pass |
 | PostgreSQL migration foundation | Added a reviewed all-20-collection rehearsal schema, per-row validation, stable-ID and owner-relationship checks, bounded source snapshot reads, and rollback-by-default replay | This is not a production migration or PostgreSQL runtime. The `pg-mem` fixture does not prove real PostgreSQL rollback/restore; no live source or database was used |
 | GitHub Actions OpenCode bot | Hardened: exact action commit pin, comment-only triggers, trusted collaborator gate, job-scoped permissions, no `id-token: write` | Verify the workflow still serves an operator need and confirm `OPENCODE_API_KEY` scope in GitHub |
@@ -62,6 +62,42 @@ production gates; a checked-in plan is not proof of a live cutover.
    declared retention window.
 6. Only then retire Coolify and MongoDB, after confirming the rollback window is
    closed and the final backup is readable.
+
+## Message ownership rollout
+
+The message ownership script is dry-run by default and accepts writes only with
+both `--write` and `--non-production`, `NODE_ENV` set to `test`, `development`,
+or `staging`, and an explicitly non-production database name. It validates the
+entire message collection before writing: every message must resolve to exactly
+one conversation, each conversation must have a valid stable Kindred `userId`,
+and any existing message `userId` must already match. Updates only fill missing
+owners, so repeated runs are idempotent. This work did not run the script or
+connect it to production.
+
+Roll out in this order:
+
+1. Back up MongoDB consistently, record collection counts and a tested restore
+   identifier, and retain the pre-change application artifact.
+2. Restore the backup into an isolated non-production database and rehearse the
+   full procedure there. Set `MONGODB_MESSAGE_OWNERSHIP_URI` and
+   `MONGODB_MESSAGE_OWNERSHIP_DATABASE` to that restore, then run `pnpm --filter
+   @workspace/db migrate:message-ownership` first as a dry-run.
+3. Validate that scanned message counts equal the source count, every owner
+   matches its conversation owner, and no orphaned or ambiguous conversation
+   mapping exists. Stop on any mismatch; do not partially repair it.
+4. In staging only, run the same command with `--write --non-production`, then
+   rerun the dry-run and require `missingOwner: 0`, unchanged counts, and the
+   expected per-owner totals. Exercise chat reads, exports, and account deletion
+   with two separate test accounts.
+5. Do not deploy owner-scoped reads to production until an operator-approved
+   production backfill procedure has repeated the backup, dry-run, owner/count
+   validation, write, and post-write validation gates. The checked-in script
+   intentionally refuses production; approving or executing that separate
+   production procedure is an external release gate.
+6. Deploy the exact reviewed artifact only after the production data gate and
+   Snyk checks pass. Keep the backup, previous artifact, and Mongo-compatible
+   schema through the rollback window. The added `userId` is backward-compatible
+   with the previous application, so rollback does not require removing it.
 
 ## Cost target (monthly, before payment processing)
 

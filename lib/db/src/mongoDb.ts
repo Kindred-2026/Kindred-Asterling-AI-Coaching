@@ -242,7 +242,7 @@ const indexDefinitions: ReadonlyArray<{
   { table: habitsTable, keys: { userId: 1 } },
   { table: habitEntriesTable, keys: { userId: 1, habitId: 1, date: -1 } },
   { table: conversations, keys: { userId: 1, status: 1, createdAt: -1 } },
-  { table: messages, keys: { conversationId: 1, id: -1 } },
+  { table: messages, keys: { userId: 1, conversationId: 1, id: -1 } },
   { table: medicationsTable, keys: { userId: 1, name: 1 } },
   {
     table: medicationLogsTable,
@@ -837,17 +837,9 @@ async function cascadeDelete(
       "entitlement_audit",
       "beta_grants",
     ];
-    const conversationRows = await current
-      .collection(conversations.collectionName)
-      .find({ userId: { $in: userIds } }, { projection: { id: 1 }, session })
-      .toArray();
-    // A stored conversation ID is data, not a MongoDB query expression.
-    const conversationIds = conversationRows.map((row) =>
-      canonicalStoredQueryId(row.id),
-    );
     await current
       .collection(messages.collectionName)
-      .deleteMany({ conversationId: { $in: conversationIds } }, { session });
+      .deleteMany({ userId: { $in: userIds } }, { session });
     await current
       .collection(conversations.collectionName)
       .deleteMany({ userId: { $in: userIds } }, { session });

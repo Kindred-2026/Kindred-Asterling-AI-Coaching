@@ -67,6 +67,13 @@ const MAX_TOOL_OUTPUT_CHARS = 8000;
 // Slightly higher cap for the archive export path where the user explicitly
 // wants a fuller transcript, but still bounded to prevent oversized reads.
 const ARCHIVE_MESSAGE_LIMIT = 500;
+const messageResponseColumns = {
+  id: messages.id,
+  conversationId: messages.conversationId,
+  role: messages.role,
+  content: messages.content,
+  createdAt: messages.createdAt,
+};
 
 async function requestWithRetry(
   provider: AIProvider,
@@ -150,9 +157,14 @@ async function loadWithMessages(
   // the response. This bounds both the DB read and the serialized payload size
   // regardless of how many messages a conversation has accumulated.
   const msgsDesc = await db
-    .select()
+    .select(messageResponseColumns)
     .from(messages)
-    .where(eq(messages.conversationId, conversationId))
+    .where(
+      and(
+        eq(messages.conversationId, conversationId),
+        eq(messages.userId, userId),
+      ),
+    )
     .orderBy(desc(messages.id))
     .limit(limit);
   const msgs = msgsDesc.slice().reverse();
@@ -271,6 +283,7 @@ router.post(
     const conv = await getOrCreateActive(userId);
     await db.insert(messages).values({
       conversationId: conv.id,
+      userId,
       role: parsed.data.role,
       content: clipped,
     });
@@ -330,6 +343,7 @@ router.post(
 
     await db.insert(messages).values({
       conversationId: conv.id,
+      userId,
       role: "user",
       content: clipped,
     });
@@ -340,9 +354,14 @@ router.post(
     // serialize on every future /chat/send, even though the model payload
     // itself is bounded by MAX_HISTORY_CHARS.
     const recentDesc = await db
-      .select()
+      .select(messageResponseColumns)
       .from(messages)
-      .where(eq(messages.conversationId, conv.id))
+      .where(
+        and(
+          eq(messages.conversationId, conv.id),
+          eq(messages.userId, userId),
+        ),
+      )
       .orderBy(desc(messages.id))
       .limit(HISTORY_TURN_LIMIT);
     const recent = recentDesc.slice().reverse();
@@ -492,6 +511,7 @@ router.post(
 
     await db.insert(messages).values({
       conversationId: conv.id,
+      userId,
       role: "assistant",
       content: clipMessage(assistantText),
     });

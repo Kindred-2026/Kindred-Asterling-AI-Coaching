@@ -81,6 +81,7 @@ cutover.
 | `ELEVENLABS_API_KEY` | Voice generation for the selected project/voice only; no workspace administration. | Proposed; verify provider grant |
 | `POSTGRES_SOURCE_URL` | Read-only access to the isolated migration source database. | Job-only; do not place in app runtime |
 | `POSTGRES_RESTORE_URL` | Create schema and write data only in the isolated rehearsal target; no production access. | Job-only; not currently provisioned |
+| `MONGODB_MESSAGE_OWNERSHIP_URI` | Read/write access only to an isolated non-production MongoDB restore used for message-owner backfill; never use production credentials. | Temporary staging/rehearsal job only; remove after validation and rollback window |
 | `AUTH0_CLIENT_SECRET` | Auth0 Deploy CLI machine-to-machine scopes limited to the explicitly managed tenant resources; no user impersonation or runtime API access. | Exact Deploy CLI scopes require tenant review |
 | `CLERK_SECRET_KEY` | Read-only Clerk user/identity inspection only while legacy account reconciliation is authorized. | Legacy-only; exact grant and continued need unverified |
 | `CLERK_WEBHOOK_SECRET` | Verify signatures for a legacy Clerk webhook only if that endpoint is still intentionally operated. | Unmounted code; remove after migration/rollback review |
@@ -104,6 +105,8 @@ The names below are present in examples or tracked consumers, but are **not evid
 | `MONGODB_MIGRATION_REPORT_PATH` | N; old migration report path override; optional | local config | not runtime | job config if needed | verify/remove |
 | `MONGODB_VALIDATION_SOURCE_DATABASE` | N; Mongo restore drill source; required for restore validator | local config | not runtime | job config if drill needed | verify/remove |
 | `MONGODB_VALIDATION_RESTORE_DATABASE` | N; Mongo restore drill target; required for restore validator | local config | not runtime | job config if drill needed | verify/remove |
+| `MONGODB_MESSAGE_OWNERSHIP_URI` | S; message-owner backfill script; required only for isolated restore/staging rehearsal and prohibited in production mode | local secret or isolated staging job secret | not runtime; production execution prohibited | isolated job secret with database-level access only; remove after backfill/rollback window | Kindred owner; verify scope before use, then remove |
+| `MONGODB_MESSAGE_OWNERSHIP_DATABASE` | N; dedicated non-production database name for the message-owner backfill; required only for that job | local config | not runtime; production execution prohibited | isolated job config; remove after backfill/rollback window | Kindred owner; verify target name, then remove |
 | `AUTH0_CLIENT_ID` | P; Auth0 Deploy CLI application ID, required for tenant deployment only | local config | not runtime; deployment job unverified | job config | verify/retain |
 | `AUTH0_CLIENT_SECRET` | S; Auth0 Deploy CLI machine-to-machine credential, required for tenant deployment only | local secret | not runtime; deployment job unverified | job secret | verify/rotate |
 | `CLERK_SECRET_KEY` | S; retired Clerk admin script; required only if that script is run | local secret | not runtime; unverified | no app runtime target | verify/remove after migration check |

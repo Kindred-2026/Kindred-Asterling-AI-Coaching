@@ -14,6 +14,8 @@
     "typecheck:scripts": "tsc --noEmit --strict --skipLibCheck --module preserve --moduleResolution bundler --target es2022 --types node ./scripts/*.ts",
     "test:journey": "tsx ./scripts/test-coach-journey.ts",
     "test:postgres-rehearsal": "tsx --test ./scripts/postgres-rehearsal.test.ts",
+    "test:message-ownership": "tsx --test ./scripts/migrate-message-ownership.test.ts",
+    "migrate:message-ownership": "tsx ./scripts/migrate-message-ownership.ts",
     "rehearse:mongo-to-postgres": "tsx ./scripts/rehearse-mongo-to-postgres.ts"
   },
   "dependencies": {

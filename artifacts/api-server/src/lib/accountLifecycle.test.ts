@@ -110,6 +110,7 @@ describe("MongoDB account lifecycle", () => {
     });
     await db.insert(messages).values({
       conversationId: chat!.id,
+      userId,
       role: "user",
       content: "Private content",
     });
@@ -166,6 +167,9 @@ describe("MongoDB account lifecycle", () => {
     for (const value of Object.values(exported!.data)) {
       expect(value).toHaveLength(1);
     }
+    expect(
+      exported!.data.chatMessages.every((message) => message.userId === userId),
+    ).toBe(true);
 
     await expect(deleteAccount(userId)).resolves.toBe(true);
     await expect(deleteAccount(userId)).resolves.toBe(false);

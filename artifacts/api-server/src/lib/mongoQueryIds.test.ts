@@ -191,7 +191,7 @@ describe("database-derived query identifiers", () => {
     ["array", ["unexpected"]],
     ["non-integer number", 1.5],
   ] as const) {
-    it(`rolls back account deletion when a stored conversation ID is a ${label}`, async () => {
+    it(`does not reuse a stored ${label} conversation ID during account deletion`, async () => {
       const mongo = await getMongoDatabase();
       const owner = `${marker}-owner`,
         survivor = `${marker}-survivor`;
@@ -211,25 +211,19 @@ describe("database-derived query identifiers", () => {
       await mongo.collection<FixtureRow>("messages").insertOne({
         _id: `${marker}-message`,
         conversationId: `${marker}-good-chat`,
+        userId: survivor,
         queryIdTest: marker,
       });
-      let failure: unknown;
-      try {
-        await db.delete(usersTable).where(eq(usersTable.id, owner));
-      } catch (error) {
-        failure = error;
-      }
+      await db.delete(usersTable).where(eq(usersTable.id, owner));
       expect(
         await mongo.collection<FixtureRow>("messages").countDocuments({ queryIdTest: marker }),
       ).toBe(1);
-      expect(failure).toBeInstanceOf(Error);
-      expect((failure as Error).message).toBe("Invalid stored query identifier");
       expect(
         await mongo.collection<FixtureRow>("users").countDocuments({ queryIdTest: marker }),
-      ).toBe(2);
+      ).toBe(1);
       expect(
         await mongo.collection<FixtureRow>("conversations").countDocuments({ queryIdTest: marker }),
-      ).toBe(2);
+      ).toBe(1);
       expect(
         await mongo.collection<FixtureRow>("messages").countDocuments({ queryIdTest: marker }),
       ).toBe(1);
@@ -254,10 +248,16 @@ describe("database-derived query identifiers", () => {
       },
     ]);
     await mongo.collection<FixtureRow>("messages").insertMany([
-      { _id: `${marker}-message`, conversationId: `${marker}-chat`, queryIdTest: marker },
+      {
+        _id: `${marker}-message`,
+        conversationId: `${marker}-chat`,
+        userId: owner,
+        queryIdTest: marker,
+      },
       {
         _id: `${marker}-other-message`,
         conversationId: `${marker}-other-chat`,
+        userId: survivor,
         queryIdTest: marker,
       },
     ]);
@@ -299,11 +299,13 @@ describe("database-derived query identifiers", () => {
       {
         _id: `${marker}-literal-message`,
         conversationId: ".*",
+        userId: owner,
         queryIdTest: marker,
       },
       {
         _id: `${marker}-other-message`,
         conversationId: survivor,
+        userId: survivor,
         queryIdTest: marker,
       },
     ]);
@@ -339,6 +341,7 @@ describe("database-derived query identifiers", () => {
     await mongo.collection<FixtureRow>("messages").insertOne({
       _id: `${marker}-numeric-message`,
       conversationId,
+      userId: owner,
       queryIdTest: marker,
     });
 

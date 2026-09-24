@@ -75,7 +75,7 @@ export const rehearsalColumns = {
     "startDate",
     "endDate",
   ],
-  messages: ["id", "conversationId", "role", "content", "createdAt"],
+  messages: ["id", "conversationId", "userId", "role", "content", "createdAt"],
   morning_logs: ["id", "userId", "date", "mentalLoadLevel", "miniGoals", "notes", "createdAt"],
   processed_webhooks: ["webhookId", "eventType", "processedAt"],
   reminder_settings: [
@@ -176,7 +176,7 @@ const required: Partial<Record<RehearsalTable, readonly string[]>> = {
   habit_entries: ["id", "habitId", "userId", "date"],
   medication_logs: ["id", "medicationId", "userId", "date", "scheduledTime"],
   medication_schedule_entries: ["id", "medicationId", "userId", "scheduledTime", "startDate"],
-  messages: ["id", "conversationId", "role", "content"],
+  messages: ["id", "conversationId", "userId", "role", "content"],
   morning_logs: ["id", "userId", "date", "mentalLoadLevel"],
   processed_webhooks: ["webhookId", "eventType"],
   reminder_settings: ["userId"],
@@ -341,7 +341,7 @@ export function validateRehearsal(snapshot: RehearsalSnapshot): void {
     }
   }
   const parents = [
-    ["messages", "conversationId", "conversations", null],
+    ["messages", "conversationId", "conversations", "userId"],
     ["habit_entries", "habitId", "habits", "userId"],
     ["medication_logs", "medicationId", "medications", "userId"],
     ["medication_schedule_entries", "medicationId", "medications", "userId"],

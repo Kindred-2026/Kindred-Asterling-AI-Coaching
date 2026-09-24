@@ -26,7 +26,15 @@ const fixture = (): RehearsalSnapshot =>
       { id: "kindred-owner-b", auth0UserId: "auth0|b" },
     ],
     conversations: [{ id: 71, userId: "kindred-owner-a", title: "History" }],
-    messages: [{ id: 23, conversationId: 71, role: "user", content: "Private" }],
+    messages: [
+      {
+        id: 23,
+        conversationId: 71,
+        userId: "kindred-owner-a",
+        role: "user",
+        content: "Private",
+      },
+    ],
     habits: [{ id: 41, userId: "kindred-owner-a", name: "Walk", startDate: "2026-09-21" }],
     habit_entries: [{ id: 51, userId: "kindred-owner-a", habitId: 41, date: "2026-09-22" }],
     daily_usage: [{ userId: "kindred-owner-a", date: "2026-09-22", count: 2 }],
@@ -148,8 +156,24 @@ test("rejects cross-account relationships, orphan identities and unreviewed fiel
   ];
   assert.throws(() => validateRehearsal(crossAccount), /crosses account boundary/);
   const orphan = fixture();
-  orphan.messages = [{ id: 23, conversationId: 999, role: "user", content: "Private" }];
+  orphan.messages = [
+    {
+      id: 23,
+      conversationId: 999,
+      userId: "kindred-owner-a",
+      role: "user",
+      content: "Private",
+    },
+  ];
   assert.throws(() => validateRehearsal(orphan), /orphaned conversationId/);
+  const crossOwnerMessage = fixture();
+  crossOwnerMessage.messages = [
+    { ...crossOwnerMessage.messages[0]!, userId: "kindred-owner-b" },
+  ];
+  assert.throws(
+    () => validateRehearsal(crossOwnerMessage),
+    /crosses account boundary/,
+  );
   const unknown = fixture();
   unknown.users = [{ id: "kindred-owner-a", undocumented: true }];
   assert.throws(() => validateRehearsal(unknown), /Unreviewed users.undocumented/);
@@ -220,7 +244,7 @@ test("replays deterministically into a clean embedded schema", async () => {
     for (const [table, fields] of [
       ["users", "id, auth0_user_id"],
       ["conversations", "id, user_id, title"],
-      ["messages", "id, conversation_id, content"],
+      ["messages", "id, conversation_id, user_id, content"],
       ["habits", "id, user_id, name"],
       ["habit_entries", "id, habit_id, user_id"],
       ["daily_usage", "user_id, date, count"],
