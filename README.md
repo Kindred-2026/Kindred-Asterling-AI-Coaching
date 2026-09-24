@@ -6,10 +6,9 @@ Monorepo for the Kindred Asterling AI Coaching product.
 **Finalization target:** Fly.io for application hosting and managed PostgreSQL;
 Cloudflare remains the DNS/security and AI Gateway layer. See [the finalization
 record](docs/FINALIZATION_RECORD.md) and [the Fly.io deployment runbook](docs/FLY_DEPLOYMENT.md).
-The DigitalOcean guide remains marked as superseded; Railway was evaluated but
-not selected. Production
-hosting and database remain on the current providers until their migration gates
-are verified.
+DigitalOcean and Railway were evaluated but not selected. The two removed guides
+were specifically the DigitalOcean guides. Production hosting and database
+remain on the current providers until their migration gates are verified.
 
 - Product UI: `artifacts/kindred-coach` (React/Vite, `@workspace/kindred-coach`)
 - API server: `artifacts/api-server` (Express, `@workspace/api-server`)
