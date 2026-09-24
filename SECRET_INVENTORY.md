@@ -142,10 +142,12 @@ container in commit `900dc255d10666e702c81adf230b1754e9d220ce` (2026-08-02),
 under a historical Windows-profile filename; it is absent from the current
 tree. A public-key fingerprint is recorded in the owner-facing review request,
 not as a credential value. Its owner, passphrase-holder, and whether it remains
-authorized are unknown. Treat it as potentially exposed: identify and revoke it
-where registered, then coordinate a history rewrite across affected refs. Do
-not claim history cleanup complete until owner confirmation, key revocation,
-all-branch rewrite, and collaborator clone instructions are complete.
+authorized are unknown. A read-only query found no match in the Kindred repo's
+deploy keys; GitHub did not authorize listing the connected account's SSH keys.
+Treat it as potentially exposed: identify and revoke it where registered, then
+coordinate a history rewrite across affected refs. Do not claim history cleanup
+complete until owner confirmation, key revocation, all-branch rewrite, and
+collaborator clone instructions are complete.
 
 ## Planned target state — NOT implemented or verified by this checkout
 
