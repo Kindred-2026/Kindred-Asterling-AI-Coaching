@@ -45,7 +45,7 @@ function encryptRefreshToken(value: string, secret: string): string {
 }
 
 describe("disconnectCalendar", () => {
-  const secret = "test-calendar-encryption-secret";
+  const secret = randomBytes(32).toString("hex");
 
   beforeEach(() => {
     vi.clearAllMocks();

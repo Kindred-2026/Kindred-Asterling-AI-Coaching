@@ -369,6 +369,23 @@ function documentId(table: Table, row: Row): unknown {
   );
 }
 
+function canonicalStoredQueryId(value: unknown): string | number {
+  // Reconstruct a JSON scalar, never carry a BSON object, array, or RegExp
+  // from a stored document into a MongoDB query. JSON round-tripping retains
+  // punctuation (including regex-looking strings) and composite key strings.
+  if (
+    !(typeof value === "string" && value.length > 0) &&
+    !(typeof value === "number" && Number.isSafeInteger(value))
+  ) {
+    throw new Error("Invalid stored query identifier");
+  }
+  const parsed: unknown = JSON.parse(JSON.stringify(value));
+  if (typeof parsed !== typeof value || parsed !== value) {
+    throw new Error("Invalid stored query identifier");
+  }
+  return parsed as string | number;
+}
+
 function storedQueryIds(rows: readonly Row[], field: string): Array<string | number> {
   // Persisted data is not a query expression. In particular, MongoDB treats a
   // RegExp inside $in as a pattern, which could match another account's rows.
@@ -376,14 +393,7 @@ function storedQueryIds(rows: readonly Row[], field: string): Array<string | num
   // Build a fresh list from validated primitives, never from raw documents.
   const ids: Array<string | number> = [];
   for (const row of rows) {
-    const value = row[field];
-    if (typeof value === "string" && value.length > 0) {
-      ids.push(String(value));
-    } else if (typeof value === "number" && Number.isSafeInteger(value)) {
-      ids.push(Number(value));
-    } else {
-      throw new Error("Invalid stored query identifier");
-    }
+    ids.push(canonicalStoredQueryId(row[field]));
   }
   return ids;
 }
@@ -701,13 +711,7 @@ class UpdateQuery<TableRow extends Row> implements PromiseLike<TableRow[]> {
       if (matches.length === 0) return [];
       // Validate the database-derived values at the source, before either
       // MongoDB query. Do not allow a BSON object or RegExp into $in.
-      const ids: Array<string | number> = matches.map((match) => {
-        const id: unknown = match._id;
-        if (typeof id === "string" && id.length > 0) return String(id);
-        if (typeof id === "number" && Number.isSafeInteger(id))
-          return Number(id);
-        throw new Error("Invalid stored query identifier");
-      });
+      const ids = matches.map((match) => canonicalStoredQueryId(match._id));
       await target.updateMany(
         { _id: { $in: ids } },
         { $set: changes },
@@ -784,14 +788,8 @@ async function cascadeDelete(
       .find({ userId: { $in: userIds } }, { projection: { id: 1 }, session })
       .toArray();
     // A stored conversation ID is data, not a MongoDB query expression.
-    const conversationIds: Array<string | number> = conversationRows.map(
-      (row) => {
-        const id: unknown = row.id;
-        if (typeof id === "string" && id.length > 0) return String(id);
-        if (typeof id === "number" && Number.isSafeInteger(id))
-          return Number(id);
-        throw new Error("Invalid stored query identifier");
-      },
+    const conversationIds = conversationRows.map((row) =>
+      canonicalStoredQueryId(row.id),
     );
     await current
       .collection(messages.collectionName)

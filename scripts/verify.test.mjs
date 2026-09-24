@@ -7,6 +7,7 @@
 // stay unchanged.
 
 import { execFileSync, spawnSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { mkdtempSync, readFileSync, writeFileSync, rmSync, existsSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -41,19 +42,20 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
 describe("buildChildEnv (safe configuration)", () => {
   test("never forwards secret-like keys or VITE_* build values", () => {
+    const fixtureSecret = randomBytes(24).toString("hex");
     const parent = {
       PATH: "/usr/bin:/bin",
       HOME: "/home/ci",
       CI: undefined,
-      VITE_AUTH0_CLIENT_SECRET: "should-never-leak",
+      VITE_AUTH0_CLIENT_SECRET: fixtureSecret,
       VITE_AUTH0_DOMAIN: "should-never-leak",
       VITE_AUTH0_CLIENT_ID: "should-never-leak",
       VITE_AUTH0_AUDIENCE: "should-never-leak",
-      AUTH0_CLIENT_SECRET: "should-never-leak",
-      AUTH0_MANAGEMENT_TOKEN: "should-never-leak",
-      MONGODB_URI: "mongodb://secret-prod",
-      OPENAI_API_KEY: "sk-should-never-leak",
-      AWS_SECRET_ACCESS_KEY: "should-never-leak",
+      AUTH0_CLIENT_SECRET: fixtureSecret,
+      AUTH0_MANAGEMENT_TOKEN: fixtureSecret,
+      MONGODB_URI: `mongodb://127.0.0.1:27017/${fixtureSecret}`,
+      OPENAI_API_KEY: fixtureSecret,
+      AWS_SECRET_ACCESS_KEY: fixtureSecret,
       AUTH0_DOMAIN: "real.prod.auth0",
     };
     const env = buildChildEnv(parent);

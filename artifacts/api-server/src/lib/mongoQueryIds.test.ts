@@ -43,6 +43,27 @@ describe("database-derived query identifiers", () => {
     });
   });
 
+  it("treats operator-looking and JSON composite string IDs as literal values", async () => {
+    const mongo = await getMongoDatabase();
+    const composite = JSON.stringify({ userId: marker, date: "2026-09-14" });
+    await mongo.collection<FixtureRow>("users").insertMany([
+      { _id: "$ne", id: `${marker}-operator`, firstName: "before", bio: marker, queryIdTest: marker },
+      { _id: composite, id: `${marker}-composite`, firstName: "before", bio: marker, queryIdTest: marker },
+      { _id: marker, id: `${marker}-other`, firstName: "survivor", queryIdTest: marker },
+    ]);
+    const changed = await db
+      .update(usersTable)
+      .set({ firstName: "after" })
+      .where(eq(usersTable.bio, marker))
+      .returning();
+    expect(changed.map(({ id }) => id).sort()).toEqual(
+      [`${marker}-operator`, `${marker}-composite`].sort(),
+    );
+    expect(await mongo.collection<FixtureRow>("users").findOne({ _id: marker })).toMatchObject({
+      firstName: "survivor",
+    });
+  });
+
   it("preserves numeric IDs during update and returning", async () => {
     const mongo = await getMongoDatabase();
     await mongo.collection<FixtureRow>("messages").insertOne({
