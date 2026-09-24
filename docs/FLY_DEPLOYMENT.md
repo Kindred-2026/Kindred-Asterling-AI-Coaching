@@ -203,8 +203,8 @@ runtime credentials in Fly's secret store; do not put values in `fly.toml`,
 GitHub Actions, or chat. Build only a reviewed commit and inspect the resulting
 browser bundle for the expected Auth0 domain/audience before staging checks.
 
-The API now has an **opt-in PostgreSQL runtime adapter on this finalization
-branch**. MongoDB remains the default (`DATABASE_PROVIDER=mongo`), and no Fly
+The API now has an **opt-in PostgreSQL runtime adapter in the merged codebase**.
+MongoDB remains the default (`DATABASE_PROVIDER=mongo`), and no Fly
 staging app or real PostgreSQL integration has been verified. Do not select
 `DATABASE_PROVIDER=postgres` or provision production credentials until the
 adapter passes real PostgreSQL integration/restore checks and staging acceptance.
