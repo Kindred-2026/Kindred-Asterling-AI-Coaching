@@ -35,9 +35,9 @@ Kindred uses information to:
 
 ## Service providers and disclosures
 
-The hosting provider, database provider, and AI processor must be reconciled with the live deployment before publication. Fly.io with Managed Postgres in Toronto (`yyz`) is the selected target; the user confirmed Fly account and payment access only. No app or database deployment has been reported. The planned hosted AI route is Cloudflare AI Gateway to a selected upstream model provider. These are planning choices and are not confirmation of a completed cutover.
+The hosting provider, database provider, and AI processor must be reconciled with the live deployment before publication. Fly.io with Managed Postgres in Toronto (`yyz`) is the selected target. Read-only Fly CLI checks on 2026-09-24 confirmed access to the `personal` organization and found no apps or Managed Postgres clusters; billing and payment details have not been inspected. The planned hosted AI route is Cloudflare AI Gateway to a selected upstream model provider. These are planning choices and are not confirmation of a completed cutover.
 
-The service also supports Clerk for identity, Helcim for payments, Google Calendar for optional read-only calendar access, Sentry for error and performance monitoring when enabled, Twilio for SMS, Resend for email, and ElevenLabs for voice features. Information should be sent to a provider only when its feature is enabled and needed.
+The service uses Auth0 for identity, Helcim for payments, Google Calendar for optional read-only calendar access, Sentry for error and performance monitoring when enabled, Twilio for SMS, Resend for email, and ElevenLabs for voice features. Legacy Clerk identity mappings are retained only for account-history reconciliation and rollback. Information should be sent to a provider only when its feature is enabled and needed.
 
 > **Founder/legal confirmation required:** Before publication, confirm actual hosting and database locations, live AI model/provider and processing region, enabled optional providers, retention and training terms, subprocessors, cross-border transfers, and contractual safeguards. Remove providers not used in production.
 

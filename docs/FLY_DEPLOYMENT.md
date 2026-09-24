@@ -1,9 +1,9 @@
 # Fly.io deployment and migration runbook
 
-**Status:** Fly.io is the selected hosting provider. The user confirmed account
-and payment access only. No Fly app, Managed Postgres cluster, or deployment has
-been reported. This repository has not independently verified the account or
-payment method.
+**Status:** Fly.io is the selected hosting provider. Read-only CLI checks on
+2026-09-24 verified access to the `personal` organization and found no apps or
+Managed Postgres clusters. No deployment is in place. Billing and payment
+details have not been inspected.
 Keep the current Coolify and MongoDB release available through the cutover and
 rollback gates.
 

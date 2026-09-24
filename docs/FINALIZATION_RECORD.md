@@ -7,10 +7,11 @@ production gates; a checked-in plan is not proof of a live cutover.
 
 ## Direction
 
-- **Application hosting:** Fly.io is the selected provider. The user confirmed
-  account and payment access only; no Fly app or deployment has been reported.
-  Keep Coolify available until a
-  replacement release and rollback window are verified.
+- **Application hosting:** Fly.io is the selected provider. Read-only CLI checks
+  on 2026-09-24 verified access to the `personal` organization and found no apps
+  or Managed Postgres clusters. No deployment is in place; billing and payment
+  details have not been inspected. Keep Coolify available until a replacement
+  release and rollback window are verified.
 - **Database:** Fly Managed Postgres in Toronto (`yyz`) is the target, pending
   resource verification, real-server adapter validation, and successful
   migration/restore rehearsal.
@@ -34,6 +35,7 @@ production gates; a checked-in plan is not proof of a live cutover.
 | Experimental Next.js `frontend/` | Removed from workspace, scripts, docs, and standalone CI; production React/Vite app retained | Verify the resulting single production build path in CI |
 | Dormant Clerk dependency override | Removed from `pnpm-workspace.yaml` and `pnpm-lock.yaml` after repository-wide search found no dependency or import consumer | Clerk identity mapping, webhook, and rollback utilities remain retained behind the Auth0 reconciliation and rollback gates |
 | Superseded release SOP exports | Removed the stale HTML, DOCX, and PDF that prescribed Coolify, Clerk, Ollama, and a future GitLab pipeline | README now points to the Fly runbook and release/rollback guide; Coolify's separately labeled legacy deployment record remains available while cutover gates are open |
+| Public legal PDF downloads | Retained to preserve the existing user-facing download links | All six current PDFs are marked draft / not for distribution; the privacy and cookie PDFs also name Clerk and Contabo, and the privacy/AI PDFs describe Bedrock. Replace with legally approved copies consistent with the web pages before treating legal-document cleanup as complete |
 | AWS Bedrock provider | Removed from API runtime, dependency, examples, and provider instructions | Confirm no active deployment/workflow still sets Bedrock variables before deleting them from external stores |
 | Legacy AWS EKS/KEDA assets | Removed after the owner confirmed there is no AWS cluster; repository search found no active workflow or application-runtime consumer | Removed the EKS Terraform, Karpenter/KEDA/metrics-server manifests, deploy scripts, and version pins. AWS resources were not changed |
 | TODO/FIXME cleanup | No unresolved TODO, FIXME, XXX, or HACK markers remain in current source; matches are UI `ListTodo` symbols and usage text | Recheck when code changes are finalized |

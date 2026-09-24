@@ -241,7 +241,7 @@ const privacySections: LegalSection[] = [
       ),
       list([
         "AI Processing: The model provider and processing region must be confirmed against the live deployment before this disclosure is published. The planned route is an OpenAI-compatible model through Cloudflare AI Gateway.",
-        "Cloud Hosting & Infrastructure: The live hosting provider and database location must be confirmed before this disclosure is published. DigitalOcean App Platform and managed PostgreSQL are the planned target.",
+        "Cloud Hosting & Infrastructure: The live hosting provider and database location must be confirmed before this disclosure is published. Fly.io and Managed Postgres in Toronto are the selected target; no Fly app or database is deployed yet.",
         "Authentication & Identity: Auth0 (USA / Global) - secure session management.",
         "Payment Processing: Helcim (Calgary, AB, Canada) - PCI-DSS compliant checkout and subscription billing.",
         "Communications: Resend (transactional email), Twilio (SMS reminders, where enabled), and ElevenLabs (voice synthesis, where enabled).",
