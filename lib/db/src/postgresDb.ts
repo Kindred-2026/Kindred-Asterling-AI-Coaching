@@ -114,8 +114,7 @@ function defaults(table: Table, input: Row): Row {
   return result;
 }
 function project(row: Row, selection: Record<string, unknown> | undefined, table: Table): Row {
-  const converted = fromDb(row);
-  return selection ? selectionSql(selection, table).project(converted) : converted;
+  return selection ? selectionSql(selection, table).project(row) : fromDb(row);
 }
 function targetColumns(target: Column | Column[], table: Table): Column[] { const result = Array.isArray(target) ? target : [target]; result.forEach((c) => validateColumn(c, table)); return result; }
 

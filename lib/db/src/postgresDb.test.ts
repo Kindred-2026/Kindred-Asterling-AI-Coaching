@@ -44,6 +44,8 @@ test("translates supported conditions and rejects forged or cross-table conditio
       .from(conversations).where(and(gt(conversations.id, 0), inArray(conversations.status, ["active"])))
       .orderBy(desc(conversations.id)).limit(1);
     assert.deepEqual(rows, [{ id: 2, title: "two" }]);
+    const aliasedRows = await api.select({ user_id: conversations.userId }).from(conversations).limit(1);
+    assert.deepEqual(aliasedRows, [{ user_id: "owner-a" }]);
     assert.throws(() => api.select().from(conversations).where({ $gt: 1 } as any), /Invalid database condition/);
     assert.throws(() => eq(conversations.id, usersTable.id), /Cross-table/);
     assert.throws(() => eq({ key: "missing", tableName: "conversations" } as any, 1), /Invalid database condition column/);
