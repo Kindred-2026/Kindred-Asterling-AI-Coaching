@@ -71,9 +71,57 @@ jobs:
       - name: Snyk Open Source monitor
         run: snyk monitor --all-projects
 
+      - name: Detect supported Snyk IaC files
+        id: snyk-iac-files
+        run: |
+          python3 <<'PY'
+          import os
+          import re
+
+          excluded = {".git", "node_modules", ".venv", "venv"}
+          found = False
+          for root, dirs, files in os.walk("."):
+              dirs[:] = [directory for directory in dirs if directory not in excluded]
+              for filename in files:
+                  path = os.path.join(root, filename)
+                  lower = filename.lower()
+                  if lower.endswith((".tf", ".tf.json")):
+                      found = True
+                      break
+                  if lower.endswith((".yaml", ".yml", ".json")):
+                      try:
+                          with open(path, encoding="utf-8") as source:
+                              content = source.read()
+                      except (OSError, UnicodeError):
+                          continue
+                      if re.search(r"(?m)^\s*(?:apiVersion\s*:|\"apiVersion\"\s*:)", content):
+                          found = True  # Kubernetes manifests
+                      elif re.search(r"(?m)^\s*(?:AWSTemplateFormatVersion|Transform)\s*:", content) or re.search(r'"(?:AWSTemplateFormatVersion|Transform)"\s*:', content):
+                          found = True  # CloudFormation templates
+                      elif re.search(r"(?m)^\s*\$schema\s*:\s*[^\n]*deploymentTemplate\.json", content) or re.search(r'"\$schema"\s*:\s*"[^"]*deploymentTemplate\.json', content):
+                          found = True  # Azure ARM templates
+                  if found:
+                      break
+              if found:
+                  break
+
+          # Helm charts are supported IaC when a chart has metadata and templates.
+          if not found:
+              for root, dirs, files in os.walk("."):
+                  dirs[:] = [directory for directory in dirs if directory not in excluded]
+                  if "Chart.yaml" in files and os.path.isdir(os.path.join(root, "templates")):
+                      found = True
+                      break
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"found={'true' if found else 'false'}\n")
+          if not found:
+              print("::notice::No supported Snyk IaC files found; skipping only the Snyk IaC scan.")
+          PY
+
         # Runs Snyk Infrastructure as Code (IaC) analysis and uploads result to Snyk.
-        # Use || true to not fail the pipeline.
       - name: Snyk IaC test and report
+        if: ${{ steps.snyk-iac-files.outputs.found == 'true' }}
         run: snyk iac test --report # || true
 
         # Build the docker image for testing
