@@ -7,12 +7,13 @@ production gates; a checked-in plan is not proof of a live cutover.
 
 ## Direction
 
-- **Application hosting:** Railway is the recommended candidate after
-  DigitalOcean rejected the available payment methods. Payment acceptance is
-  not verified. Keep Coolify available until a replacement release and rollback
-  window are verified.
-- **Database:** Railway PostgreSQL is the candidate, pending payment acceptance,
-  a completed runtime adapter, and successful rehearsal. Preserve internal
+- **Application hosting:** Fly.io is the selected provider. The user confirmed
+  account and payment access only; no Fly app or deployment has been reported.
+  Keep Coolify available until a
+  replacement release and rollback window are verified.
+- **Database:** Fly Managed Postgres in Toronto (`yyz`) is the target, pending
+  resource verification, a completed runtime adapter, and successful rehearsal.
+  Preserve internal
   Kindred user IDs and each user's existing histories. Never merge accounts by
   email. Keep MongoDB until migration rehearsal, restore validation, staging,
   production verification, and rollback-retention gates pass.
@@ -36,7 +37,7 @@ production gates; a checked-in plan is not proof of a live cutover.
 | OpenAI-compatible AI | Retained; Cloudflare Gateway endpoint supported; request payload logging header added | Provider account, upstream model, privacy contract, Gateway settings, and staging verification remain external gates |
 | Snyk | Retained as an observable scanner. Messages now carry the stable internal Kindred `userId`; chat reads/writes, account exports, and account deletion use that owner instead of rebuilding message selectors from database-returned conversation IDs. No suppression was added. | At PR SHA `238ab8ab886a3cbbe2d1dd124b804de53405b7d1`, CI, Security Audit, and Snyk passed. Snyk Code SARIF contained 0 findings; IaC test and production-image build/container monitor completed. Open Source and Container use `monitor`, which submits results but does not gate on findings; review their project results in Snyk before merge. Production remains blocked on ownership backfill and cutover gates below |
 | MongoDB and Coolify | Retained temporarily for production and rollback | Do not retire before all cutover gates pass |
-| Hosting provider decision | DigitalOcean could not accept the available payment methods. Railway is the recommended alternative candidate; its account/payment access and actual Kindred costs remain unverified | No provider resource was created. See [Railway candidate runbook](RAILWAY_DEPLOYMENT.md) and [cost baseline](COST_BASELINE.md). The earlier [DigitalOcean deployment draft](DIGITALOCEAN_APP_PLATFORM.md) is retained as a non-selected reference |
+| Hosting provider decision | DigitalOcean rejected the available payment methods; user selected Fly.io and confirmed account/payment access only. Railway was evaluated but not selected because its listed app/database regions omit Canada | No Fly app or database is reported as deployed. Verify the Fly organization, Toronto app and Managed Postgres resources, billing, maintenance responsibility, and measured costs. See [Fly.io deployment runbook](FLY_DEPLOYMENT.md) and [cost baseline](COST_BASELINE.md). The DigitalOcean guides remain marked as superseded evaluations |
 | PostgreSQL migration foundation | Added a reviewed all-20-collection rehearsal schema, per-row validation, stable-ID and owner-relationship checks, bounded source snapshot reads, and rollback-by-default replay | This is not a production migration or PostgreSQL runtime. The `pg-mem` fixture does not prove real PostgreSQL rollback/restore; no live source or database was used |
 | GitHub Actions OpenCode bot | Hardened: both the OpenCode action and checkout action use exact commit pins, comment-only triggers, trusted collaborator gate, job-scoped permissions, no `id-token: write` | Write grants remain for repository edits and issue/PR replies. Verify the workflow still serves an operator need and confirm `OPENCODE_API_KEY` scope in GitHub |
 | GitHub Actions runtime | CI, Security Audit, and Snyk action references use immutable SHAs for the verified Node 24 releases of checkout, setup-node, pnpm setup, artifact upload, and CodeQL SARIF upload | Exact SHAs were resolved from upstream release tags and each action's `action.yml` runtime was checked; validate behavior with PR checks |
@@ -110,17 +111,17 @@ usage, and plan tiers have not yet been verified.
 
 | Service | Published starting estimate | Actual monthly cost | Notes |
 | --- | ---: | ---: | --- |
-| Railway app and PostgreSQL services | Usage-metered; illustrative combined 1 vCPU + 1 GB RAM at full continuous usage is about $30/month | Not measured | Storage, egress, and other services extra; hard usage limit can take workloads offline |
+| Fly Managed Postgres Basic | $38.00/month plus $0.28/GB/month provisioned database storage | Not measured | Selected but not deployed; application compute, egress, and other retained services are extra; no Fly invoice was inspected |
 | Cloudflare AI Gateway | $0 for core gateway features | Not measured | Upstream inference is billed by the selected model provider; logging limits and optional features apply |
 | Auth0, Resend, Sentry, Helcim, SMS, voice, domain/DNS, storage, backups | Account-dependent | Not measured | Verify actual plans, usage and renewal amounts |
-| **Infrastructure candidate** | **No fixed subtotal** | **Not measured** | Verify account billing, measured staging use, backups, and all retained services against the $50 target |
+| **Infrastructure baseline before app compute** | **At least $38/month plus database storage** | **Not measured** | Leaves less than $12 for app compute and all other services under the $50 target; actual target is unverified |
 
 The **under-$50/month goal is unverified**, not guaranteed by starting prices.
 Before cutover, record recurring invoices, usage-based bills, AI token spend,
 and backup/storage costs; configure provider spend alerts and per-user AI
 quotas. Exclude payment processing from the target as approved.
 
-Published pricing references, checked 2026-09-23: [Railway pricing](https://railway.com/pricing), [Railway cost controls](https://docs.railway.com/pricing/cost-control), and [Cloudflare AI Gateway pricing](https://developers.cloudflare.com/ai-gateway/reference/pricing/).
+Published pricing references, checked 2026-09-23: [Fly Managed Postgres](https://fly.io/docs/mpg/), [Fly resource pricing](https://fly.io/docs/about/pricing/), and [Cloudflare AI Gateway pricing](https://developers.cloudflare.com/ai-gateway/reference/pricing/).
 
 ## Explicitly not claimed by this record
 

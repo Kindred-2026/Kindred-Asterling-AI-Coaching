@@ -1,8 +1,8 @@
 # DigitalOcean App Platform and PostgreSQL cutover (superseded)
 
 **Status:** Superseded planning draft. DigitalOcean rejected the available
-payment methods. Railway is the recommended candidate; see
-[the Railway deployment candidate](RAILWAY_DEPLOYMENT.md). This document does
+payment methods. Fly.io is the selected provider; see
+[the Fly.io deployment runbook](FLY_DEPLOYMENT.md). This document does
 not attest that any DigitalOcean app, database, or Cloudflare Gateway is
 provisioned. Keep the current Coolify/MongoDB deployment available until all
 replacement gates pass.

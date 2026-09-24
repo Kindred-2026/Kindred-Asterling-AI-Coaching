@@ -1,7 +1,8 @@
 # Legacy deployment record: Coolify
 
-**Status:** Historical current-state runbook. The recommended candidate is Railway
-with PostgreSQL and Cloudflare AI Gateway; account/payment access is not verified. Keep Coolify and
+**Status:** Historical current-state runbook. Fly.io with Managed PostgreSQL
+and Cloudflare AI Gateway is the selected target. The user reports Fly access is
+working; deployment and payment details have not been independently verified. Keep Coolify and
 MongoDB available until the database rehearsal, backup restore, staging checks,
 production health/sign-in/API/AI checks, and rollback retention gates pass.
 Historical Bedrock setup instructions are retired because Bedrock support has

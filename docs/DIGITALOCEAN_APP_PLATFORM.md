@@ -1,9 +1,9 @@
 # DigitalOcean App Platform deployment runbook (superseded)
 
 **Status:** non-selected reference. DigitalOcean rejected the available
-payment methods, so Railway is now the recommended candidate. No DigitalOcean
-app or database was created. Do not use this runbook as the current deployment
-target; see [Railway deployment candidate](RAILWAY_DEPLOYMENT.md). Coolify stays
+payment methods, so Fly.io was selected. No DigitalOcean app or database was
+created. Do not use this runbook as the current deployment target; see
+[Fly.io deployment runbook](FLY_DEPLOYMENT.md). Coolify stays
 available until the replacement and rollback gates pass.
 
 ## Deployment shape

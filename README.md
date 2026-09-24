@@ -3,11 +3,11 @@
 Monorepo for the Kindred Asterling AI Coaching product.
 
 **Current application stack:** React/Vite + Express + Auth0 + MongoDB.
-**Finalization target:** Railway is the recommended hosting candidate after
-DigitalOcean rejected the available payment methods; PostgreSQL and Cloudflare
-AI Gateway remain planned components. See [the finalization record](docs/FINALIZATION_RECORD.md)
-and [the Railway deployment candidate](docs/RAILWAY_DEPLOYMENT.md). The earlier
-DigitalOcean guides are retained as superseded references. Production
+**Finalization target:** Fly.io for application hosting and managed PostgreSQL;
+Cloudflare remains the DNS/security and AI Gateway layer. See [the finalization
+record](docs/FINALIZATION_RECORD.md) and [the Fly.io deployment runbook](docs/FLY_DEPLOYMENT.md).
+The DigitalOcean guide remains marked as superseded; Railway was evaluated but
+not selected. Production
 hosting and database remain on the current providers until their migration gates
 are verified.
 
