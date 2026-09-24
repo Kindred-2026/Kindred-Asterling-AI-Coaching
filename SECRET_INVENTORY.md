@@ -1,6 +1,6 @@
 # Kindred credential and configuration inventory
 
-**Canonical source baseline:** `e91135e` (2026-09-24); inventory reflects merged PR #155 PostgreSQL startup schema validation alongside the finalization and Snyk IaC workflow. **Owner for every entry:** Kindred owner unless marked unknown. This is a value-free inventory of names and code requirements, not an attestation that an account, vault item, production deployment, or GitHub secret is populated. Evidence: root and `auth0-deploy/` `.env.example` **names only**, `artifacts/api-server/src/lib/validateConfig.ts`, application consumers, migration scripts, frontend build validator, `.github/workflows/`, and redacted Gitleaks scans of the current tree and Git history. Secret values must never enter Git or browser `VITE_*` builds.
+**Canonical source baseline:** `17262dd` (2026-09-24; after PR #163); inventory reflects merged PR #155 PostgreSQL startup schema validation alongside the finalization and Snyk IaC workflow. **Owner for every entry:** Kindred owner unless marked unknown. This is a value-free inventory of names and code requirements, not an attestation that an account, vault item, production deployment, or GitHub secret is populated. Evidence: root and `auth0-deploy/` `.env.example` **names only**, `artifacts/api-server/src/lib/validateConfig.ts`, application consumers, migration scripts, frontend build validator, `.github/workflows/`, and redacted Gitleaks scans of the current tree and Git history. Secret values must never enter Git or browser `VITE_*` builds.
 
 ## Current repository contract
 
