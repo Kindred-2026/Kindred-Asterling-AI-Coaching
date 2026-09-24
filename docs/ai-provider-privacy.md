@@ -6,10 +6,11 @@ hosted route is OpenAI-compatible inference through Cloudflare AI Gateway, with
 the model vendor and account selected after quality, privacy, and contract review.
 Use `OPENAI_BASE_URL` for the Gateway endpoint and keep `OPENAI_API_KEY` only in
 the runtime secret store. The application sends
-`cf-aig-collect-log-payload: false` to disable Gateway payload logging; the
-operator must also disable payload logging in Gateway settings. Keep AI Gateway
-caching off for personalized coaching. `AI_PROVIDER=disabled` prevents requests
-from leaving the application. Local Ollama remains a development option.
+`cf-aig-collect-log-payload: false` to disable Gateway payload logging and
+`cf-aig-skip-cache: true` to bypass response caching for every personalized
+coaching request. The operator must also disable payload logging and caching in
+Gateway settings. `AI_PROVIDER=disabled` prevents requests from leaving the
+application. Local Ollama remains a development option.
 
 The Gateway routes requests; it does not include model inference in its free
 feature tier. The selected upstream model provider bills inference separately.

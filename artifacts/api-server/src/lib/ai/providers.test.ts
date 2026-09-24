@@ -56,6 +56,7 @@ describe("normalized AI provider contract", () => {
     ).chat(request);
     const init = fetchMock.mock.calls[0][1] as RequestInit;
     expect((init.headers as Record<string, string>)["cf-aig-collect-log-payload"]).toBe("false");
+    expect((init.headers as Record<string, string>)["cf-aig-skip-cache"]).toBe("true");
     expect(JSON.parse(init.body as string).store).toBe(false);
   });
 

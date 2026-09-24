@@ -17,8 +17,10 @@ export class OpenAIProvider implements AIProvider {
     };
     if (isCloudflareAIGateway(this.baseUrl)) {
       // Keep conversation bodies out of Gateway request logs. Metadata and
-      // usage can still be used for operational metrics.
+      // usage can still be used for operational metrics. Conversation-specific
+      // prompts and responses must also bypass Gateway response caching.
       headers["cf-aig-collect-log-payload"] = "false";
+      headers["cf-aig-skip-cache"] = "true";
     }
     const response = await fetchWithDeadline(
       `${this.baseUrl.replace(/\/$/, "")}/chat/completions`,
