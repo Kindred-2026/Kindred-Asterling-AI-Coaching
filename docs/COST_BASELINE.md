@@ -1,6 +1,6 @@
 # Kindred recurring cost baseline
 
-**As of:** 2026-09-23. **Status:** planning inventory; no provider invoices or
+**As of:** 2026-09-24. **Status:** planning inventory; no provider invoices or
 billing dashboards were inspected. The under-$50/month target excludes Helcim
 payment-processing charges and remains unverified until every applicable row
 has a current bill or usage export.
@@ -35,6 +35,6 @@ retained service, configure model quotas and spend alerts, and record a dated
 invoice/usage source. Reconcile again after 30 days on the selected provider and after
 the rollback window closes.
 
-Pricing references checked 2026-09-23: [Fly Managed Postgres](https://fly.io/docs/mpg/),
+Pricing references checked 2026-09-24: [Fly Managed Postgres](https://docs.fly.io/mpg),
 [Fly resource pricing](https://fly.io/docs/about/pricing/),
 and [Cloudflare AI Gateway](https://developers.cloudflare.com/ai-gateway/reference/pricing/).

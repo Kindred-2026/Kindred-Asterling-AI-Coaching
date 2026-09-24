@@ -121,7 +121,7 @@ Before cutover, record recurring invoices, usage-based bills, AI token spend,
 and backup/storage costs; configure provider spend alerts and per-user AI
 quotas. Exclude payment processing from the target as approved.
 
-Published pricing references, checked 2026-09-23: [Fly Managed Postgres](https://fly.io/docs/mpg/), [Fly resource pricing](https://fly.io/docs/about/pricing/), and [Cloudflare AI Gateway pricing](https://developers.cloudflare.com/ai-gateway/reference/pricing/).
+Published pricing references, checked 2026-09-24: [Fly Managed Postgres](https://docs.fly.io/mpg), [Fly resource pricing](https://fly.io/docs/about/pricing/), and [Cloudflare AI Gateway pricing](https://developers.cloudflare.com/ai-gateway/reference/pricing/).
 
 ## Explicitly not claimed by this record
 

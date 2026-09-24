@@ -91,7 +91,7 @@ make the upstream model provider Canadian-hosted.
 8. Retire Coolify and MongoDB only after the rollback window ends and a
    retained backup has been restored successfully.
 
-References checked 2026-09-23: [Fly.io regions](https://fly.io/docs/reference/regions/),
+References checked 2026-09-24: [Fly.io regions](https://fly.io/docs/reference/regions/),
 [Managed Postgres and pricing](https://docs.fly.io/mpg),
 [Fly.io resource pricing](https://fly.io/docs/about/pricing/),
 [Fly Launch](https://fly.io/docs/flyctl/launch/), and
