@@ -1,13 +1,13 @@
 # Kindred checkout and worktree audit
 
 **Audit date:** 2026-09-24. Canonical source is GitHub `main` at
-`c44d263cc54d186701708afe1439dc452a9400da`. PR #147, #149, and #152 are merged;
+`e91135e5d774abc700235adcef3d5ac14cbdb79d`. PR #147, #149, #152, #154, and #155 are merged;
 PR #148 was closed as redundant after its Snyk changes were verified in #149.
 The GitHub branch API lists only `main`.
 
 | Local checkout | Branch / HEAD | State | Disposition |
 | --- | --- | --- | --- |
-| `Kindred-Asterling-AI-Coaching` | local `main`, `c44d263cc54d186701708afe1439dc452a9400da` | Aligned to canonical GitHub `origin/main`; untracked `.vscode/` preserved | The former unique `40c8841` commit remains preserved at `archive/kindred-local-main-40c8841`. Its gitlink, reversed AI privacy statement, workspace placeholder, and inventory edits were reviewed and not ported. |
+| `Kindred-Asterling-AI-Coaching` | local `main`, `e91135e5d774abc700235adcef3d5ac14cbdb79d` | Aligned to canonical GitHub `origin/main`; untracked `.vscode/` preserved | The former unique `40c8841` commit remains preserved at `archive/kindred-local-main-40c8841`. Its gitlink, reversed AI privacy statement, workspace placeholder, and inventory edits were reviewed and not ported. |
 | `Kindred-Canonical-Checkout-Archive-7c264f6` | separate nested clone, `main` at `7c264f6e5fecdee0739075bd66d432bb9fa6ba85` | Clean snapshot | Preserved outside the stale parent checkout after verifying it matched its recorded canonical baseline. |
 | `kindred-snyk-iac-followup` | `codex/snyk-iac-no-files` at `690853726651652c22ef8129b0ab559c788ce988` | Removed after merge of the equivalent Snyk workflow change in #149 | PR #148 was closed without merge; its remote branch was deleted. |
 | `kindred-foundation-cleanup` | `codex/remove-dead-clerk-release-docs` at `6670cfbf096cf6461690262b4d733bf096da942f` | Removed after PR #149 merged | Changes are now on `main` at `c44d263`; its remote and local topic branches were deleted. |
