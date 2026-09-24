@@ -147,7 +147,8 @@ export function collectPublished({ state }) {
     },
     deployed: {
       verified: false,
-      detail: "pending selected deployment provider's dashboard/revision evidence (requires provider access)",
+      detail:
+        "pending selected deployment provider's dashboard/revision evidence (requires provider access)",
     },
     acceptance: { verified: false, detail: "pending authorized human production acceptance" },
     rollback: {
@@ -261,7 +262,9 @@ export function printReport({ state, evidence, evidenceStatus, config, published
   if (!published.merge.verified)
     steps.push("merge into main (GitHub pull request) and record the merge SHA");
   if (!published.deployed.verified)
-    steps.push("deploy through the selected provider and record the deployed revision from its dashboard");
+    steps.push(
+      "deploy through the selected provider and record the deployed revision from its dashboard",
+    );
   if (!published.acceptance.verified)
     steps.push(
       "run authorized production acceptance checks (Auth0 live sign-in, payments sandbox)",
