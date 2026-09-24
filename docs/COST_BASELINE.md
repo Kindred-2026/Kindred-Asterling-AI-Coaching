@@ -7,8 +7,8 @@ has a current bill or usage export.
 
 | Service | Current or target purpose | Published starting estimate | Kindred actual monthly cost | Status / measurement source |
 | --- | --- | ---: | ---: | --- |
-| Fly.io app compute | Selected app/API hosting; target Toronto region `yyz` | Usage-based; not estimated until app size is selected | Not measured | User confirmed account/payment access only; no app deployed; invoice unverified |
-| Fly Managed Postgres Basic | Selected primary database; target Toronto region `yyz` | $38.00/month plus $0.28/GB/month provisioned storage; CLI creation defaults to 10 GB | Not measured | Selected target; no cluster deployed; choose the initial storage size explicitly and verify backup, restore, and invoice in Fly dashboard |
+| Fly.io app compute | Selected app/API hosting; target Toronto region `yyz` | About $5.92/month for one always-on shared-cpu-1x machine with 1 GB RAM at the current reference rate; regional price must be confirmed | Not measured | Read-only CLI access verified for the `personal` organization; no app deployed; no invoice inspected |
+| Fly Managed Postgres Basic | Selected primary database; target Toronto region `yyz` | $38.00/month plus $0.28/GB/month provisioned storage; CLI creation defaults to 10 GB ($2.80/month) | Not measured | `fly platform regions` lists Toronto as MPG-capable; no cluster deployed; verify account capacity, backup/restore, and invoice before cutover |
 | Cloudflare AI Gateway | AI routing, metadata, rate limits | $0 for core Gateway features | Not measured | Upstream inference is usage-billed; verify log retention limits and any paid features |
 | OpenAI or selected Gateway upstream | Model inference | Usage-based; no Kindred estimate | Not measured | Record tokens, model, invoice, quota, and spend alert |
 | Cloudflare DNS, proxy, and application security | Domain routing, TLS, edge security | Account/plan dependent | Not measured | Verify plan and any add-ons |
@@ -24,28 +24,27 @@ has a current bill or usage export.
 | GitHub Actions, Snyk, and OpenCode | CI/security automation | Account/usage dependent | Not measured | Verify included minutes and any paid subscriptions |
 | Helcim payment-processing fees | Payment processing | Excluded from the $50 target | Not measured | Track separately; include any non-processing subscription fee |
 
-Fly Managed Postgres Basic starts at **$38/month plus provisioned storage**.
-The Fly CLI currently defaults new clusters to 10 GB, which costs $2.80/month.
-The lowest listed always-on `shared-cpu-1x` app machine with 256 MB RAM is
-$2.02/month; Fly's compute price table varies by region, so confirm the `yyz`
-rate before provisioning. Using that lowest listed rate, the illustrative
-minimum is **$42.82/month before app memory above 256 MB,
-network transfer, backups beyond included retention, model inference, and every
-other retained service**. Kindred's actual memory requirement has not been
-measured, and the smallest machine may not run the production app reliably. A
-single additional 256 MB of machine memory raises the listed low-end machine
-price to $3.32/month, putting the illustrative subtotal at $44.12 before any
-Toronto adjustment. This is a floor
-scenario, not a workload estimate or a claim that the under-$50 goal is
-achievable. Do not retire MongoDB or Coolify based on published starting prices
-alone. See [the Fly.io deployment runbook](FLY_DEPLOYMENT.md).
+Fly Managed Postgres Basic is **$38/month plus provisioned storage**. The
+read-only CLI reports a 10 GB creation default ($2.80/month) and lists Toronto
+(`yyz`) as an MPG region. Kindred's reminder scheduler must run continuously
+until it is moved to durable external work, so the app estimate uses an
+always-on machine rather than scale-to-zero. A 1 GB shared-cpu-1x machine is
+listed at about $5.92/month at the current reference rate; the actual `yyz`
+price and app memory requirement remain unverified. That scenario totals about
+**$46.72/month** for app plus database before network transfer, other providers,
+AI inference, backups beyond included retention, and all remaining services.
+The $50 target therefore has at most $3.28/month left for those costs under
+this estimate, and is not yet supported by measured bills. The smaller
+256 MB machine estimate would lower the subtotal but has not been shown to run
+Kindred reliably. Do not retire MongoDB or Coolify from list prices alone. See
+[the Fly.io deployment runbook](FLY_DEPLOYMENT.md).
 
 Before cutover, fill in actual monthly totals and billing periods for every
 retained service, configure model quotas and spend alerts, and record a dated
 invoice/usage source. Reconcile again after 30 days on the selected provider and after
 the rollback window closes.
 
-Pricing references checked 2026-09-24: [Fly Managed Postgres](https://docs.fly.io/mpg),
-[Fly resource pricing](https://fly.io/docs/about/pricing/),
+Pricing references checked 2026-09-24: [Fly Managed Postgres plans and storage](https://docs.fly.io/mpg),
+[Fly resource pricing](https://docs.fly.io/about/pricing/),
 [Fly Managed Postgres creation and default storage size](https://fly.io/docs/mpg/create-and-connect/),
 and [Cloudflare AI Gateway](https://developers.cloudflare.com/ai-gateway/reference/pricing/).

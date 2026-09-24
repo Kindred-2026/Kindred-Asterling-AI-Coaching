@@ -116,10 +116,10 @@ usage, and plan tiers have not yet been verified.
 
 | Service | Published starting estimate | Actual monthly cost | Notes |
 | --- | ---: | ---: | --- |
-| Fly Managed Postgres Basic | $38.00/month plus $0.28/GB/month provisioned database storage | Not measured | Selected but not deployed; application compute, egress, and other retained services are extra; no Fly invoice was inspected |
+| Fly Managed Postgres Basic + app | $38.00/month plus $0.28/GB/month storage; 10GB storage default adds $2.80; about $5.92/month for a continuously running 1GB shared-cpu-1x app machine at current reference rate | Not measured | Illustrative subtotal $46.72 before transfer, AI, backups, and retained services; actual region rate and app memory are unverified; no Fly invoice was inspected |
 | Cloudflare AI Gateway | $0 for core gateway features | Not measured | Upstream inference is billed by the selected model provider; logging limits and optional features apply |
 | Auth0, Resend, Sentry, Helcim, SMS, voice, domain/DNS, storage, backups | Account-dependent | Not measured | Verify actual plans, usage and renewal amounts |
-| **Infrastructure baseline before app compute** | **At least $38/month plus database storage** | **Not measured** | Leaves less than $12 for app compute and all other services under the $50 target; actual target is unverified |
+| **Illustrative Fly app + database subtotal** | **About $46.72/month** with 1GB always-on app compute and the CLI's default 10GB database storage | **Not measured** | Leaves at most $3.28 under the $50 target before network use, AI, other providers, and backup extras; actual region pricing and bills remain unverified |
 
 The **under-$50/month goal is unverified**, not guaranteed by starting prices.
 Before cutover, record recurring invoices, usage-based bills, AI token spend,

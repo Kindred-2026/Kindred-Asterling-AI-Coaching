@@ -2,8 +2,9 @@
 
 **Status:** Fly.io is the selected hosting provider. Read-only CLI checks on
 2026-09-24 verified access to the `personal` organization and found no apps or
-Managed Postgres clusters. No deployment is in place. Billing and payment
-details have not been inspected.
+Managed Postgres clusters. `fly platform regions` lists Toronto (`yyz`) as
+available for Managed Postgres. No deployment is in place. Account-specific
+capacity, pricing, billing, and payment details have not been inspected.
 Keep the current Coolify and MongoDB release available through the cutover and
 rollback gates.
 
