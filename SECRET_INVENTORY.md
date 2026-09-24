@@ -164,7 +164,7 @@ A read-only GitHub metadata query returned repository-level Actions secret **nam
 | `OPENCODE_API_KEY` | S; referenced by pinned `.github/workflows/opencode.yml` action | Kindred owner; retain only while workflow is used; action pin and comment permissions hardened; verify secret scope |
 | `SNYK_TOKEN` | S; referenced by `.github/workflows/snyk-security.yml` | Kindred owner; retain while Snyk scanning is active; rotate if exposure or ownership requires it |
 
-GitHub lists three deployment environments: `Asterling Coach / production`, `Asterling Coaching / production`, and `Asterling Coaching / Staging`. Direct read-only API queries returned zero environment secrets and zero environment variables for each. Their deployment records remain: 1, 43, and 21 respectively; the latest recorded SHA for the two `Asterling Coaching` environments is `99d0679bae2dceb8218214efa47eee98655e5235` (2026-07-28), and the latest for `Asterling Coach / production` is `3049c5c97babaa5ddbc01427e91000212aeb0992` (2026-07-11). These are GitHub deployment records, not proof of a currently active provider deployment. Keep the records; verify each environment's external purpose before removing it.
+GitHub lists three deployment environments: `Asterling Coach / production`, `Asterling Coaching / production`, and `Asterling Coaching / Staging`. Read-only queries of the correct repository environment endpoints returned zero environment secrets and zero environment variables for each. Their deployment records remain: 1, 43, and 21 respectively; the latest recorded SHA for the two `Asterling Coaching` environments is `99d0679bae2dceb8218214efa47eee98655e5235` (2026-07-28), and the latest for `Asterling Coach / production` is `3049c5c97babaa5ddbc01427e91000212aeb0992` (2026-07-11). Repository Actions variables are empty. The signed-in GitHub organization Actions settings pages show no organization secrets and no organization variables. These GitHub deployment records are not proof of a currently active provider deployment. Keep the records; verify each environment's external purpose before removing it.
 
 ### Redacted Git history scan — 2026-09-23
 
@@ -177,11 +177,13 @@ same categories. No active application token was confirmed by code inspection.
 The scan also found a structurally valid, encrypted OpenSSH private-key
 container in commit `900dc255d10666e702c81adf230b1754e9d220ce` (2026-08-02),
 under a historical Windows-profile filename; it is absent from the current
-tree. A public-key fingerprint is recorded in the owner-facing review request,
-not as a credential value. Its owner, passphrase-holder, and whether it remains
-authorized are unknown. A read-only query found no match in the Kindred repo's
-deploy keys; GitHub did not authorize listing the connected account's SSH keys.
-Treat it as potentially exposed: identify and revoke it where registered, then
+tree. Its public-key fingerprint was used only for comparison and is omitted
+here. The key's owner, passphrase-holder, and whether it remains
+authorized are unknown. No fingerprint match was found in the Kindred repo's
+deploy keys or the current GitHub login's public SSH-key list. The authenticated
+`gh` token lacks `admin:public_key`; registrations outside the current GitHub
+profile and repository remain unknown. Treat it as potentially exposed:
+identify and revoke it where registered, then
 coordinate a history rewrite across affected refs. Do not claim history cleanup
 complete until owner confirmation, key revocation, all-branch rewrite, and
 collaborator clone instructions are complete.
