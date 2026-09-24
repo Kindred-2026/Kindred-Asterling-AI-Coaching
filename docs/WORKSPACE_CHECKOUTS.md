@@ -17,8 +17,8 @@ worktrees were preserved.
 | `Kindred-OpenCode-Workflow` | `codex/opencode-workflow` | Workflow hardening committed and integrated | Retain branch commit as delegation evidence; remove the temporary worktree after final review if clean. |
 | `Kindred-OpenCode-Postgres` | `codex/opencode-postgres-target` | Delegated PostgreSQL rehearsal implementation integrated and reviewed | Retain branch commit as delegation evidence; remove the temporary worktree after final review if clean. |
 | `Kindred-Devin-Postgres` | `codex/devin-postgres-target` | Empty worktree; Devin exhausted its daily usage quota | No changes to integrate; preserve until this task closes, then remove the empty worktree. |
-| `Kindred-OpenCode-Foundation-Audit` | detached at finalization baseline | Scratch-file cleanup and SEO brief relocation integrated; workflow audit completed | Temporary audit worktree; retain only until final review, then remove if clean. |
-| `Kindred-Devin-Foundation-Audit` | detached at finalization baseline | No changes; Devin could not start because its daily usage quota was exhausted | No changes to integrate. |
+| `Kindred-OpenCode-Foundation-Audit` | detached at finalization baseline | Scratch-file cleanup and SEO brief relocation integrated; workflow audit completed | Temporary worktree removed after integration; commits remain in the finalization branch. |
+| `Kindred-Devin-Foundation-Audit` | detached at finalization baseline | No changes; Devin could not start because its daily usage quota was exhausted | Empty temporary worktree removed; no changes to integrate. |
 | `kindred-auth0-migration` | `codex/auth0-rules-to-actions`, `0e072f5` | Two modified files | Preserve; this checkout was not changed or inspected for content. |
 | `copilot-worktrees/.../griffixchips15-bookish-sniffle` | registered worktree reference | Git could not open it as a valid checkout | Preserve the registration until its owner confirms the path can be retired. |
 
