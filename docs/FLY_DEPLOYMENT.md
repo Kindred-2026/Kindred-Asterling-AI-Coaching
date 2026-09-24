@@ -2,13 +2,21 @@
 
 **Status:** Fly.io is the selected hosting provider. Read-only CLI checks on
 2026-09-24 verified access to the `personal` organization and found no apps or
-Managed Postgres clusters. `fly platform regions` lists Toronto (`yyz`) as
+Managed Postgres clusters. `flyctl platform regions` lists Toronto (`yyz`) as
 available for Managed Postgres. No deployment is in place. Account-specific
 capacity, pricing, billing, and payment details have not been inspected.
 Keep the current Coolify and MongoDB release available through the cutover and
 rollback gates.
 
 ## First-time staging runbook (operator-executed; not yet run)
+
+In Bash, add the installed CLI directory to `PATH` for the current shell and
+verify that `flyctl` resolves:
+
+```bash
+export PATH="$HOME/.fly/bin:$PATH"
+command -v flyctl
+```
 
 All steps marked **[DASHBOARD/PROVIDER ACCESS - NOT EXECUTED]** require the
 Kindred owner to use Fly, Auth0, and the configured database/provider consoles.
@@ -38,7 +46,7 @@ non-production backup restore rehearsal.
    create the app configuration without deploying:
 
    ```sh
-   fly launch --no-deploy --name YOUR_UNIQUE_STAGING_APP --region yyz --dockerfile Dockerfile
+   flyctl launch --no-deploy --name YOUR_UNIQUE_STAGING_APP --region yyz --dockerfile Dockerfile
    ```
 
    Review the generated configuration. Set `internal_port = 8080` and the
@@ -102,7 +110,7 @@ requirements verified in `SECRET_INVENTORY.md` and
 authorized provider consoles or existing approved secret manager. Enter runtime
 secrets interactively without placing values in shell history or process
 arguments. For example, in Bash, `read -rsp` suppresses terminal echo; the
-command line contains names/placeholders only, then `fly secrets import` reads
+command line contains names/placeholders only, then `flyctl secrets import` reads
 the values from standard input:
 
 ```sh
@@ -113,7 +121,7 @@ read -rp 'RESEND_FROM_EMAIL: ' RESEND_FROM_EMAIL
 read -rp 'SUBSCRIPTION_OWNER_IDS: ' SUBSCRIPTION_OWNER_IDS
 printf 'MONGODB_URI=%s\nMONGODB_DATABASE=%s\nRESEND_API_KEY=%s\nRESEND_FROM_EMAIL=%s\nSUBSCRIPTION_OWNER_IDS=%s\n' \
   "$MONGODB_URI" "$MONGODB_DATABASE" "$RESEND_API_KEY" "$RESEND_FROM_EMAIL" "$SUBSCRIPTION_OWNER_IDS" \
-  | fly secrets import --app YOUR_UNIQUE_STAGING_APP
+  | flyctl secrets import --app YOUR_UNIQUE_STAGING_APP
 unset MONGODB_URI MONGODB_DATABASE RESEND_API_KEY RESEND_FROM_EMAIL SUBSCRIPTION_OWNER_IDS
 ```
 
