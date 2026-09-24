@@ -151,19 +151,16 @@ These are **workflow references only**; all are **verify-in-GitHub** for presenc
 | `GITHUB_TOKEN` | S; OpenCode workflow GitHub API access | GitHub-managed workflow token | `secrets.GITHUB_TOKEN`; verify-in-GitHub (GitHub-provided) | GitHub-managed token | Kindred owner; verify-in-GitHub, no manual secret rotation assumed |
 
 
-### GitHub repository inventory — names checked 2026-09-23
+### GitHub repository inventory — names checked 2026-09-24
 
-A read-only GitHub metadata query returned these repository-level Actions secret **names only**; no values were accessed. The repository also has the `NEON_PROJECT_ID` Actions variable. This is a point-in-time inventory, not proof that each item is consumed or correctly scoped.
+A read-only GitHub metadata query returned repository-level Actions secret **names only**; no values were accessed. After checking both canonical `main` and the finalization branch workflows, unused `CLERK`, `NEON_API_KEY`, and `NEON_PROJECT_ID` entries were removed on 2026-09-24. Only the two secrets consumed by current workflows remain; the repository variable list is empty. This is a point-in-time inventory, not proof that either retained secret is correctly scoped.
 
 | Name | Kind; observed consumer | Owner / disposition |
 | --- | --- | --- |
-| `CLERK` | S; no current workflow reference found; local Clerk inspection/migration tools remain | Kindred owner; verify any external deployment or identity-recovery use, then remove if unused |
-| `NEON_API_KEY` | S; no current tracked workflow reference found | Kindred owner; verify deploy integrations and project ownership, then remove if unused |
 | `OPENCODE_API_KEY` | S; referenced by pinned `.github/workflows/opencode.yml` action | Kindred owner; retain only while workflow is used; action pin and comment permissions hardened; verify secret scope |
 | `SNYK_TOKEN` | S; referenced by `.github/workflows/snyk-security.yml` | Kindred owner; retain while Snyk scanning is active; rotate if exposure or ownership requires it |
-| `NEON_PROJECT_ID` | N; repository Actions variable; no current tracked workflow reference found | Kindred owner; verify deploy integrations and project ownership, then remove if unused |
 
-GitHub lists the deployment environments `Asterling Coach / production`, `Asterling Coaching / production`, and `Asterling Coaching / Staging`. Read-only environment-secret queries returned zero entries for all three at audit time. Recheck before cutover; do not assume this remains current.
+GitHub lists three deployment environments: `Asterling Coach / production`, `Asterling Coaching / production`, and `Asterling Coaching / Staging`. Direct read-only API queries returned zero environment secrets and zero environment variables for each. Their deployment records remain: 1, 43, and 21 respectively; the latest recorded SHA for the two `Asterling Coaching` environments is `99d0679bae2dceb8218214efa47eee98655e5235` (2026-07-28), and the latest for `Asterling Coach / production` is `3049c5c97babaa5ddbc01427e91000212aeb0992` (2026-07-11). These are GitHub deployment records, not proof of a currently active provider deployment. Keep the records; verify each environment's external purpose before removing it.
 
 ### Redacted Git history scan — 2026-09-23
 
