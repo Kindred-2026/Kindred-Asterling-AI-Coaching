@@ -12,6 +12,7 @@
     "src/index.ts",
     "src/migrationSupport.ts",
     "src/mongoDb.ts",
-    "src/mongoSchema.ts"
+    "src/mongoSchema.ts",
+    "src/postgresRehearsal.ts"
   ]
 }

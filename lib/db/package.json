@@ -12,7 +12,9 @@
     "validate:restore": "tsx ./scripts/validate-mongodb-restore.ts",
     "test:api": "tsx ./scripts/test-api-server.ts",
     "typecheck:scripts": "tsc --noEmit --strict --skipLibCheck --module preserve --moduleResolution bundler --target es2022 --types node ./scripts/*.ts",
-    "test:journey": "tsx ./scripts/test-coach-journey.ts"
+    "test:journey": "tsx ./scripts/test-coach-journey.ts",
+    "test:postgres-rehearsal": "tsx --test ./scripts/postgres-rehearsal.test.ts",
+    "rehearse:mongo-to-postgres": "tsx ./scripts/rehearse-mongo-to-postgres.ts"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",
@@ -23,6 +25,7 @@
     "@types/pg": "^8.20.0",
     "mongodb-memory-server": "10.4.3",
     "pg": "^8.20.0",
+    "pg-mem": "3.0.14",
     "tsx": "catalog:"
   }
 }

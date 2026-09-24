@@ -1,0 +1,234 @@
+-- Rehearsal-only schema. This is intentionally NOT a complete Kindred runtime.
+-- IDs remain the same application strings and integers used in MongoDB.
+-- Apply only to an empty, isolated staging database; never to the old PG schema.
+CREATE TABLE users (
+  id text PRIMARY KEY,
+  auth0_user_id text UNIQUE,
+  clerk_user_id text UNIQUE,
+  clerk_deleted_at timestamptz,
+  email text UNIQUE,
+  password_hash text,
+  first_name text,
+  last_name text,
+  profile_image_url text,
+  preferred_name text,
+  birthday date,
+  struggles text,
+  strengths text,
+  interests text,
+  bio text,
+  motivational_quote text,
+  phone text,
+  timezone text,
+  email_verified_at timestamptz,
+  onboarded_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX users_email_case_insensitive_lookup ON users (lower(email));
+
+CREATE TABLE conversations (
+  id integer PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  status text NOT NULL DEFAULT 'active',
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  archived_at timestamptz,
+  UNIQUE (user_id, id)
+);
+CREATE INDEX conversations_owner_status_created_idx ON conversations (user_id, status, created_at DESC);
+
+CREATE TABLE messages (
+  id integer PRIMARY KEY,
+  conversation_id integer NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  role text NOT NULL,
+  content text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX messages_conversation_id_idx ON messages (conversation_id, id DESC);
+
+CREATE TABLE habits (
+  id integer PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  description text,
+  target_days integer NOT NULL DEFAULT 90,
+  start_date date NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (user_id, id)
+);
+CREATE INDEX habits_owner_idx ON habits (user_id);
+
+CREATE TABLE habit_entries (
+  id integer PRIMARY KEY,
+  habit_id integer NOT NULL,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date date NOT NULL,
+  completed boolean NOT NULL DEFAULT false,
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id, habit_id) REFERENCES habits(user_id, id) ON DELETE CASCADE
+);
+CREATE INDEX habit_entries_owner_habit_date_idx ON habit_entries (user_id, habit_id, date DESC);
+
+CREATE TABLE daily_usage (
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date date NOT NULL,
+  count integer NOT NULL DEFAULT 0 CHECK (count >= 0),
+  PRIMARY KEY (user_id, date)
+);
+
+CREATE TABLE affirmations (
+  id integer PRIMARY KEY,
+  text text NOT NULL,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE beta_grants (
+  id text PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  granted_by text REFERENCES users(id) ON DELETE SET NULL,
+  granted_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at timestamptz,
+  revoked_at timestamptz,
+  revoked_by text REFERENCES users(id) ON DELETE SET NULL
+);
+CREATE INDEX beta_grants_owner_status_idx ON beta_grants(user_id, revoked_at, expires_at);
+CREATE INDEX beta_grants_granted_by_idx ON beta_grants(granted_by);
+CREATE INDEX beta_grants_revoked_by_idx ON beta_grants(revoked_by);
+CREATE INDEX beta_grants_granted_at_idx ON beta_grants(granted_at DESC);
+
+CREATE TABLE body_scans (
+  id integer PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  scanned_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  feelings text[] NOT NULL DEFAULT '{}',
+  energy_level integer NOT NULL,
+  physical_sensations text,
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX body_scans_owner_scanned_idx ON body_scans(user_id, scanned_at DESC);
+
+CREATE TABLE calendar_connections (
+  user_id text PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  provider text NOT NULL DEFAULT 'google',
+  encrypted_refresh_token text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX calendar_connections_provider_idx ON calendar_connections(provider);
+
+CREATE TABLE entitlement_audit (
+  id text PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  action text NOT NULL,
+  actor_id text REFERENCES users(id) ON DELETE SET NULL,
+  metadata jsonb,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX entitlement_audit_owner_created_idx ON entitlement_audit(user_id, created_at DESC);
+CREATE INDEX entitlement_audit_actor_created_idx ON entitlement_audit(actor_id, created_at DESC);
+
+CREATE TABLE evening_reports (
+  id integer PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date date NOT NULL,
+  medication_effectiveness integer NOT NULL,
+  overall_mood text,
+  wins text,
+  challenges text,
+  tomorrow_intent text,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX evening_reports_owner_created_idx ON evening_reports(user_id, created_at DESC);
+
+CREATE TABLE medications (
+  id integer PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  dosage text NOT NULL,
+  times text[] NOT NULL,
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (user_id, id)
+);
+CREATE INDEX medications_owner_name_idx ON medications(user_id, name);
+
+CREATE TABLE medication_logs (
+  id integer PRIMARY KEY,
+  medication_id integer NOT NULL,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date date NOT NULL,
+  scheduled_time text NOT NULL,
+  taken_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  effectiveness integer,
+  FOREIGN KEY (user_id, medication_id) REFERENCES medications(user_id, id) ON DELETE CASCADE,
+  UNIQUE (user_id, medication_id, date, scheduled_time)
+);
+
+CREATE TABLE medication_schedule_entries (
+  id integer PRIMARY KEY,
+  medication_id integer NOT NULL,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  scheduled_time text NOT NULL,
+  start_date date NOT NULL,
+  end_date date,
+  FOREIGN KEY (user_id, medication_id) REFERENCES medications(user_id, id) ON DELETE CASCADE
+);
+CREATE INDEX medication_schedule_owner_med_dates_idx ON medication_schedule_entries(user_id, medication_id, start_date, end_date);
+
+CREATE TABLE morning_logs (
+  id integer PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date date NOT NULL,
+  mental_load_level text NOT NULL,
+  mini_goals text[] NOT NULL DEFAULT '{}',
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX morning_logs_owner_created_idx ON morning_logs(user_id, created_at DESC);
+
+CREATE TABLE processed_webhooks (
+  webhook_id text PRIMARY KEY,
+  event_type text NOT NULL,
+  processed_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE reminder_settings (
+  user_id text PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  morning_enabled boolean NOT NULL DEFAULT false,
+  morning_time text NOT NULL DEFAULT '08:00',
+  medication_enabled boolean NOT NULL DEFAULT false,
+  evening_enabled boolean NOT NULL DEFAULT false,
+  evening_time text NOT NULL DEFAULT '21:00',
+  sms_enabled boolean NOT NULL DEFAULT false,
+  email_enabled boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE reminder_deliveries (
+  id integer PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type text NOT NULL,
+  dose_time text NOT NULL DEFAULT '',
+  local_date date NOT NULL,
+  channel text NOT NULL,
+  sent_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (user_id, type, local_date, dose_time, channel)
+);
+
+CREATE TABLE subscriptions (
+  user_id text PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  email text,
+  status text NOT NULL DEFAULT 'pending',
+  payment_customer_id text UNIQUE,
+  payment_subscription_id text,
+  current_period_end timestamptz,
+  provider_event_at timestamptz,
+  last_checked_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
