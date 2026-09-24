@@ -1,6 +1,6 @@
 # Kindred checkout and worktree audit
 
-**Audit date:** 2026-09-23. Canonical source is GitHub `main` at
+**Audit date:** 2026-09-24. Canonical source is GitHub `main` at
 `7c264f6e5fecdee0739075bd66d432bb9fa6ba85`. The former stale outer checkout
 was aligned after its only unique commit was archived; the separate clean
 canonical clone was moved intact to a sibling archive. Other user-owned
@@ -11,6 +11,7 @@ worktrees were preserved.
 | `Kindred-Asterling-AI-Coaching` | local `main`, `7c264f6e5fecdee0739075bd66d432bb9fa6ba85` | Aligned to canonical GitHub `origin/main`; clean | Its former unique `40c8841` commit was reviewed, not ported, and preserved at local ref `archive/kindred-local-main-40c8841`. It included a broken self-gitlink, a reversed AI privacy statement, a placeholder pnpm workspace value, and inventory edits superseded by this finalization. |
 | `Kindred-Canonical-Checkout-Archive-7c264f6` | separate nested clone, `main` at `7c264f6e5fecdee0739075bd66d432bb9fa6ba85` | Clean, no ignored or untracked files | Moved intact out of the stale parent checkout after verifying it exactly matched canonical `main`; preserved as a local snapshot. |
 | `Kindred-Finalization` | `codex/kindred-finalization`, based on canonical `main` | Finalization implementation branch | Keep as the review branch until PR and CI disposition are complete. |
+| `Kindred-OpenCode-Fly-Audit` | `codex/opencode-fly-runbook`, based on finalization `407185f` | OpenCode-authored Fly staging runbook committed as `8b67f0a` and integrated here as `335508b`; docs-only diff reviewed, `git diff --check` passed | Keep the clean isolated checkout and delegation commit until the runbook review and this task close; no provider actions were performed. |
 | `Kindred-OpenCode-Secrets` | `codex/opencode-secret-inventory` | Inventory change committed and integrated | Retain branch commit as delegation evidence; remove the temporary worktree after final review if clean. |
 | `Kindred-Snyk-Fix` | `codex/snyk-nosql-findings` | Query-ID fix committed and integrated | Retain branch commit as delegation evidence; remove the temporary worktree after Snyk confirms on the PR. |
 | `Kindred-Devin-Audit` | `codex/devin-finalization-audit` | Next.js cleanup committed and integrated | Retain branch commit as delegation evidence; remove the temporary worktree after final review if clean. |
