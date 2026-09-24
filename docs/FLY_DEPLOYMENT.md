@@ -71,11 +71,22 @@ tenant/audience as the server configuration. Do not put their values in this
 document, source control, shell command arguments, or chat.
 
 `AI_PROVIDER` defaults to `ollama`, which requires `OLLAMA_BASE_URL` and
-`OLLAMA_MODEL`; for a staging build with no configured AI service, use
+`OLLAMA_MODEL`; for the initial smoke with no configured AI service, use
 `AI_PROVIDER=disabled`. Do not enable payments: leave `HELCIM_PAYMENTS_ENABLED`
-unset or false. Configure any other optional integrations only when explicitly
-included in the test scope, with their names and conditional requirements
-verified in `SECRET_INVENTORY.md` and `artifacts/api-server/src/lib/validateConfig.ts`.
+unset or false. For a separate AI-enabled test phase only, set
+`AI_PROVIDER=openai`, `OPENAI_BASE_URL` to the Cloudflare AI Gateway OpenAI
+provider endpoint (`https://gateway.ai.cloudflare.com/v1/<account_id>/<gateway_id>/openai`),
+`OPENAI_API_KEY` to a test-safe upstream key, and `OPENAI_MODEL` to the selected
+bare upstream model name. The API appends `/chat/completions` to the configured base URL.
+Never use real user prompts or production credentials. Verify the deployed
+configuration routes through the intended Gateway and that its payload logging
+setting is disabled. In the existing provider implementation,
+`cf-aig-collect-log-payload: false` and `cf-aig-skip-cache: true` are sent only
+when requests are routed through the gateway (that is, when `OPENAI_BASE_URL` is
+configured); verify both request behavior and Gateway settings before recording
+an AI pass. Configure other optional integrations only when explicitly included
+in test scope, with names and conditional requirements verified in
+`SECRET_INVENTORY.md` and `artifacts/api-server/src/lib/validateConfig.ts`.
 
 **[DASHBOARD/PROVIDER ACCESS - NOT EXECUTED]** Obtain values directly from the
 authorized provider consoles or existing approved secret manager. Enter runtime
@@ -130,10 +141,10 @@ EXECUTED]** Run these checks against the staging origin only:
 | Auth0 | Complete a fresh test-user sign-in and sign-out; confirm authenticated API access uses the intended staging Auth0 tenant/audience. | Redirect/token/API failure or wrong tenant/audience = FAIL. |
 | Logs | Review app startup and request logs for errors, crashes, repeated DB failures, and accidental sensitive-data logging. Save a redacted excerpt/reference. | Crash, unexplained errors, secrets/credentials or sensitive user data in logs = FAIL. |
 | User-history separation | Use two distinct synthetic staging accounts; create one uniquely identifiable test history per account, then verify each account sees only its own history, including after sign-out/sign-in. Do not use real user data. | Cross-account visibility, merged identities, or inability to verify ownership = FAIL. |
-| AI chat and privacy controls | **PASS** only after an AI chat request and personalized response are verified using test-safe OpenAI-compatible credentials routed through Cloudflare AI Gateway, with personalized response caching disabled and payload collection disabled; verify the settings and a successful synthetic prompt/response without recording personal data. The initial `AI_PROVIDER=disabled` smoke is not an AI pass. | **FAIL** for the wrong route, failed chat, personalized-response caching, enabled payload collection, or unverifiable privacy settings. **BLOCKED** until test-safe credentials and Gateway configuration are available. Never use real user prompts. |
+| AI chat and privacy controls | The initial smoke must use `AI_PROVIDER=disabled` and does not exercise AI. For the separate AI-enabled phase, configure `AI_PROVIDER=openai`, `OPENAI_BASE_URL` to `https://gateway.ai.cloudflare.com/v1/<account_id>/<gateway_id>/openai`, `OPENAI_API_KEY` to a test-safe upstream key, and `OPENAI_MODEL` to the selected bare upstream model name. **PASS** only after a successful synthetic chat response is verified through that Gateway, payload logging is disabled in Gateway settings, and request headers `cf-aig-collect-log-payload: false` and `cf-aig-skip-cache: true` are verified. The provider sends these headers only when routed through the configured Gateway. | **FAIL** for the wrong route, failed chat, enabled payload logging, or missing/unverifiable headers/settings. **BLOCKED** until test-safe credentials and Gateway configuration are available. Never use real user prompts. |
 | Helcim checkout and webhook replay | **PASS** only after completing checkout in the Helcim developer test account and verifying signed webhook validation, idempotent handling of duplicate delivery, and rejection/no duplicate effect on replay. The developer test account must be requested from Helcim. | **FAIL** for any live charge, invalid/missing signature accepted, duplicate side effect, or unverifiable replay behavior. **BLOCKED** until the developer test account and safe credentials/configuration are available; payments remain disabled. Never use live processing. |
-| Calendar retirement | **PASS** after verifying the retirement notice, authenticated `410 calendar_retired` behavior for retired connect/upcoming routes, and retained user-initiated disconnect behavior, as recorded in [the Calendar sunset](releases/calendar-sunset.md). | **FAIL** for absent notice/410 behavior, broken disconnect, or an undocumented disposition change. If the product disposition changes, update the record and acceptance criteria before treating Calendar as active. |
-| Reminders | **PASS** after scheduling a reminder for a synthetic account, verifying expected staging delivery, and confirming retries/duplicate job creation do not cause duplicate reminders. Keep at least one Fly machine running with `auto_stop_machines = "off"`; record configuration and running machine status. A stopped machine misses scheduler ticks and autostart does not replay them. | **FAIL** for missing/incorrect delivery, cross-account delivery, duplicate jobs/notifications, or failure to maintain the required running machine. **BLOCKED** if safe staging scheduling or delivery configuration is unavailable. |
+| Calendar retirement | **PASS** after verifying the retirement notice, authenticated `410 calendar_retired` behavior for retired connect/upcoming routes, and retained user-initiated disconnect behavior, as recorded in [the Calendar sunset](releases/calendar-sunset.md). OAuth connection creation paths are retired and must not be used to create a test connection. Disconnect acceptance requires a synthetic, non-production account with an already-stored test connection/token. | **FAIL** for absent notice/410 behavior, broken disconnect, or an undocumented disposition change. If no synthetic non-production stored connection is available, mark **BLOCKED**; do not use production tokens. If product disposition changes, update the record and acceptance criteria before treating Calendar as active. |
+| Reminders | **PASS** after scheduling a reminder for a synthetic account, verifying expected staging delivery only to controlled test addresses, and confirming retries/duplicate job creation do not cause duplicate reminders. Test delivery destinations must be controlled test addresses only, never real users or uncontrolled recipients. Keep at least one Fly machine running with `auto_stop_machines = "off"`; record configuration and running machine status. A stopped machine misses scheduler ticks and autostart does not replay them. | **FAIL** for missing/incorrect delivery, cross-account delivery, delivery to an uncontrolled destination, duplicate jobs/notifications, or failure to maintain the required running machine. **BLOCKED** if safe staging scheduling or controlled test destinations are unavailable. |
 | Voice (if retained) | If voice remains a product path, **PASS** after exercising its staging flow with synthetic input and verifying expected output and account/privacy isolation. If removed, **PASS** only with a documented sunset disposition and verification that the retired path is unavailable as intended. | **FAIL** for a retained flow that fails or exposes another account's data, or an undocumented/incomplete sunset. **BLOCKED** if retained but safe staging credentials/configuration are unavailable and no sunset disposition is documented. |
 | Account export, deletion, and restore | **PASS** after exporting and reviewing synthetic-account data, deleting a synthetic account and verifying its data is removed as specified, then restoring a non-production backup and verifying account identity and ownership separation. | **FAIL** for incomplete export/deletion, cross-account data, identity/ownership changes, or failed restore. **BLOCKED** until a real non-production restore rehearsal and any required safe staging configuration are available; do not use real user data. |
 | PostgreSQL and restore | The initial MongoDB smoke is not migration readiness. Once a real isolated non-production PostgreSQL endpoint exists, set this same staging app to `DATABASE_PROVIDER=postgres`, then rerun every applicable acceptance check in this matrix and complete a real non-production backup restore rehearsal before marking the full target staging gate PASS. | Until that endpoint exists, PostgreSQL integration, full target staging acceptance, and restore remain **BLOCKED**. `pg-mem` does not establish equivalence and cannot pass this gate. |
@@ -251,9 +262,13 @@ make the upstream model provider Canadian-hosted.
    replay, Calendar retirement notice/410 and retained disconnect behavior
    (unless its disposition changes), reminders, voice, exports, deletion, and
    restore in staging. Use test-safe OpenAI-compatible credentials routed
-   through Cloudflare AI Gateway for the AI pass; the initial AI-disabled smoke
-   is not an AI pass. Payments stay BLOCKED until a Helcim developer test account
-   requested from Helcim is available. Never use live processing. Disable
+   through Cloudflare AI Gateway for the separate AI-enabled test phase; the
+   initial AI-disabled smoke is not an AI pass. Calendar disconnect acceptance
+   requires a synthetic non-production stored connection; otherwise mark it
+   BLOCKED and do not use production tokens. Reminder deliveries must target
+   controlled test addresses only. Payments stay BLOCKED until a Helcim
+   developer test account requested from Helcim is available. Never use live
+   processing. Disable
    caching of personalized conversations and minimize AI prompt/response
    retention.
 6. Compare actual Fly invoices plus Cloudflare, model inference, Auth0, email,
@@ -269,5 +284,10 @@ make the upstream model provider Canadian-hosted.
 References checked 2026-09-24: [Fly.io regions](https://fly.io/docs/reference/regions/),
 [Managed Postgres and pricing](https://docs.fly.io/mpg),
 [Fly.io resource pricing](https://fly.io/docs/about/pricing/),
-[Fly Launch](https://fly.io/docs/flyctl/launch/), and
+[Fly Launch](https://fly.io/docs/flyctl/launch/),
+[Fly app configuration](https://fly.io/docs/reference/configuration/),
+[Fly autostop/autostart](https://fly.io/docs/launch/autostop-autostart/),
+[Helcim developer test accounts](https://devdocs.helcim.com/docs/developer-testing),
+[Cloudflare AI Gateway OpenAI-compatible API](https://developers.cloudflare.com/ai-gateway/usage/providers/openai/),
+[Cloudflare AI Gateway payload logging](https://developers.cloudflare.com/ai-gateway/observability/logging/), and
 [Cloudflare AI Gateway pricing](https://developers.cloudflare.com/ai-gateway/reference/pricing/).
