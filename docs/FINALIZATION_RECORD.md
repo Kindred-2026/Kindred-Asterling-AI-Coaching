@@ -29,6 +29,7 @@ production gates; a checked-in plan is not proof of a live cutover.
 | --- | --- | --- |
 | Experimental Next.js `frontend/` | Removed from workspace, scripts, docs, and standalone CI; production React/Vite app retained | Verify the resulting single production build path in CI |
 | AWS Bedrock provider | Removed from API runtime, dependency, examples, and provider instructions | Confirm no active deployment/workflow still sets Bedrock variables before deleting them from external stores |
+| Legacy AWS EKS/KEDA assets | No current GitHub workflow or application-runtime consumer found; docs identify them as pre-Coolify tooling | Preserve until the owner confirms no AWS cluster or rollback deployment depends on them; remove the manifests/scripts after that check |
 | TODO/FIXME cleanup | No unresolved TODO, FIXME, XXX, or HACK markers remain in current source; matches are UI `ListTodo` symbols and usage text | Recheck when code changes are finalized |
 | OpenAI-compatible AI | Retained; Cloudflare Gateway endpoint supported; request payload logging header added | Provider account, upstream model, privacy contract, Gateway settings, and staging verification remain external gates |
 | Snyk | Retained as a required observable scanner; remediation adds literal-ID validation and regression coverage | Snyk must pass on the final integration SHA; no finding suppression is allowed |
