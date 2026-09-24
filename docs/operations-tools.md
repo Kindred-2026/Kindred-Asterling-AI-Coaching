@@ -43,10 +43,11 @@ with a note that it is an unfinished strategy brief. Content preserved.
 AWS CodeBuild `buildspec.yml` and external use is not verified; disposition
 pending AWS project inventory.
 
-**Retained (out of scope for this cleanup)** — EKS deployment assets:
-`infrastructure/eks/*`, `deploy/{karpenter,keda,metrics-server-values.yaml}`,
-`scripts/{deploy-eks-autoscaling.sh,verify-eks.sh}` are not touched per
-instruction.
+**Removed (owner-confirmed unused)** — AWS EKS deployment assets:
+`infrastructure/eks/*`, `deploy/{karpenter,keda,metrics-server-values.yaml,versions.env}`,
+and `scripts/{deploy-eks-autoscaling.sh,verify-eks.sh}` had no active repository
+consumers. The owner confirmed there is no AWS cluster. Repository files were
+removed; no AWS resources were changed.
 
 **Retained (active local workflow)** — `scripts/test-local.sh` is called by the
 Codex project Test action in `.codex/environments/environment.toml`; it runs the
