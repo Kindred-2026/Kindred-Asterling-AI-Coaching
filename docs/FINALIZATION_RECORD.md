@@ -39,7 +39,7 @@ production gates; a checked-in plan is not proof of a live cutover.
 | AWS Bedrock provider | Removed from API runtime, dependency, examples, and provider instructions | Confirm no active deployment/workflow still sets Bedrock variables before deleting them from external stores |
 | Legacy AWS EKS/KEDA assets | Removed after the owner confirmed there is no AWS cluster; repository search found no active workflow or application-runtime consumer | Removed the EKS Terraform, Karpenter/KEDA/metrics-server manifests, deploy scripts, and version pins. AWS resources were not changed |
 | TODO/FIXME cleanup | No unresolved TODO, FIXME, XXX, or HACK markers remain in current source; matches are UI `ListTodo` symbols and usage text | Recheck when code changes are finalized |
-| OpenAI-compatible AI | Retained; Cloudflare Gateway endpoint supported; request payload logging header added | Provider account, upstream model, privacy contract, Gateway settings, and staging verification remain external gates |
+| OpenAI-compatible AI | Retained; Cloudflare Gateway endpoint supported; request payload logging and personalized response caching are disabled in Gateway requests | Provider account, upstream model, payload/log-retention policy, gateway-level spend limit, model budget, and staging verification remain external gates. Gateway metadata/usage logs may still be retained |
 | Snyk | Retained as an observable scanner. Messages use stable Kindred `userId` ownership; no suppression was added. | PR #149 merged at `504cdf3c3019e3550e5a074dc499961ea2540d10` with CI, Security Audit, Snyk IaC, Snyk Code, API tests, frontend tests, and build all passing. The IaC job skips only when no supported IaC files exist; when they exist, `snyk iac test --report` runs and scan failures remain fatal. Open Source and Container use `monitor`, which submits results but does not gate on findings; review their project results in Snyk. Production remains gated on ownership backfill and cutover requirements below |
 | MongoDB and Coolify | Retained temporarily for production and rollback | Do not retire before all cutover gates pass |
 | Hosting provider decision | DigitalOcean rejected the available payment methods; user selected Fly.io and confirmed account/payment access only. Railway was evaluated but not selected because its listed app/database regions omit Canada | No Fly app or database is reported as deployed. Verify the Fly organization, Toronto app and Managed Postgres resources, billing, maintenance responsibility, and measured costs. See [Fly.io deployment runbook](FLY_DEPLOYMENT.md) and [cost baseline](COST_BASELINE.md). The DigitalOcean guides remain marked as superseded evaluations |
@@ -117,7 +117,7 @@ usage, and plan tiers have not yet been verified.
 | Service | Published starting estimate | Actual monthly cost | Notes |
 | --- | ---: | ---: | --- |
 | Fly Managed Postgres Basic + app | $38.00/month plus $0.28/GB/month storage; 10GB storage default adds $2.80; about $5.92/month for a continuously running 1GB shared-cpu-1x app machine at current reference rate | Not measured | Illustrative subtotal $46.72 before transfer, AI, backups, and retained services; actual region rate and app memory are unverified; no Fly invoice was inspected |
-| Cloudflare AI Gateway | $0 for core gateway features | Not measured | Upstream inference is billed by the selected model provider; logging limits and optional features apply |
+| Cloudflare AI Gateway | $0 for core features; gateway logs may follow Workers Logs pricing depending on first-Gateway date | Not measured | Upstream inference is billed by the selected model provider; configure a global Gateway spend limit and verify log retention/pricing |
 | Auth0, Resend, Sentry, Helcim, SMS, voice, domain/DNS, storage, backups | Account-dependent | Not measured | Verify actual plans, usage and renewal amounts |
 | **Illustrative Fly app + database subtotal** | **About $46.72/month** with 1GB always-on app compute and the CLI's default 10GB database storage | **Not measured** | Leaves at most $3.28 under the $50 target before network use, AI, other providers, and backup extras; actual region pricing and bills remain unverified |
 
@@ -126,7 +126,7 @@ Before cutover, record recurring invoices, usage-based bills, AI token spend,
 and backup/storage costs; configure provider spend alerts and per-user AI
 quotas. Exclude payment processing from the target as approved.
 
-Published pricing references, checked 2026-09-24: [Fly Managed Postgres](https://docs.fly.io/mpg), [Fly resource pricing](https://fly.io/docs/about/pricing/), and [Cloudflare AI Gateway pricing](https://developers.cloudflare.com/ai-gateway/reference/pricing/).
+Published pricing references, checked 2026-09-24: [Fly Managed Postgres](https://docs.fly.io/mpg), [Fly resource pricing](https://fly.io/docs/about/pricing/), [Cloudflare AI Gateway pricing](https://developers.cloudflare.com/ai-gateway/reference/pricing/), and [Cloudflare AI Gateway spend limits](https://developers.cloudflare.com/ai-gateway/features/spend-limits/).
 
 ## Explicitly not claimed by this record
 

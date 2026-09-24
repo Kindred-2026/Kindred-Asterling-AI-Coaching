@@ -9,7 +9,7 @@ has a current bill or usage export.
 | --- | --- | ---: | ---: | --- |
 | Fly.io app compute | Selected app/API hosting; target Toronto region `yyz` | About $5.92/month for one always-on shared-cpu-1x machine with 1 GB RAM at the current reference rate; regional price must be confirmed | Not measured | Read-only CLI access verified for the `personal` organization; no app deployed; no invoice inspected |
 | Fly Managed Postgres Basic | Selected primary database; target Toronto region `yyz` | $38.00/month plus $0.28/GB/month provisioned storage; CLI creation defaults to 10 GB ($2.80/month) | Not measured | `fly platform regions` lists Toronto as MPG-capable; no cluster deployed; verify account capacity, backup/restore, and invoice before cutover |
-| Cloudflare AI Gateway | AI routing, metadata, rate limits | $0 for core Gateway features | Not measured | Upstream inference is usage-billed; verify log retention limits and any paid features |
+| Cloudflare AI Gateway | AI routing, metadata, rate limits, and spend controls | $0 for core Gateway features | Not measured | Upstream inference is usage-billed. Log cost/retention depends on when the account created its first Gateway; verify the account's applicable plan and configured limits |
 | OpenAI or selected Gateway upstream | Model inference | Usage-based; no Kindred estimate | Not measured | Record tokens, model, invoice, quota, and spend alert |
 | Cloudflare DNS, proxy, and application security | Domain routing, TLS, edge security | Account/plan dependent | Not measured | Verify plan and any add-ons |
 | Auth0 | Authentication | Account/MAU-plan dependent | Not measured | Verify tenant plan and active MAUs |
@@ -34,7 +34,19 @@ price and app memory requirement remain unverified. That scenario totals about
 **$46.72/month** for app plus database before network transfer, other providers,
 AI inference, backups beyond included retention, and all remaining services.
 The $50 target therefore has at most $3.28/month left for those costs under
-this estimate, and is not yet supported by measured bills. The smaller
+this estimate, and is not yet supported by measured bills. Cloudflare currently
+prices core AI Gateway features at $0, but inference is billed by the upstream
+provider. For accounts whose first Gateway is created on or after 2026-09-24,
+Gateway logs follow Workers Logs pricing: Workers Free includes 200,000 log
+events per day with 3-day retention; Workers Paid includes 20 million events
+per month with 7-day retention, then $0.60 per additional million. Confirm the
+first-Gateway date and plan before estimating log costs. The API disables
+conversation payload collection and response caching, but metadata/usage logs
+may remain subject to the Gateway's log policy. Gateway spend limits can enforce
+a budget and reject later requests with HTTP 429, but enforcement is eventually
+consistent and cost estimates depend on published model pricing; retain the
+application's daily quota and provider-side budget alerts as additional controls.
+The smaller
 256 MB machine estimate would lower the subtotal but has not been shown to run
 Kindred reliably. Do not retire MongoDB or Coolify from list prices alone. See
 [the Fly.io deployment runbook](FLY_DEPLOYMENT.md).
@@ -47,4 +59,5 @@ the rollback window closes.
 Pricing references checked 2026-09-24: [Fly Managed Postgres plans and storage](https://docs.fly.io/mpg),
 [Fly resource pricing](https://docs.fly.io/about/pricing/),
 [Fly Managed Postgres creation and default storage size](https://fly.io/docs/mpg/create-and-connect/),
-and [Cloudflare AI Gateway](https://developers.cloudflare.com/ai-gateway/reference/pricing/).
+Cloudflare [AI Gateway pricing and logging](https://developers.cloudflare.com/ai-gateway/reference/pricing/),
+and [AI Gateway spend limits](https://developers.cloudflare.com/ai-gateway/features/spend-limits/).

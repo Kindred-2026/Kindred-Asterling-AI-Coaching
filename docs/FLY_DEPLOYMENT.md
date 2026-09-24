@@ -85,9 +85,18 @@ setting is disabled. In the existing provider implementation,
 `cf-aig-collect-log-payload: false` and `cf-aig-skip-cache: true` are sent only
 when requests are routed through the gateway (that is, when `OPENAI_BASE_URL` is
 configured); verify both request behavior and Gateway settings before recording
-an AI pass. Configure other optional integrations only when explicitly included
-in test scope, with names and conditional requirements verified in
-`SECRET_INVENTORY.md` and `artifacts/api-server/src/lib/validateConfig.ts`.
+an AI pass. Payload collection and caching being disabled does not disable all
+Gateway metadata/usage logs. Confirm the account's first-Gateway date and
+resulting log retention/pricing before enabling real prompts. For cost controls,
+configure the Gateway spend-limit feature if it is available for the account;
+it can block requests with HTTP 429 at the selected budget, but enforcement is
+eventually consistent and uses estimated model pricing. Keep the existing
+application daily quota and upstream provider budgets active. Avoid sending
+Kindred account identifiers as Gateway custom metadata until its privacy and
+log-retention implications are reviewed. Configure other optional integrations
+only when explicitly included in test scope, with names and conditional
+requirements verified in `SECRET_INVENTORY.md` and
+`artifacts/api-server/src/lib/validateConfig.ts`.
 
 **[DASHBOARD/PROVIDER ACCESS - NOT EXECUTED]** Obtain values directly from the
 authorized provider consoles or existing approved secret manager. Enter runtime
@@ -291,4 +300,6 @@ References checked 2026-09-24: [Fly.io regions](https://fly.io/docs/reference/re
 [Helcim developer test accounts](https://devdocs.helcim.com/docs/developer-testing),
 [Cloudflare AI Gateway OpenAI-compatible API](https://developers.cloudflare.com/ai-gateway/usage/providers/openai/),
 [Cloudflare AI Gateway payload logging](https://developers.cloudflare.com/ai-gateway/observability/logging/), and
-[Cloudflare AI Gateway pricing](https://developers.cloudflare.com/ai-gateway/reference/pricing/).
+[Cloudflare AI Gateway pricing and logging](https://developers.cloudflare.com/ai-gateway/reference/pricing/),
+[Cloudflare AI Gateway spend limits](https://developers.cloudflare.com/ai-gateway/features/spend-limits/),
+and [Cloudflare AI Gateway custom metadata](https://developers.cloudflare.com/ai-gateway/observability/custom-metadata/).
