@@ -1,15 +1,15 @@
 # Kindred recurring cost baseline
 
-**As of:** 2026-09-23. **Status:** planning inventory; no provider invoices or
+**As of:** 2026-09-24. **Status:** planning inventory; no provider invoices or
 billing dashboards were inspected. The under-$50/month target excludes Helcim
 payment-processing charges and remains unverified until every applicable row
 has a current bill or usage export.
 
 | Service | Current or target purpose | Published starting estimate | Kindred actual monthly cost | Status / measurement source |
 | --- | --- | ---: | ---: | --- |
-| DigitalOcean App Platform | Target web/API hosting | $10.00 for the documented 1 GiB app container | Not measured | Target only; verify component size, bandwidth, and invoice |
-| DigitalOcean Managed PostgreSQL | Target primary database | $15.15 for the documented 1 GiB plan | Not measured | Target only; verify storage, backup, and node configuration |
-| Cloudflare AI Gateway | AI routing, metadata, rate limits | $0 for core Gateway features | Not measured | Verify plan, log retention, and any paid features |
+| DigitalOcean App Platform | Target web/API hosting; fixed 1 GiB slug `apps-s-1vcpu-1gb-fixed` | $10.00 per component | Not measured | Target only; fixed plan does not support manual scaling; verify bandwidth and invoice |
+| DigitalOcean Managed PostgreSQL | Target primary database; Standard 1 GiB node | $15.15 per node | Not measured | Target only; verify selected storage, backups, and node count |
+| Cloudflare AI Gateway | AI routing, metadata, rate limits | $0 for core Gateway features | Not measured | Upstream inference is usage-billed; verify log retention limits and any paid features |
 | OpenAI or selected Gateway upstream | Model inference | Usage-based; no Kindred estimate | Not measured | Record tokens, model, invoice, quota, and spend alert |
 | Cloudflare DNS, proxy, and application security | Domain routing, TLS, edge security | Account/plan dependent | Not measured | Verify plan and any add-ons |
 | Auth0 | Authentication | Account/MAU-plan dependent | Not measured | Verify tenant plan and active MAUs |
@@ -35,6 +35,6 @@ retained service, configure model quotas and spend alerts, and record a dated
 invoice/usage source. Reconcile again after 30 days on DigitalOcean and after
 the rollback window closes.
 
-Pricing references checked 2026-09-23: [DigitalOcean App Platform](https://docs.digitalocean.com/products/app-platform/details/pricing/),
+Pricing references checked 2026-09-24: [DigitalOcean App Platform](https://docs.digitalocean.com/products/app-platform/details/pricing/),
 [DigitalOcean Managed Databases](https://www.digitalocean.com/pricing/managed-databases),
 and [Cloudflare AI Gateway](https://developers.cloudflare.com/ai-gateway/reference/pricing/).
