@@ -1,8 +1,8 @@
 # Formatting boundary for `pnpm format` / `pnpm format:check` / `pnpm verify`.
 #
 # The maintained formatting boundary is the developer-workflow surface that
-# `scripts/format-check.mjs` enforces: scripts, generated-client config, the
-# gitlab CI and workspace YAML/JSON config, and any tracked code/config file
+# `scripts/format-check.mjs` enforces: scripts, generated-client config,
+# workspace YAML/JSON config, and any tracked code/config file
 # changed on the current branch. Everything ignored here is intentionally
 # outside that boundary and is documented in docs/specs/phase-3-developer-workflow.md.
 node_modules/
