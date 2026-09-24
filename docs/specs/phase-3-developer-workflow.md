@@ -1,5 +1,10 @@
 # Phase 3 — Reliable development and release workflow
 
+> **Historical document.** This specification is superseded operational guidance.
+> GitLab is confirmed unused by the owner; GitHub Actions is the sole active CI path.
+> Current instructions and source of truth are in `docs/FINALIZATION_RECORD.md`
+> and the current release/rollback documentation. No Fly.io deployment is claimed.
+
 Refined September 12, 2026. Scope proposal based on the original September 1
 roadmap and the founder's confirmation that the Auth0 cutover is complete.
 This document authorizes no deployment, provider change, or data migration.

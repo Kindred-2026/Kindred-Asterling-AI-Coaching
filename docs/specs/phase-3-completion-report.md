@@ -1,5 +1,10 @@
 # Phase 3 completion report
 
+> **Historical document.** This completion report is superseded operational guidance.
+> GitLab is confirmed unused by the owner; GitHub Actions is the sole active CI path.
+> Current instructions and source of truth are in `docs/FINALIZATION_RECORD.md`
+> and the current release/rollback documentation. No Fly.io deployment is claimed.
+
 Branch: `codex/phase-3a-dev-workflow`
 Baseline (merge-base with `origin/main`): `2205b98`
 Local worktree: `/tmp/kindred-phase-3a` (git worktree of the shared repository).
