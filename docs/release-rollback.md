@@ -13,8 +13,9 @@ verify in GitHub Actions or the relevant provider dashboard.
   definition. Until cutover, follow the current Coolify deployment instructions
   in `docs/COOLIFY_DEPLOYMENT.md`. For the selected Fly.io target, follow
   `docs/FLY_DEPLOYMENT.md`; no Fly deployment is currently verified.
-- **Before promotion:** GitHub Actions validates the monorepo, the MongoDB backup /
-  restore gate must have passed, and the exact commit is built and verified.
+- **Before Fly cutover:** GitHub Actions validates the monorepo, the MongoDB
+  source backup has been restore-tested, the isolated PostgreSQL target has
+  been validated, and the exact commit is built and verified.
   `pnpm run release:check` (read-only) is the local pre-push report for the
   candidate.
 - **Deployment:** Before cutover, Coolify builds the Dockerfile for the chosen
