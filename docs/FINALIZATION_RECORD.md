@@ -7,10 +7,12 @@ production gates; a checked-in plan is not proof of a live cutover.
 
 ## Direction
 
-- **Application hosting:** DigitalOcean App Platform is the target for the
-  production React/Vite app and Express API. Coolify remains available for
-  rollback until the DO release and rollback window are verified.
-- **Database:** DigitalOcean managed PostgreSQL is the target. Preserve internal
+- **Application hosting:** Railway is the recommended candidate after
+  DigitalOcean rejected the available payment methods. Payment acceptance is
+  not verified. Keep Coolify available until a replacement release and rollback
+  window are verified.
+- **Database:** Railway PostgreSQL is the candidate, pending payment acceptance,
+  a completed runtime adapter, and successful rehearsal. Preserve internal
   Kindred user IDs and each user's existing histories. Never merge accounts by
   email. Keep MongoDB until migration rehearsal, restore validation, staging,
   production verification, and rollback-retention gates pass.
@@ -34,7 +36,7 @@ production gates; a checked-in plan is not proof of a live cutover.
 | OpenAI-compatible AI | Retained; Cloudflare Gateway endpoint supported; request payload logging header added | Provider account, upstream model, privacy contract, Gateway settings, and staging verification remain external gates |
 | Snyk | Retained as an observable scanner. Messages now carry the stable internal Kindred `userId`; chat reads/writes, account exports, and account deletion use that owner instead of rebuilding message selectors from database-returned conversation IDs. No suppression was added. | At PR SHA `238ab8ab886a3cbbe2d1dd124b804de53405b7d1`, CI, Security Audit, and Snyk passed. Snyk Code SARIF contained 0 findings; IaC test and production-image build/container monitor completed. Open Source and Container use `monitor`, which submits results but does not gate on findings; review their project results in Snyk before merge. Production remains blocked on ownership backfill and cutover gates below |
 | MongoDB and Coolify | Retained temporarily for production and rollback | Do not retire before all cutover gates pass |
-| DigitalOcean App Platform preparation | Added a no-Docker buildpack deployment runbook for the existing root Vite/Express app, provider-encrypted runtime secrets, health checks, PostgreSQL binding order, and rollback | No DigitalOcean resource was created; complete the PostgreSQL runtime, staging, and provider gates before deployment. See [App Platform runbook](DIGITALOCEAN_APP_PLATFORM.md) |
+| Hosting provider decision | DigitalOcean could not accept the available payment methods. Railway is the recommended alternative candidate; its account/payment access and actual Kindred costs remain unverified | No provider resource was created. See [Railway candidate runbook](RAILWAY_DEPLOYMENT.md) and [cost baseline](COST_BASELINE.md). The earlier [DigitalOcean deployment draft](DIGITALOCEAN_APP_PLATFORM.md) is retained as a non-selected reference |
 | PostgreSQL migration foundation | Added a reviewed all-20-collection rehearsal schema, per-row validation, stable-ID and owner-relationship checks, bounded source snapshot reads, and rollback-by-default replay | This is not a production migration or PostgreSQL runtime. The `pg-mem` fixture does not prove real PostgreSQL rollback/restore; no live source or database was used |
 | GitHub Actions OpenCode bot | Hardened: both the OpenCode action and checkout action use exact commit pins, comment-only triggers, trusted collaborator gate, job-scoped permissions, no `id-token: write` | Write grants remain for repository edits and issue/PR replies. Verify the workflow still serves an operator need and confirm `OPENCODE_API_KEY` scope in GitHub |
 | GitHub Actions runtime | CI, Security Audit, and Snyk action references use immutable SHAs for the verified Node 24 releases of checkout, setup-node, pnpm setup, artifact upload, and CodeQL SARIF upload | Exact SHAs were resolved from upstream release tags and each action's `action.yml` runtime was checked; validate behavior with PR checks |
@@ -58,7 +60,7 @@ production gates; a checked-in plan is not proof of a live cutover.
 4. Pass staging checks for sign-in, separate account histories, chat, payments
    and webhook replay/idempotency, Calendar disposition, reminders, voice,
    exports, deletion, and backup restore.
-5. Deploy the exact reviewed SHA to DigitalOcean and verify production health,
+5. Deploy the exact reviewed SHA to the selected provider and verify production health,
    mapped sign-in, database-backed API, AI response, payment/webhook, and
    account-history invariants. Keep encrypted rollback backups through the
    declared retention window.
@@ -108,18 +110,17 @@ usage, and plan tiers have not yet been verified.
 
 | Service | Published starting estimate | Actual monthly cost | Notes |
 | --- | ---: | ---: | --- |
-| DigitalOcean App Platform, 1 GiB fixed container | $10.00 | Not measured | Published baseline; bandwidth overage and extra components may add cost |
-| DigitalOcean managed PostgreSQL, 1 GiB | $15.15 | Not measured | Storage/backup/extra-node choice can change the bill |
+| Railway app and PostgreSQL services | Usage-metered; illustrative combined 1 vCPU + 1 GB RAM at full continuous usage is about $30/month | Not measured | Storage, egress, and other services extra; hard usage limit can take workloads offline |
 | Cloudflare AI Gateway | $0 for core gateway features | Not measured | Upstream inference is billed by the selected model provider; logging limits and optional features apply |
 | Auth0, Resend, Sentry, Helcim, SMS, voice, domain/DNS, storage, backups | Account-dependent | Not measured | Verify actual plans, usage and renewal amounts |
-| **Infrastructure subtotal for the two DO baseline items** | **$25.15** | **Not measured** | Leaves at most $24.85 under a $50 target for every other included service and usage |
+| **Infrastructure candidate** | **No fixed subtotal** | **Not measured** | Verify account billing, measured staging use, backups, and all retained services against the $50 target |
 
 The **under-$50/month goal is unverified**, not guaranteed by starting prices.
 Before cutover, record recurring invoices, usage-based bills, AI token spend,
 and backup/storage costs; configure provider spend alerts and per-user AI
 quotas. Exclude payment processing from the target as approved.
 
-Published pricing references, checked 2026-09-24: [DigitalOcean App Platform](https://docs.digitalocean.com/products/app-platform/details/pricing/), [DigitalOcean managed databases](https://www.digitalocean.com/pricing/managed-databases), and [Cloudflare AI Gateway pricing](https://developers.cloudflare.com/ai-gateway/reference/pricing/).
+Published pricing references, checked 2026-09-23: [Railway pricing](https://railway.com/pricing), [Railway cost controls](https://docs.railway.com/pricing/cost-control), and [Cloudflare AI Gateway pricing](https://developers.cloudflare.com/ai-gateway/reference/pricing/).
 
 ## Explicitly not claimed by this record
 

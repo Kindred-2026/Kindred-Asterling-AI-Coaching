@@ -35,7 +35,7 @@ Kindred uses information to:
 
 ## Service providers and disclosures
 
-The hosting provider, database provider, and AI processor must be reconciled with the live deployment before publication. The planned hosting target is DigitalOcean App Platform with managed PostgreSQL. The planned hosted AI route is Cloudflare AI Gateway to a selected upstream model provider. These are target choices and are not confirmation of a completed cutover.
+The hosting provider, database provider, and AI processor must be reconciled with the live deployment before publication. Railway with PostgreSQL is the current hosting candidate after DigitalOcean rejected the available payment methods; no Railway account or deployment has been verified. The planned hosted AI route is Cloudflare AI Gateway to a selected upstream model provider. These are planning choices and are not confirmation of a completed cutover.
 
 The service also supports Clerk for identity, Helcim for payments, Google Calendar for optional read-only calendar access, Sentry for error and performance monitoring when enabled, Twilio for SMS, Resend for email, and ElevenLabs for voice features. Information should be sent to a provider only when its feature is enabled and needed.
 

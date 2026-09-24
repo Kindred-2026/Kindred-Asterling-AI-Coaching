@@ -1,7 +1,7 @@
 # Legacy deployment record: Coolify
 
-**Status:** Historical current-state runbook. The approved target is DigitalOcean
-App Platform with managed PostgreSQL and Cloudflare AI Gateway. Keep Coolify and
+**Status:** Historical current-state runbook. The recommended candidate is Railway
+with PostgreSQL and Cloudflare AI Gateway; account/payment access is not verified. Keep Coolify and
 MongoDB available until the database rehearsal, backup restore, staging checks,
 production health/sign-in/API/AI checks, and rollback retention gates pass.
 Historical Bedrock setup instructions are retired because Bedrock support has

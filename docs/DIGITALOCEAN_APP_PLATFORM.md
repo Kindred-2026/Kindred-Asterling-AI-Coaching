@@ -1,9 +1,10 @@
-# DigitalOcean App Platform deployment runbook
+# DigitalOcean App Platform deployment runbook (superseded)
 
-**Status:** prepared target; no DigitalOcean app or database has been created.
-This runbook describes the repository's current build and the deployment path
-after the PostgreSQL runtime and staging gates pass. Coolify stays available as
-the rollback service until the production rollback window closes.
+**Status:** non-selected reference. DigitalOcean rejected the available
+payment methods, so Railway is now the recommended candidate. No DigitalOcean
+app or database was created. Do not use this runbook as the current deployment
+target; see [Railway deployment candidate](RAILWAY_DEPLOYMENT.md). Coolify stays
+available until the replacement and rollback gates pass.
 
 ## Deployment shape
 

@@ -1,9 +1,11 @@
-# DigitalOcean App Platform and PostgreSQL cutover
+# DigitalOcean App Platform and PostgreSQL cutover (superseded)
 
-**Status:** Target runbook only. The application still requires MongoDB and this
-document does not attest that a DigitalOcean app, database, or Cloudflare
-Gateway is provisioned. Keep the current Coolify/MongoDB deployment available
-until all gates at the end of this document pass.
+**Status:** Superseded planning draft. DigitalOcean rejected the available
+payment methods. Railway is the recommended candidate; see
+[the Railway deployment candidate](RAILWAY_DEPLOYMENT.md). This document does
+not attest that any DigitalOcean app, database, or Cloudflare Gateway is
+provisioned. Keep the current Coolify/MongoDB deployment available until all
+replacement gates pass.
 
 ## Target service shape
 
