@@ -109,6 +109,7 @@ async function database() {
   const adapter = memory.adapters.createPg();
   const client = new adapter.Client();
   await client.connect();
+  (client as typeof client & { supportsIdentitySequences: boolean }).supportsIdentitySequences = false;
   return client;
 }
 
@@ -218,6 +219,7 @@ test("defaults to dry-run and requires an explicit non-production write gate", a
     const statements: string[] = [];
     await replayRehearsal(
       {
+        supportsIdentitySequences: false,
         query: async (sql, values) => {
           statements.push(sql);
           return client.query(sql, values as unknown[]);

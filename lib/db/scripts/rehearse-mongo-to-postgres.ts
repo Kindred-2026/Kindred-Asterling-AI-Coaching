@@ -79,7 +79,7 @@ export async function runRehearsal(args: readonly string[] = process.argv.slice(
   // Validate target identity and mode before opening either connection.
   const targetUrl = required("PG_REHEARSAL_URL");
   const environment = process.env.NODE_ENV;
-  const write = authorizeTarget(args, environment, targetUrl, process.env.DATABASE_URL);
+  const write = authorizeTarget(args, environment, targetUrl, process.env.POSTGRES_URL);
   const sourceUri = required("MONGODB_REHEARSAL_URI");
   const sourceName = required("MONGODB_REHEARSAL_DATABASE");
   if (!/(^|[_-])(test|dev|development|fixture|rehearsal)([_-]|$)/.test(sourceName))

@@ -407,6 +407,9 @@ importers:
       mongodb:
         specifier: ^7.6.0
         version: 7.6.0
+      pg:
+        specifier: ^8.20.0
+        version: 8.22.0
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -417,9 +420,6 @@ importers:
       mongodb-memory-server:
         specifier: 10.4.3
         version: 10.4.3
-      pg:
-        specifier: ^8.20.0
-        version: 8.22.0
       pg-mem:
         specifier: 3.0.14
         version: 3.0.14

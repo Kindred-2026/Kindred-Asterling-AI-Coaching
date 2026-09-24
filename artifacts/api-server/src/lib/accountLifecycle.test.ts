@@ -22,6 +22,7 @@ import {
   reminderSettingsTable,
   subscriptionsTable,
   usersTable,
+  getMongoDatabase,
   withDatabaseLease,
 } from "@workspace/db";
 import { deleteAccount, exportAccount } from "./accountLifecycle";
@@ -29,6 +30,16 @@ import { deleteAccount, exportAccount } from "./accountLifecycle";
 const suffix = Math.random().toString(36).slice(2, 10);
 const userId = `account-owner-${suffix}`;
 const survivorId = `account-survivor-${suffix}`;
+
+async function waitForLease(leaseId: string): Promise<boolean> {
+  const database = await getMongoDatabase();
+  const leases = database.collection<{ _id: string }>("_leases");
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    if (await leases.findOne({ _id: leaseId })) return true;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  return false;
+}
 
 afterAll(async () => {
   await db.delete(usersTable).where(eq(usersTable.id, survivorId));
@@ -42,12 +53,15 @@ describe("MongoDB account lifecycle", () => {
       release = resolve;
     });
     const first = withDatabaseLease("test", userId, 5_000, async () => held);
-    await new Promise((resolve) => setTimeout(resolve, 25));
-    await expect(
-      withDatabaseLease("test", userId, 5_000, async () => undefined),
-    ).rejects.toBeInstanceOf(DatabaseLeaseUnavailableError);
-    release();
-    await first;
+    try {
+      expect(await waitForLease(`test:${userId}`)).toBe(true);
+      await expect(
+        withDatabaseLease("test", userId, 5_000, async () => undefined),
+      ).rejects.toBeInstanceOf(DatabaseLeaseUnavailableError);
+    } finally {
+      release();
+      await first;
+    }
     await expect(
       withDatabaseLease("test", userId, 5_000, async () => "released"),
     ).resolves.toBe("released");
@@ -64,12 +78,16 @@ describe("MongoDB account lifecycle", () => {
       90,
       async () => held,
     );
-    await new Promise((resolve) => setTimeout(resolve, 140));
-    await expect(
-      withDatabaseLease("renewal-test", userId, 90, async () => undefined),
-    ).rejects.toBeInstanceOf(DatabaseLeaseUnavailableError);
-    release();
-    await first;
+    try {
+      expect(await waitForLease(`renewal-test:${userId}`)).toBe(true);
+      await new Promise((resolve) => setTimeout(resolve, 140));
+      await expect(
+        withDatabaseLease("renewal-test", userId, 90, async () => undefined),
+      ).rejects.toBeInstanceOf(DatabaseLeaseUnavailableError);
+    } finally {
+      release();
+      await first;
+    }
   });
 
   it("exports every owned data category and transactionally erases it", async () => {

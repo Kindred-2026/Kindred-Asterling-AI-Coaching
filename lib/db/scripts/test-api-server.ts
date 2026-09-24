@@ -32,6 +32,7 @@ try {
       env: {
         ...process.env,
         NODE_ENV: "test",
+        DATABASE_PROVIDER: "mongo",
         HELCIM_PAYMENTS_ENABLED: "false",
         MONGODB_URI: uri,
         MONGODB_DATABASE: databaseName,

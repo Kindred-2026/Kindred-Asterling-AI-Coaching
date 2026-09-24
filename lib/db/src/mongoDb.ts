@@ -925,6 +925,42 @@ class DeleteQuery<TableRow extends Row> implements PromiseLike<TableRow[]> {
 export class MongoDataApi {
   constructor(readonly session?: ClientSession) {}
 
+  async incrementDailyUsage(userId: string, date: string, limit: number): Promise<number | null> {
+    const current = await getMongoDatabase();
+    const usage = current.collection<{ _id: string; userId: string; date: string; count: number }>("daily_usage");
+    const id = `${userId}:${date}`;
+    await usage.updateOne(
+      { _id: id },
+      { $setOnInsert: { userId, date, count: 0 } },
+      { upsert: true, session: this.session },
+    );
+    const result = await usage.findOneAndUpdate(
+      { _id: id, count: { $lt: limit } },
+      { $inc: { count: 1 } },
+      { returnDocument: "after", session: this.session },
+    );
+    return result?.count ?? null;
+  }
+
+  async refundDailyUsage(userId: string, date: string): Promise<void> {
+    const current = await getMongoDatabase();
+    await current.collection<{ _id: string; userId: string; date: string; count: number }>("daily_usage").updateOne(
+      { _id: `${userId}:${date}`, count: { $gt: 0 } },
+      { $inc: { count: -1 } },
+      { session: this.session },
+    );
+  }
+
+  async findUsersByEmail(email: string, limit = 2): Promise<string[]> {
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) throw new Error("Invalid user lookup limit");
+    const current = await getMongoDatabase();
+    const matches = await current.collection<{ id?: string; email?: string }>("users").find(
+      { email },
+      { projection: { id: 1 }, collation: { locale: "en", strength: 2 }, session: this.session },
+    ).limit(limit).toArray();
+    return matches.flatMap((user) => typeof user.id === "string" ? [user.id] : []);
+  }
+
   select<Selection extends Record<string, unknown> | undefined = undefined>(
     selection?: Selection,
   ): SelectStart<Selection> {

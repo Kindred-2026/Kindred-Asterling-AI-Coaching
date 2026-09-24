@@ -1,7 +1,9 @@
-# PostgreSQL migration rehearsal (not an application runtime)
+# PostgreSQL schema baseline (rehearsal only)
 
-MongoDB remains the API's only database. This isolated schema covers every
-field and all 20 collections in `src/mongoSchema.ts`, with explicit SQL types,
+MongoDB remains the default API database. The code has an opt-in PostgreSQL
+runtime adapter, but this schema is still applied only to isolated rehearsal
+databases until real PostgreSQL integration, migration, restore and production
+cutover gates pass. It covers every field and all 20 tables in `src/mongoSchema.ts`, with explicit SQL types,
 indexes, uniqueness and owner relationships. It is for an **empty, dedicated**
 database, never the historical PostgreSQL database or the application DB.
 Kindred `users.id` remains text; Auth0 subject, Clerk ID and email are attributes,
@@ -41,24 +43,26 @@ server-side `MONGODB_REHEARSAL_URI`, `MONGODB_REHEARSAL_DATABASE` (named
 test/dev/fixture/rehearsal, different from the configured runtime source),
 `PG_REHEARSAL_URL` and
 `NODE_ENV=test` or `development`. It requires no `.env` file loader. The
-optional `DATABASE_URL` is used to reject any target on the runtime database host,
-even when the database name differs. When `DATABASE_URL` is not configured, the
+optional `POSTGRES_URL` is used to reject any target on the runtime database host,
+even when the database name differs. When `POSTGRES_URL` is not configured, the
 operator must independently verify the target host is non-production.
 The default invocation is `corepack pnpm --filter @workspace/db
 rehearse:mongo-to-postgres`; the explicit staging-write invocation appends
 `-- --write --non-production`.
 
-## Barriers before any runtime selector or cutover
+## Barriers before staging verification or production cutover
 
-- Implement and integration-test the complete PostgreSQL query API: conditions,
+- The code includes an opt-in `DATABASE_PROVIDER=postgres` runtime selector,
+  PostgreSQL query adapter, database-backed leases, sequence identities and
+  database-neutral quota and legacy identity lookup. Mongo remains the default.
+  `POSTGRES_URL` must point only at the reviewed Kindred database.
+- Run the complete app integration suite against real PostgreSQL for conditions,
   sorting, pagination, projections, multi-row writes/deletes, targeted conflict
-  handling, conditional upserts, transactions, counts, leases, health and close.
-- Convert direct Mongo calls in `dailyQuota.ts` (atomic quota and refund) and
-  `routes/subscription.ts` (legacy webhook lookup within the transaction).
-  Migration never correlates users by email.
+  handling, conditional upserts, nested transactions, counts, leases, health,
+  close, quotas, webhook identity fallback, ownership, exports and deletion.
 - Validate source/target row digests and exact values in addition to counts,
   integer sequence continuation, all index/constraint behavior on real
   PostgreSQL, real transaction rollback, restore/replay and incremental changes.
   The `pg-mem` fixture does **not** prove PostgreSQL rollback or restore.
-- Independently review DigitalOcean TLS/configuration, deployment and rollback
-  gates before allowing `DB_BACKEND=postgres`. Keep Snyk scanning active.
+- Verify Fly TLS/configuration, deployment and rollback gates before setting
+  `DATABASE_PROVIDER=postgres`. Keep Snyk scanning active.

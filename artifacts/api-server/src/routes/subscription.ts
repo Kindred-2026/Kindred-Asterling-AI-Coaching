@@ -3,7 +3,6 @@ import {
   DatabaseLeaseUnavailableError,
   and,
   eq,
-  getMongoDatabase,
   isNull,
   withDatabaseLease,
 } from "@workspace/db";
@@ -225,23 +224,8 @@ router.post("/payment/webhook", async (req, res): Promise<void> => {
       if (!subscription) {
         let userId = referencedUser;
         if (fallbackEmail) {
-          const database = await getMongoDatabase();
-          const legacyUsers = await database
-            .collection("users")
-            .find(
-              { email: fallbackEmail.trim() },
-              {
-                projection: { id: 1 },
-                collation: { locale: "en", strength: 2 },
-                session: tx.session,
-              },
-            )
-            .limit(2)
-            .toArray();
-          userId =
-            legacyUsers.length === 1 && typeof legacyUsers[0]?.id === "string"
-              ? legacyUsers[0].id
-              : null;
+          const legacyUserIds = await tx.findUsersByEmail(fallbackEmail.trim(), 2);
+          userId = legacyUserIds.length === 1 ? legacyUserIds[0]! : null;
         }
         if (!userId) throw new Error("No internal user for Helcim customer");
         const [user] = await tx

@@ -111,6 +111,7 @@ export type RehearsalSnapshot = {
 };
 export type SqlClient = {
   query(sql: string, values?: readonly unknown[]): Promise<{ rows: Record<string, unknown>[] }>;
+  supportsIdentitySequences?: boolean;
 };
 export type RehearsalOptions = {
   write?: boolean;
@@ -119,6 +120,11 @@ export type RehearsalOptions = {
   schemaSql?: string;
 };
 export const rehearsalTables = Object.keys(rehearsalColumns) as RehearsalTable[];
+const rehearsalIdentityTables = [
+  "affirmations", "body_scans", "conversations", "evening_reports", "habits",
+  "habit_entries", "medications", "medication_logs", "medication_schedule_entries",
+  "messages", "morning_logs", "reminder_deliveries",
+] as const;
 
 // Every non-identity field must be classified. A change to the Mongo schema
 // requires a deliberate corresponding change to this map and to the SQL file.
@@ -391,6 +397,13 @@ export async function replayRehearsal(
         );
       }
       counts[table] = snapshot[table].length;
+    }
+    if (options.write && client.supportsIdentitySequences !== false) {
+      for (const table of rehearsalIdentityTables) {
+        await client.query(
+          `SELECT setval(pg_get_serial_sequence('"${table}"', 'id'), GREATEST(COALESCE(MAX(id), 1), 1), COALESCE(MAX(id), 0) > 0) FROM "${table}"`,
+        );
+      }
     }
     for (const table of rehearsalTables) {
       const { rows } = await client.query(`SELECT count(*) AS total FROM "${table}"`);

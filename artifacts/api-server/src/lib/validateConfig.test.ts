@@ -11,6 +11,7 @@ function baseEnv(): void {
   process.env = {
     ...originalEnv,
     NODE_ENV: "test",
+    DATABASE_PROVIDER: "mongo",
     MONGODB_URI: "mongodb://test:27017",
     MONGODB_DATABASE: "kindred_test",
     PORT: "8080",
@@ -72,6 +73,24 @@ describe("MongoDB runtime configuration", () => {
 
     process.env.MONGODB_URI = "mongodb+srv://mongo.example";
     expect(validateRuntimeConfig).toThrow(/MONGODB_DATABASE must contain/);
+  });
+});
+
+describe("PostgreSQL runtime configuration", () => {
+  it("accepts PostgreSQL without requiring MongoDB credentials", () => {
+    baseEnv();
+    process.env.DATABASE_PROVIDER = "postgres";
+    process.env.POSTGRES_URL = "postgresql://db.example/kindred";
+    delete process.env.MONGODB_URI;
+    delete process.env.MONGODB_DATABASE;
+    expect(validateRuntimeConfig).not.toThrow();
+  });
+
+  it("rejects non-PostgreSQL connection URLs", () => {
+    baseEnv();
+    process.env.DATABASE_PROVIDER = "postgres";
+    process.env.POSTGRES_URL = "https://db.example/kindred";
+    expect(validateRuntimeConfig).toThrow(/POSTGRES_URL must use/);
   });
 });
 
