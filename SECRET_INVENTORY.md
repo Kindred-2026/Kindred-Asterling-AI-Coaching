@@ -95,8 +95,8 @@ cutover.
 | `CALENDAR_OAUTH_STATE_SECRET` | Local OAuth state signing only while the retired Calendar flow remains available. | Retired; remove after disconnect audit |
 | `CALENDAR_TOKEN_ENCRYPTION_KEY` | Local decrypt/re-encrypt of stored Calendar refresh tokens for disconnect or recovery; never share with the browser. | Temporary; remove after stored-token disposition |
 | `SNYK_TOKEN` | Read-only project dependency/code scanning sufficient for the CI scans; no organization administration. | Verify token type and org scope in Snyk |
-| `OPENCODE_API_KEY` | Model/API access needed for the trusted-comment workflow only; GitHub write access comes from the separate job-scoped `GITHUB_TOKEN`. | Verify provider project and spending limits |
-| `GITHUB_TOKEN` | Per-job permissions only; OpenCode workflow currently requests contents, issues, and pull-request writes for trusted maintainers. Other CI jobs stay read-only. | Workflow-declared; review necessity before expanding |
+| `OPENCODE_API_KEY` | Model/API access for the GitHub comment bot; its sole workflow consumer is removed by PR #164 | Remove from repository settings after PR #164 merges |
+| `GITHUB_TOKEN` | GitHub-managed per-job API token; permissions are bounded by each workflow's `permissions:` declaration. It is not a repository secret and needs no manual rotation. | Automatic; retain least-privilege workflow permissions |
 
 ### One-off jobs, retired integration references and development switches
 
@@ -146,22 +146,20 @@ Fixture-only `FAKE_*`, `BIND_PORT`, `MARKER_FILE`, `GRANDCHILD_*`, `EXIT_CODE`, 
 
 ### GitHub Actions references
 
-These are **workflow references only**; all are **verify-in-GitHub** for presence, access and rotation. No GitHub Actions `vars.*` references were found. Workflow-defined `HELCIM_PAYMENTS_ENABLED` and synthetic `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, `VITE_AUTH0_AUDIENCE` are test configuration, not evidence of repository secrets.
+These are **workflow references only**; verify active credential references in GitHub. The branch after PR #164 has no explicit `OPENCODE_API_KEY` or `GITHUB_TOKEN` reference. GitHub automatically provides the per-job `GITHUB_TOKEN` subject to workflow permissions; it is not a repository secret. No GitHub Actions `vars.*` references were found. Workflow-defined `HELCIM_PAYMENTS_ENABLED` and synthetic `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, `VITE_AUTH0_AUDIENCE` are test configuration, not evidence of repository secrets.
 
 | Name | Kind; consumer / purpose; requirement | Dev | Current production / Actions source | Proposed target | Owner / status |
 | --- | --- | --- | --- | --- | --- |
 | `SNYK_TOKEN` | S; Snyk workflow scans, required for that workflow | GitHub Actions secret reference | `secrets.SNYK_TOKEN`; verify-in-GitHub | GitHub Actions secret if scan retained | Kindred owner; verify-in-GitHub, rotate if needed |
-| `OPENCODE_API_KEY` | S; OpenCode workflow auth, required for that workflow | GitHub Actions secret reference | `secrets.OPENCODE_API_KEY`; verify-in-GitHub | GitHub Actions secret while the comment-triggered workflow is used | Kindred owner; limited to trusted-member comments; verify-in-GitHub, rotate if needed |
-| `GITHUB_TOKEN` | S; OpenCode workflow GitHub API access | GitHub-managed workflow token | `secrets.GITHUB_TOKEN`; verify-in-GitHub (GitHub-provided) | GitHub-managed token | Kindred owner; verify-in-GitHub, no manual secret rotation assumed |
 
 
 ### GitHub repository inventory — names checked 2026-09-24
 
-A read-only GitHub metadata query returned repository-level Actions secret **names only**; no values were accessed. After checking both canonical `main` and the finalization branch workflows, unused `CLERK`, `NEON_API_KEY`, and `NEON_PROJECT_ID` entries were removed on 2026-09-24. Only the two secrets consumed by current workflows remain; the repository variable list is empty. This is a point-in-time inventory, not proof that either retained secret is correctly scoped.
+A read-only GitHub metadata query returned repository-level Actions secret **names only**; no values were accessed. After checking both canonical `main` and the finalization branch workflows, unused `CLERK`, `NEON_API_KEY`, and `NEON_PROJECT_ID` entries were removed on 2026-09-24. Canonical `main` currently has two workflow secrets; PR #164 removes the unused OpenCode comment bot, after which `OPENCODE_API_KEY` must be deleted from GitHub. The repository variable list is empty. This is a point-in-time inventory, not proof that the retained Snyk token is correctly scoped.
 
 | Name | Kind; observed consumer | Owner / disposition |
 | --- | --- | --- |
-| `OPENCODE_API_KEY` | S; referenced by pinned `.github/workflows/opencode.yml` action | Kindred owner; retain only while workflow is used; action pin and comment permissions hardened; verify secret scope |
+| `OPENCODE_API_KEY` | S; referenced only by `.github/workflows/opencode.yml` on canonical `main`; PR #164 removes the sole consumer after zero successful workflow runs | Kindred owner; delete from GitHub after PR #164 is merged; retain until then so canonical `main` does not contain a workflow with a missing secret |
 | `SNYK_TOKEN` | S; referenced by `.github/workflows/snyk-security.yml` | Kindred owner; retain while Snyk scanning is active; rotate if exposure or ownership requires it |
 
 GitHub lists three deployment environments: `Asterling Coach / production`, `Asterling Coaching / production`, and `Asterling Coaching / Staging`. Read-only queries of the correct repository environment endpoints returned zero environment secrets and zero environment variables for each. Their deployment records remain: 1, 43, and 21 respectively; the latest recorded SHA for the two `Asterling Coaching` environments is `99d0679bae2dceb8218214efa47eee98655e5235` (2026-07-28), and the latest for `Asterling Coach / production` is `3049c5c97babaa5ddbc01427e91000212aeb0992` (2026-07-11). Repository Actions variables are empty. The signed-in GitHub organization Actions settings pages show no organization secrets and no organization variables. These GitHub deployment records are not proof of a currently active provider deployment. Keep the records; verify each environment's external purpose before removing it.
@@ -199,4 +197,4 @@ The selected destination is **Fly.io app + Fly Managed Postgres in Toronto (`yyz
 3. Are Clerk webhook/admin access or Google Calendar stored tokens still needed for cleanup or revocation before removing credentials (especially `CALENDAR_TOKEN_ENCRYPTION_KEY`)?
 4. Which Fly organization/app and Managed Postgres cluster are selected, is Toronto (`yyz`) available on both, and what is the verified migration/rollback and secret-rotation schedule?
 5. Which Cloudflare AI Gateway account, authentication mode, upstream provider and server-side credential contract are intended?
-6. In GitHub Actions, are `SNYK_TOKEN` and `OPENCODE_API_KEY` configured and scoped correctly, and does the OpenCode workflow rely on GitHub's supplied `GITHUB_TOKEN`?
+6. Verify `SNYK_TOKEN` remains correctly scoped for the active Snyk workflow. After PR #164 merges, delete the unused `OPENCODE_API_KEY` and confirm the repository secret list contains only active consumers.
