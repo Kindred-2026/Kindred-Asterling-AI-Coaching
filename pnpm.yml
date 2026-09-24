@@ -17,4 +17,4 @@ phases:
   build:
     commands:
       - pnpm run typecheck
-      - pnpm --filter @workspace/api-server exec vitest run src/lib/ai/bedrockProvider.test.ts src/lib/validateConfig.test.ts
+      - pnpm --filter @workspace/api-server exec vitest run src/lib/ai/providers.test.ts src/lib/validateConfig.test.ts

@@ -3,7 +3,6 @@ packages:
   - lib/*
   - lib/integrations/*
   - scripts
-  - frontend
 
 allowBuilds:
   "@google/genai": true

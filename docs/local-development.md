@@ -6,9 +6,6 @@
 - the Express API (`artifacts/api-server`) on the same `/api` origin (the Vite dev
   server proxies `/api` to the API), backed by a disposable MongoDB.
 
-The legacy Next.js experiment is **not** part of this command. Use
-`pnpm dev:experiment` if you still need it.
-
 ## Prerequisites
 
 - Node 24+ and pnpm (the repo pins `pnpm@10.28.1`; use it if you can: `corepack enable` + `pnpm i`).
@@ -36,7 +33,8 @@ tears it down when you stop `pnpm dev`.
   so Vite naturally falls back to the package file, while an explicit nonblank
   shell value still wins.
 - **`AI_PROVIDER=disabled`** keeps the API runnable without AI infrastructure;
-  switch to `openai`/`ollama`/`bedrock` (adding their keys) when you need live AI.
+  switch to `openai`/`ollama` when you need live AI. Hosted endpoints should be
+  used only with synthetic data unless the provider review is complete.
 - Secret values (`RESEND_API_KEY`, `OPENAI_API_KEY`, calendar keys, …) belong in
   your environment or a secrets manager, **never** in `.env.dev`. The launcher
   sends only public nonblank `VITE_*` values to the browser child; anything else

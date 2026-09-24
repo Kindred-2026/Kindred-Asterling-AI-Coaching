@@ -37,7 +37,7 @@ jobs:
       actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check Snyk credentials
         run: |
           if [ -z "$SNYK_TOKEN" ]; then
@@ -61,7 +61,7 @@ jobs:
 
       - name: Preserve Snyk Code report
         if: ${{ always() && hashFiles('snyk-code.sarif') != '' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: snyk-code-report
           path: snyk-code.sarif
@@ -78,7 +78,18 @@ jobs:
 
         # Build the docker image for testing
       - name: Build a Docker image
-        run: docker build -t your/image-to-test .
+        env:
+          # Synthetic public build identifiers let the production image compile
+          # for scanning without granting this security job access to an Auth0 tenant.
+          VITE_AUTH0_DOMAIN: tenant.example.invalid
+          VITE_AUTH0_CLIENT_ID: synthetic-public-client
+          VITE_AUTH0_AUDIENCE: https://api.example.invalid
+        run: >-
+          docker build
+          --secret id=VITE_AUTH0_DOMAIN,env=VITE_AUTH0_DOMAIN
+          --secret id=VITE_AUTH0_CLIENT_ID,env=VITE_AUTH0_CLIENT_ID
+          --secret id=VITE_AUTH0_AUDIENCE,env=VITE_AUTH0_AUDIENCE
+          -t your/image-to-test .
         # Runs Snyk Container (Container and SCA) analysis and uploads result to Snyk.
       - name: Snyk Container monitor
         run: snyk container monitor your/image-to-test --file=Dockerfile
@@ -86,6 +97,6 @@ jobs:
         # Push the Snyk Code results into GitHub Code Scanning tab
       - name: Upload result to GitHub Code Scanning
         if: ${{ always() && hashFiles('snyk-code.sarif') != '' }}
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4.38.1
         with:
           sarif_file: snyk-code.sarif

@@ -10,6 +10,7 @@ import adminRouter from "./admin";
 
 function testApp(authenticated: boolean) {
   const app = express();
+  app.disable("x-powered-by");
   app.use((req: Request, _res: Response, next: NextFunction) => {
     req.isAuthenticated = function (this: Request) {
       return this.user != null;
@@ -77,6 +78,7 @@ describe("admin route mounting", () => {
     );
 
     expect(response.status).toBe(200);
+    expect(response.headers["x-powered-by"]).toBeUndefined();
     expect(response.body.users).toEqual([
       expect.objectContaining({
         id: "app-user-id",
@@ -93,5 +95,13 @@ describe("admin route mounting", () => {
     );
 
     expect(response.status).toBe(401);
+  });
+
+  it("rejects an array-valued admin search query", async () => {
+    const response = await request(testApp(true)).get(
+      "/api/admin/users?q=one&q=two",
+    );
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: "q must be a string" });
   });
 });

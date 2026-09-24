@@ -1,4 +1,4 @@
-import { eq, inArray } from "@workspace/db";
+import { eq } from "@workspace/db";
 import {
   db,
   usersTable,
@@ -134,14 +134,10 @@ export async function exportAccount(userId: string) {
         .where(eq(betaGrantsTable.userId, userId)),
     ),
   ]);
-  const conversationIds = chats.map((chat) => chat.id);
-  const chatMessages =
-    conversationIds.length === 0
-      ? []
-      : await db
-          .select()
-          .from(messages)
-          .where(inArray(messages.conversationId, conversationIds));
+  const chatMessages = await db
+    .select()
+    .from(messages)
+    .where(eq(messages.userId, userId));
   return {
     exportedAt: new Date().toISOString(),
     formatVersion: 1,

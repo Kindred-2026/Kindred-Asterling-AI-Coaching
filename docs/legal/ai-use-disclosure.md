@@ -23,9 +23,9 @@ Kindred's context assembler selects source categories using the current interact
 
 ## Providers and data use
 
-Production AI inference is provided through AWS Bedrock. The server also supports locally operated Ollama and a configured OpenAI-compatible service, but those alternatives should not be described as production processors unless they are actually enabled.
+The production AI provider and its processing region must be confirmed against the live deployment before publication. The application supports local Ollama and an OpenAI-compatible hosted endpoint. The planned hosted route is Cloudflare AI Gateway to a selected upstream model provider; this is a target architecture, not confirmation that either service currently processes production data.
 
-> **Founder/legal confirmation required:** Confirm the AWS Bedrock model and processing region, retention, abuse monitoring, training policy, human-review access, and opt-out or consent choices. Confirm whether any alternative AI provider is enabled in production.
+> **Founder/legal confirmation required:** Before publication, confirm the live model vendor, model, processing regions, retention, abuse monitoring, training policy, human-review access, and opt-out or consent choices. Confirm the Gateway payload logging configuration and the upstream provider's controls.
 
 ## Canadian privacy guidance
 

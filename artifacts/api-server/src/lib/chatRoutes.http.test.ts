@@ -9,7 +9,7 @@ import {
 } from "vitest";
 import type { AddressInfo } from "net";
 import type { Server } from "http";
-import { eq, inArray } from "@workspace/db";
+import { eq } from "@workspace/db";
 import {
   db,
   closeDatabase,
@@ -166,14 +166,10 @@ async function quotaCount(userId: string): Promise<number> {
 }
 
 async function messagesForUser(userId: string) {
-  const chats = await db
+  return await db
     .select()
-    .from(conversations)
-    .where(eq(conversations.userId, userId));
-  const ids = chats.map((chat) => chat.id);
-  return ids.length === 0
-    ? []
-    : db.select().from(messages).where(inArray(messages.conversationId, ids));
+    .from(messages)
+    .where(eq(messages.userId, userId));
 }
 
 beforeAll(async () => {
@@ -366,6 +362,9 @@ describe("POST /chat/send", () => {
     );
     expect(
       conv.messages.some((m) => m.content === "Take your time at therapy."),
+    ).toBe(true);
+    expect(
+      (await messagesForUser(userAId)).every((m) => m.userId === userAId),
     ).toBe(true);
   });
 
@@ -759,6 +758,29 @@ describe("POST /chat/append", () => {
       .from(conversations)
       .where(eq(conversations.id, conv.id));
     expect(row.userId).toBe(userAId);
+  });
+
+  it("does not return a message with another owner even under the same conversation", async () => {
+    const first = await api("POST", "/chat/append", {
+      token: tokenA,
+      body: { role: "user", content: "owned note" },
+    });
+    const conversationId = (first.body as ConvWithMessages).id;
+    await db.insert(messages).values({
+      conversationId,
+      userId: userBId,
+      role: "user",
+      content: "cross-account fixture",
+    });
+
+    const active = await api("GET", "/chat/active", { token: tokenA });
+    const returned = active.body as ConvWithMessages;
+    expect(returned.messages.map((message) => message.content)).toContain(
+      "owned note",
+    );
+    expect(returned.messages.map((message) => message.content)).not.toContain(
+      "cross-account fixture",
+    );
   });
 });
 

@@ -2,14 +2,19 @@
 
 Monorepo for the Kindred Asterling AI Coaching product.
 
-**Production stack:** React/Vite + Express + Auth0 + MongoDB.
+**Current application stack:** React/Vite + Express + Auth0 + MongoDB.
+**Finalization target:** Fly.io for application hosting and managed PostgreSQL;
+Cloudflare remains the DNS/security and AI Gateway layer. See [the finalization
+record](docs/FINALIZATION_RECORD.md) and [the Fly.io deployment runbook](docs/FLY_DEPLOYMENT.md).
+The DigitalOcean guide remains marked as superseded; Railway was evaluated but
+not selected. Production
+hosting and database remain on the current providers until their migration gates
+are verified.
 
 - Product UI: `artifacts/kindred-coach` (React/Vite, `@workspace/kindred-coach`)
 - API server: `artifacts/api-server` (Express, `@workspace/api-server`)
 - Database: MongoDB (replica set — multi-document writes require transactions)
 - Authentication: Auth0 (see [docs/auth0-migration.md](docs/auth0-migration.md))
-- The `frontend/` directory is a **Next.js experiment** only; it is not part of the
-  production stack and is not built by production jobs. See `frontend/README.md`.
 
 ## Quick start
 
@@ -29,9 +34,9 @@ hot-reloaded — restart `pnpm dev` after editing API code.
 
 ## Verification
 
-One command runs the same components as GitHub Actions in the same order, from a
-sanitised child environment (no secrets or `VITE_*` values are forwarded, and
-nothing outside the repository is touched):
+Use one local verification command before review. It runs the maintained local
+checks from a sanitised child environment (no secrets or `VITE_*` values are
+forwarded, and nothing outside the repository is touched):
 
 ```sh
 pnpm verify

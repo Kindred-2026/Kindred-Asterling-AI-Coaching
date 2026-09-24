@@ -53,10 +53,10 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
         await closeDatabase();
       } catch (databaseError) {
         shutdownFailed = true;
-        logger.error({ err: databaseError }, "MongoDB close failed");
+        logger.error({ err: databaseError }, "Database close failed");
       }
       if (!shutdownFailed) {
-        logger.info("HTTP server and MongoDB pool closed");
+        logger.info("HTTP server and database pool closed");
       }
       process.exitCode = shutdownFailed ? 1 : 0;
     } finally {

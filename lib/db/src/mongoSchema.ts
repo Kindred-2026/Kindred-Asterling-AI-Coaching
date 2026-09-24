@@ -461,6 +461,7 @@ export const medicationScheduleEntriesTable = table<MedicationScheduleEntry>(
 export interface Message extends Record<string, unknown> {
   id: number;
   conversationId: number;
+  userId: string;
   role: string;
   content: string;
   createdAt: Date;
@@ -468,7 +469,7 @@ export interface Message extends Record<string, unknown> {
 
 export const messages = table<Message>(
   "messages",
-  ["id", "conversationId", "role", "content", "createdAt"],
+  ["id", "conversationId", "userId", "role", "content", "createdAt"],
   {
     primaryKey: ["id"],
     autoIncrement: "id",

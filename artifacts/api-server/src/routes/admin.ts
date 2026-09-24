@@ -51,7 +51,12 @@ const router: IRouter = Router();
 router.use(requireAuth, requireOwner);
 
 router.get("/users", async (req, res): Promise<void> => {
-  const rawQ = ((req.query.q as string) || "").trim().toLowerCase();
+  const query = req.query.q;
+  if (query !== undefined && typeof query !== "string") {
+    res.status(400).json({ error: "q must be a string" });
+    return;
+  }
+  const rawQ = (query ?? "").trim().toLowerCase();
   if (!rawQ) {
     res.json({ users: [] });
     return;

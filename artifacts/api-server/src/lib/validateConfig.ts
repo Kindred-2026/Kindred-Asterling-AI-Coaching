@@ -4,18 +4,29 @@ export function validateRuntimeConfig(): void {
     if (!process.env[name]?.trim()) missing.push(name);
   };
 
-  requireValue("MONGODB_URI");
-  requireValue("MONGODB_DATABASE");
   requireValue("PORT");
-  const uri = process.env.MONGODB_URI?.trim();
-  if (uri && !/^mongodb(?:\+srv)?:\/\//i.test(uri)) {
-    throw new Error("MONGODB_URI must use mongodb:// or mongodb+srv://");
-  }
-  const databaseName = process.env.MONGODB_DATABASE?.trim();
-  if (databaseName && !/^[A-Za-z0-9_-]{1,63}$/.test(databaseName)) {
-    throw new Error(
-      "MONGODB_DATABASE must contain only letters, numbers, underscores, or hyphens",
-    );
+  const databaseProvider = (process.env.DATABASE_PROVIDER || "mongo").trim().toLowerCase();
+  if (databaseProvider === "mongo") {
+    requireValue("MONGODB_URI");
+    requireValue("MONGODB_DATABASE");
+    const uri = process.env.MONGODB_URI?.trim();
+    if (uri && !/^mongodb(?:\+srv)?:\/\//i.test(uri)) {
+      throw new Error("MONGODB_URI must use mongodb:// or mongodb+srv://");
+    }
+    const databaseName = process.env.MONGODB_DATABASE?.trim();
+    if (databaseName && !/^[A-Za-z0-9_-]{1,63}$/.test(databaseName)) {
+      throw new Error(
+        "MONGODB_DATABASE must contain only letters, numbers, underscores, or hyphens",
+      );
+    }
+  } else if (databaseProvider === "postgres") {
+    requireValue("POSTGRES_URL");
+    const uri = process.env.POSTGRES_URL?.trim();
+    if (uri && !/^postgres(?:ql):\/\//i.test(uri)) {
+      throw new Error("POSTGRES_URL must use postgres:// or postgresql://");
+    }
+  } else {
+    throw new Error("DATABASE_PROVIDER must be either mongo or postgres");
   }
   const aiProvider = (process.env.AI_PROVIDER || "ollama").toLowerCase();
   if (aiProvider === "ollama") {
@@ -24,12 +35,9 @@ export function validateRuntimeConfig(): void {
   } else if (aiProvider === "openai") {
     requireValue("OPENAI_API_KEY");
     requireValue("OPENAI_MODEL");
-  } else if (aiProvider === "bedrock") {
-    requireValue("AWS_REGION");
-    requireValue("BEDROCK_MODEL_ID");
   } else if (!["disabled", "none", "off"].includes(aiProvider)) {
     throw new Error(
-      "AI_PROVIDER must be one of: bedrock, ollama, openai, disabled",
+      "AI_PROVIDER must be one of: ollama, openai, disabled",
     );
   }
 

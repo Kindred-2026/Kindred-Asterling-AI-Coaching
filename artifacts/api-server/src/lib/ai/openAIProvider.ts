@@ -11,14 +11,22 @@ export class OpenAIProvider implements AIProvider {
   ) {}
 
   async chat(request: AIRequest): Promise<AIResponse> {
+    const headers: Record<string, string> = {
+      "content-type": "application/json",
+      authorization: `Bearer ${this.apiKey}`,
+    };
+    if (isCloudflareAIGateway(this.baseUrl)) {
+      // Keep conversation bodies out of Gateway request logs. Metadata and
+      // usage can still be used for operational metrics. Conversation-specific
+      // prompts and responses must also bypass Gateway response caching.
+      headers["cf-aig-collect-log-payload"] = "false";
+      headers["cf-aig-skip-cache"] = "true";
+    }
     const response = await fetchWithDeadline(
       `${this.baseUrl.replace(/\/$/, "")}/chat/completions`,
       {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-          authorization: `Bearer ${this.apiKey}`,
-        },
+        headers,
         body: JSON.stringify({
           model: this.model,
           store: false,
@@ -79,6 +87,14 @@ export class OpenAIProvider implements AIProvider {
           ? choice.finish_reason
           : undefined,
     };
+  }
+}
+
+function isCloudflareAIGateway(baseUrl: string): boolean {
+  try {
+    return new URL(baseUrl).hostname === "gateway.ai.cloudflare.com";
+  } catch {
+    return false;
   }
 }
 

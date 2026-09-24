@@ -1,5 +1,7 @@
 # SEO Strategy
 
+> **Note:** This is an unfinished strategy brief. Content is incomplete and subject to change.
+
 ## In scope
 - Public marketing pages: `/`, `/about`, `/science`, `/pricing`
 - Public transactional page: `/payment-success`

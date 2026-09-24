@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("./logger", () => ({ logger: { warn: vi.fn() } }));
@@ -20,7 +21,7 @@ describe("crisis safety boundary", () => {
   });
 
   it("logs an allowlisted event without message or identity data", () => {
-    const secretMessage = "I want to die";
+    const secretMessage = randomBytes(24).toString("hex");
     const directIdentifier = "user_clerk_123@example.test";
     emitSafetySignalEvent();
 

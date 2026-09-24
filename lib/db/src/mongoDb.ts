@@ -9,6 +9,8 @@ import {
   type CreateIndexesOptions,
   type Sort,
 } from "mongodb";
+// @ts-expect-error mongo-sanitize is a CommonJS sanitizer without declarations.
+import mongoSanitize from "mongo-sanitize";
 import { trace } from "@opentelemetry/api";
 import {
   allTables,
@@ -32,6 +34,22 @@ type MongoRow = Row & { _id: any };
 export type Condition = { readonly filter: Filter<Document> };
 export type SortExpression = { readonly sort: Sort };
 
+type ScalarValue = string | number | boolean | Date | null;
+type ConditionExpression =
+  | {
+      readonly kind: "comparison";
+      readonly column: Column;
+      readonly operator: "eq" | "$gt" | "$gte" | "$lt" | "$lte" | "$in";
+      readonly value: ScalarValue | readonly ScalarValue[];
+    }
+  | {
+      readonly kind: "logical";
+      readonly operator: "$and" | "$or";
+      readonly conditions: readonly Condition[];
+    };
+
+const conditionExpressions = new WeakMap<object, ConditionExpression>();
+
 function isColumn(value: unknown): value is Column {
   return Boolean(
     value &&
@@ -41,49 +59,98 @@ function isColumn(value: unknown): value is Column {
   );
 }
 
-function condition(filter: Filter<Document>): Condition {
-  return { filter };
+function scalarValue(value: unknown): ScalarValue {
+  if (value === null || typeof value === "string" || typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (value instanceof Date && Number.isFinite(value.getTime())) {
+    return new Date(value.getTime());
+  }
+  throw new Error("MongoDB conditions accept scalar values only");
+}
+
+function expressionFilter(expression: ConditionExpression): Filter<Document> {
+  if (expression.kind === "logical") {
+    const children = expression.conditions.map((condition) => mongoFilter(condition));
+    if (children.length === 0) return {};
+    return { [expression.operator]: children };
+  }
+  const column = expression.column;
+  const owner = isColumn(column)
+    ? allTables.find((table) => table.collectionName === column.tableName)
+    : undefined;
+  if (
+    !owner ||
+    typeof column.key !== "string" ||
+    !Object.hasOwn(owner.columns, column.key)
+  ) {
+    throw new Error("Invalid database condition column");
+  }
+  const value = Array.isArray(expression.value)
+    ? expression.value.map(scalarValue)
+    : scalarValue(expression.value);
+  if (expression.operator === "eq") return { [column.key]: value };
+  if (expression.operator === "$in") return { [column.key]: { $in: value } };
+  return { [column.key]: { [expression.operator]: value } };
+}
+
+function condition(expression: ConditionExpression): Condition {
+  const result = { filter: expressionFilter(expression) };
+  conditionExpressions.set(result, expression);
+  return result;
+}
+
+function mongoFilter(value: Condition): Filter<Document> {
+  const expression = value && typeof value === "object"
+    ? conditionExpressions.get(value as object)
+    : undefined;
+  if (!expression) throw new Error("Invalid database condition");
+  return expressionFilter(expression);
 }
 
 export function eq(column: Column, value: unknown): Condition {
   if (isColumn(value)) {
     throw new Error("Cross-collection comparisons require an explicit lookup");
   }
-  return condition({ [column.key]: value });
+  return condition({ kind: "comparison", column, operator: "eq", value: scalarValue(value) });
 }
 
 export function and(...conditions: Condition[]): Condition {
-  if (conditions.length === 0) return condition({});
-  return condition({ $and: conditions.map((entry) => entry.filter) });
+  return condition({ kind: "logical", operator: "$and", conditions: [...conditions] });
 }
 
 export function or(...conditions: Condition[]): Condition {
-  if (conditions.length === 0) return condition({});
-  return condition({ $or: conditions.map((entry) => entry.filter) });
+  return condition({ kind: "logical", operator: "$or", conditions: [...conditions] });
 }
 
 export function isNull(column: Column): Condition {
-  return condition({ [column.key]: null });
+  return condition({ kind: "comparison", column, operator: "eq", value: null });
 }
 
 export function gt(column: Column, value: unknown): Condition {
-  return condition({ [column.key]: { $gt: value } });
+  return condition({ kind: "comparison", column, operator: "$gt", value: scalarValue(value) });
 }
 
 export function gte(column: Column, value: unknown): Condition {
-  return condition({ [column.key]: { $gte: value } });
+  return condition({ kind: "comparison", column, operator: "$gte", value: scalarValue(value) });
 }
 
 export function lte(column: Column, value: unknown): Condition {
-  return condition({ [column.key]: { $lte: value } });
+  return condition({ kind: "comparison", column, operator: "$lte", value: scalarValue(value) });
 }
 
 export function lt(column: Column, value: unknown): Condition {
-  return condition({ [column.key]: { $lt: value } });
+  return condition({ kind: "comparison", column, operator: "$lt", value: scalarValue(value) });
 }
 
 export function inArray(column: Column, values: readonly unknown[]): Condition {
-  return condition({ [column.key]: { $in: [...values] } });
+  return condition({
+    kind: "comparison",
+    column,
+    operator: "$in",
+    value: values.map(scalarValue),
+  });
 }
 
 export function asc(column: Column): SortExpression {
@@ -175,7 +242,7 @@ const indexDefinitions: ReadonlyArray<{
   { table: habitsTable, keys: { userId: 1 } },
   { table: habitEntriesTable, keys: { userId: 1, habitId: 1, date: -1 } },
   { table: conversations, keys: { userId: 1, status: 1, createdAt: -1 } },
-  { table: messages, keys: { conversationId: 1, id: -1 } },
+  { table: messages, keys: { userId: 1, conversationId: 1, id: -1 } },
   { table: medicationsTable, keys: { userId: 1, name: 1 } },
   {
     table: medicationLogsTable,
@@ -369,6 +436,25 @@ function documentId(table: Table, row: Row): unknown {
   );
 }
 
+function canonicalStoredQueryId(value: unknown): string | number {
+  // Sanitize database-derived data, then accept only Kindred's scalar keys.
+  // MongoDB-returned documents are data, never query expressions.
+  const sanitized = mongoSanitize(value);
+  if (
+    !(typeof sanitized === "string" && sanitized.length > 0) &&
+    !(typeof sanitized === "number" && Number.isSafeInteger(sanitized))
+  ) {
+    throw new Error("Invalid stored query identifier");
+  }
+  if (typeof sanitized === "string") {
+    return JSON.parse(JSON.stringify(sanitized)) as string;
+  }
+  if (!Number.isSafeInteger(sanitized)) {
+    throw new Error("Invalid stored query identifier");
+  }
+  return sanitized;
+}
+
 function storedQueryIds(rows: readonly Row[], field: string): Array<string | number> {
   // Persisted data is not a query expression. In particular, MongoDB treats a
   // RegExp inside $in as a pattern, which could match another account's rows.
@@ -376,14 +462,7 @@ function storedQueryIds(rows: readonly Row[], field: string): Array<string | num
   // Build a fresh list from validated primitives, never from raw documents.
   const ids: Array<string | number> = [];
   for (const row of rows) {
-    const value = row[field];
-    if (typeof value === "string" && value.length > 0) {
-      ids.push(String(value));
-    } else if (typeof value === "number" && Number.isSafeInteger(value)) {
-      ids.push(Number(value));
-    } else {
-      throw new Error("Invalid stored query identifier");
-    }
+    ids.push(canonicalStoredQueryId(row[field]));
   }
   return ids;
 }
@@ -473,7 +552,7 @@ class SelectQuery<Result extends Row> implements PromiseLike<Result[]> {
   ) {}
 
   where(value: Condition): this {
-    this.filter = value.filter;
+    this.filter = mongoFilter(value);
     return this;
   }
 
@@ -584,7 +663,7 @@ class InsertQuery<TableRow extends Row> implements PromiseLike<TableRow[]> {
             targetColumns.map((column) => [column.key, document[column.key]]),
           );
           if (this.conflict.setWhere) {
-            Object.assign(filter, this.conflict.setWhere.filter);
+            Object.assign(filter, mongoFilter(this.conflict.setWhere));
           }
           const updateValues = Object.fromEntries(
             Object.entries(this.conflict.set).filter(
@@ -623,7 +702,7 @@ class InsertQuery<TableRow extends Row> implements PromiseLike<TableRow[]> {
             targetColumns.map((column) => [column.key, document[column.key]]),
           );
           if (this.conflict.setWhere) {
-            Object.assign(filter, this.conflict.setWhere.filter);
+            Object.assign(filter, mongoFilter(this.conflict.setWhere));
           }
           const updateValues = Object.fromEntries(
             Object.entries(this.conflict.set).filter(
@@ -674,7 +753,7 @@ class UpdateQuery<TableRow extends Row> implements PromiseLike<TableRow[]> {
   }
 
   where(value: Condition): this {
-    this.filter = value.filter;
+    this.filter = mongoFilter(value);
     return this;
   }
 
@@ -692,24 +771,11 @@ class UpdateQuery<TableRow extends Row> implements PromiseLike<TableRow[]> {
     if (this.table.updatedAtField)
       changes[this.table.updatedAtField] = new Date();
     if (this.shouldReturn) {
-      const matches = await target
-        .find(this.filter, {
-          projection: { _id: 1 },
-          session: this.session,
-        })
-        .toArray();
+      const matches = await target.find(this.filter, { session: this.session }).toArray();
       if (matches.length === 0) return [];
-      const ids = storedQueryIds(matches, "_id");
-      await target.updateMany(
-        { _id: { $in: ids } },
-        { $set: changes },
-        { session: this.session },
-      );
-      const updated = await target
-        .find({ _id: { $in: ids } }, { session: this.session })
-        .toArray();
-      return updated.map((document) =>
-        project(stripMongoId(document), this.selection),
+      await target.updateMany(this.filter, { $set: changes }, { session: this.session });
+      return matches.map((document) =>
+        project({ ...stripMongoId(document), ...changes }, this.selection),
       ) as TableRow[];
     }
     await target.updateMany(
@@ -771,17 +837,9 @@ async function cascadeDelete(
       "entitlement_audit",
       "beta_grants",
     ];
-    const conversationRows = await current
-      .collection(conversations.collectionName)
-      .find({ userId: { $in: userIds } }, { projection: { id: 1 }, session })
-      .toArray();
-    const conversationIds = storedQueryIds(conversationRows, "id");
     await current
       .collection(messages.collectionName)
-      .deleteMany(
-        { conversationId: { $in: conversationIds } },
-        { session },
-      );
+      .deleteMany({ userId: { $in: userIds } }, { session });
     await current
       .collection(conversations.collectionName)
       .deleteMany({ userId: { $in: userIds } }, { session });
@@ -813,7 +871,7 @@ class DeleteQuery<TableRow extends Row> implements PromiseLike<TableRow[]> {
   ) {}
 
   where(value: Condition): this {
-    this.filter = value.filter;
+    this.filter = mongoFilter(value);
     return this;
   }
 
@@ -867,6 +925,42 @@ class DeleteQuery<TableRow extends Row> implements PromiseLike<TableRow[]> {
 export class MongoDataApi {
   constructor(readonly session?: ClientSession) {}
 
+  async incrementDailyUsage(userId: string, date: string, limit: number): Promise<number | null> {
+    const current = await getMongoDatabase();
+    const usage = current.collection<{ _id: string; userId: string; date: string; count: number }>("daily_usage");
+    const id = `${userId}:${date}`;
+    await usage.updateOne(
+      { _id: id },
+      { $setOnInsert: { userId, date, count: 0 } },
+      { upsert: true, session: this.session },
+    );
+    const result = await usage.findOneAndUpdate(
+      { _id: id, count: { $lt: limit } },
+      { $inc: { count: 1 } },
+      { returnDocument: "after", session: this.session },
+    );
+    return result?.count ?? null;
+  }
+
+  async refundDailyUsage(userId: string, date: string): Promise<void> {
+    const current = await getMongoDatabase();
+    await current.collection<{ _id: string; userId: string; date: string; count: number }>("daily_usage").updateOne(
+      { _id: `${userId}:${date}`, count: { $gt: 0 } },
+      { $inc: { count: -1 } },
+      { session: this.session },
+    );
+  }
+
+  async findUsersByEmail(email: string, limit = 2): Promise<string[]> {
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) throw new Error("Invalid user lookup limit");
+    const current = await getMongoDatabase();
+    const matches = await current.collection<{ id?: string; email?: string }>("users").find(
+      { email },
+      { projection: { id: 1 }, collation: { locale: "en", strength: 2 }, session: this.session },
+    ).limit(limit).toArray();
+    return matches.flatMap((user) => typeof user.id === "string" ? [user.id] : []);
+  }
+
   select<Selection extends Record<string, unknown> | undefined = undefined>(
     selection?: Selection,
   ): SelectStart<Selection> {
@@ -887,7 +981,7 @@ export class MongoDataApi {
 
   async count(table: Table, value?: Condition): Promise<number> {
     const target = await collection(table);
-    return target.countDocuments(value?.filter ?? {}, {
+    return target.countDocuments(value ? mongoFilter(value) : {}, {
       session: this.session,
     });
   }

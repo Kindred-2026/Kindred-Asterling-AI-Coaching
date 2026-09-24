@@ -1,4 +1,4 @@
-import { getMongoDatabase } from "@workspace/db";
+import { db } from "@workspace/db";
 import { logger } from "./logger";
 
 const DEFAULT_DAILY_LIMIT = 100;
@@ -15,25 +15,8 @@ export async function checkAndIncrementDailyQuota(
   const limit = getDailyLimit();
   try {
     const date = new Date().toISOString().split("T")[0];
-    const database = await getMongoDatabase();
-    const usage = database.collection<{
-      _id: string;
-      userId: string;
-      date: string;
-      count: number;
-    }>("daily_usage");
-    await usage.updateOne(
-      { _id: `${userId}:${date}` },
-      { $setOnInsert: { userId, date, count: 0 } },
-      { upsert: true },
-    );
-    const result = await usage.findOneAndUpdate(
-      { _id: `${userId}:${date}`, count: { $lt: limit } },
-      { $inc: { count: 1 } },
-      { returnDocument: "after" },
-    );
-    if (!result) return { allowed: false, remaining: 0 };
-    const count = result.count;
+    const count = await db.incrementDailyUsage(userId, date, limit);
+    if (count === null) return { allowed: false, remaining: 0 };
     const remaining = Math.max(0, limit - count);
     return { allowed: count <= limit, remaining };
   } catch (err) {
@@ -48,13 +31,7 @@ export async function checkAndIncrementDailyQuota(
 export async function refundDailyQuota(userId: string): Promise<void> {
   try {
     const date = new Date().toISOString().split("T")[0];
-    const database = await getMongoDatabase();
-    await database
-      .collection<any>("daily_usage")
-      .updateOne(
-        { _id: `${userId}:${date}`, count: { $gt: 0 } },
-        { $inc: { count: -1 } },
-      );
+    await db.refundDailyUsage(userId, date);
   } catch (err) {
     logger.error({ err, userId }, "Failed to refund daily quota");
   }

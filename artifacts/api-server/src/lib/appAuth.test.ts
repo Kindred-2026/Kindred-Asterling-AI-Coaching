@@ -43,6 +43,7 @@ function token(claims: Record<string, unknown> = {}) {
 }
 beforeAll(async () => {
   const discovery = express();
+  discovery.disable("x-powered-by");
   discovery.get("/.well-known/openid-configuration", (_req, res) =>
     res.json({
       issuer,
@@ -72,6 +73,7 @@ beforeAll(async () => {
 });
 function createTestApp() {
   app = express();
+  app.disable("x-powered-by");
   app.use(
     createAuth0Middleware({
       issuerBaseURL: issuer,

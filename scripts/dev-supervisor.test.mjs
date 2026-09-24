@@ -13,6 +13,7 @@
 // No real product ports/processes are used by the default suite.
 
 import { spawn } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { existsSync, mkdtempSync, readFileSync } from "node:fs";
 import net from "node:net";
 import os from "node:os";
@@ -163,17 +164,18 @@ describe("parseDevConfig", () => {
   });
 
   test("external mode requires MONGODB_URI/DATABASE and never echoes secrets", () => {
-    const secret = "mongodb://user:s3cr3t-uri@db.example:27017";
+    const fixturePassword = randomBytes(24).toString("hex");
+    const uri = `mongodb://fixture:${fixturePassword}@db.example:27017`;
     assert.throws(
       () =>
         parseDevConfig({
           processEnv: {},
-          fileEnv: { KINDRED_DEV_DB: "external", MONGODB_URI: secret },
+          fileEnv: { KINDRED_DEV_DB: "external", MONGODB_URI: uri },
         }),
       (err) => {
         assert.match(err.message, /MONGODB_URI/);
         assert.match(err.message, /MONGODB_DATABASE/);
-        assert.ok(!err.message.includes("s3cr3t-uri"));
+        assert.ok(!err.message.includes(fixturePassword));
         return true;
       },
     );
@@ -205,12 +207,13 @@ describe("parseDevConfig", () => {
   });
 
   test("isolates server secrets from the browser child env", () => {
+    const fixtureKey = randomBytes(24).toString("hex");
     const config = parseDevConfig({
       processEnv: {},
       fileEnv: {
         MONGODB_URI: "mongodb://127.0.0.1:27017",
         MONGODB_DATABASE: "kindred_dev",
-        RESEND_API_KEY: "k-file-123",
+        RESEND_API_KEY: fixtureKey,
         VITE_AUTH0_CLIENT_ID: "pub-client-456",
         KINDRED_DEV_DB: DEFAULT_DEV_DB_MODE,
       },
@@ -220,7 +223,7 @@ describe("parseDevConfig", () => {
     assert.equal(config.webEnv.RESEND_API_KEY, undefined);
     assert.equal(config.webEnv.VITE_AUTH0_CLIENT_ID, "pub-client-456");
     assert.equal(config.apiEnv.MONGODB_URI, "mongodb://127.0.0.1:27017");
-    assert.equal(config.apiEnv.RESEND_API_KEY, "k-file-123");
+    assert.equal(config.apiEnv.RESEND_API_KEY, fixtureKey);
   });
 
   test("validates BASE_PATH and KINDRED_API_ORIGIN", () => {
@@ -295,10 +298,11 @@ describe("createJobs", () => {
   });
 
   test("web child keeps an exec PATH but never receives server secrets", () => {
+    const fixtureUri = `mongodb://fixture:${randomBytes(24).toString("hex")}@127.0.0.1:27017`;
     const jobEnvConfig = parseDevConfig({
       processEnv: {},
       fileEnv: {
-        MONGODB_URI: "mongodb://user:secret@127.0.0.1:27017",
+        MONGODB_URI: fixtureUri,
         MONGODB_DATABASE: "kindred_dev",
         OLLAMA_BASE_URL: "http://127.0.0.1:11434",
         VITE_AUTH0_DOMAIN: "dev.example.auth0.com",
@@ -313,7 +317,7 @@ describe("createJobs", () => {
     assert.equal(jobs.web.env.MONGODB_DATABASE, undefined);
     assert.equal(jobs.web.env.OLLAMA_BASE_URL, undefined);
     assert.equal(jobs.web.env.VITE_AUTH0_DOMAIN, "dev.example.auth0.com");
-    assert.equal(jobs.api.env.MONGODB_URI, "mongodb://user:secret@127.0.0.1:27017");
+    assert.equal(jobs.api.env.MONGODB_URI, fixtureUri);
   });
 });
 
@@ -611,7 +615,6 @@ test("build phase failure: launcher exits nonzero before starting runtime childr
 test("root package.json dev wiring stays on the product stack", () => {
   const pkg = JSON.parse(readFileSync(path.join(repoRoot, "package.json"), "utf8"));
   assert.equal(pkg.scripts.dev, "node scripts/dev.mjs");
-  assert.equal(pkg.scripts["dev:experiment"], "pnpm --filter frontend dev");
   assert.match(
     pkg.scripts["test:dev-supervisor"],
     /--test scripts\/dev-supervisor\.test\.mjs/,

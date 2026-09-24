@@ -128,7 +128,9 @@ describe("POST /api/subscription/checkout", () => {
     process.env.HELCIM_LIFETIME_CHECKOUT_URL =
       "https://subscriptions.helcim.com/subscribe/test456";
     process.env.HELCIM_API_KEY = "test-key";
-    process.env.HELCIM_WEBHOOK_SECRET = "dGVzdC1zZWNyZXQ=";
+    process.env.HELCIM_WEBHOOK_SECRET = Buffer.from(
+      "synthetic-fixture-only",
+    ).toString("base64");
     process.env.HELCIM_CUSTOMER_REFERENCE_SECRET = "test-reference-secret";
 
     const res = await api("POST", "/api/subscription/checkout", {
@@ -148,7 +150,9 @@ describe("POST /api/subscription/checkout", () => {
     process.env.HELCIM_LIFETIME_CHECKOUT_URL =
       "https://subscriptions.helcim.com/subscribe/test456";
     process.env.HELCIM_API_KEY = "test-key";
-    process.env.HELCIM_WEBHOOK_SECRET = "dGVzdC1zZWNyZXQ=";
+    process.env.HELCIM_WEBHOOK_SECRET = Buffer.from(
+      "synthetic-fixture-only",
+    ).toString("base64");
     process.env.HELCIM_CUSTOMER_REFERENCE_SECRET = "test-reference-secret";
 
     const res = await api("POST", "/api/subscription/checkout", {

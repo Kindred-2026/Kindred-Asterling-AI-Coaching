@@ -6,15 +6,13 @@ import {
 } from "./dailyQuota";
 import { logger } from "./logger";
 
-const { updateOne, findOneAndUpdate } = vi.hoisted(() => ({
-  updateOne: vi.fn(),
-  findOneAndUpdate: vi.fn(),
+const { incrementDailyUsage, refundDailyUsage } = vi.hoisted(() => ({
+  incrementDailyUsage: vi.fn(),
+  refundDailyUsage: vi.fn(),
 }));
 
 vi.mock("@workspace/db", () => ({
-  getMongoDatabase: vi.fn(async () => ({
-    collection: () => ({ updateOne, findOneAndUpdate }),
-  })),
+  db: { incrementDailyUsage, refundDailyUsage },
 }));
 
 vi.mock("./logger", () => ({
@@ -55,8 +53,7 @@ describe("dailyQuota", () => {
 
   describe("checkAndIncrementDailyQuota", () => {
     it("returns allowed true when count is within limit", async () => {
-      updateOne.mockResolvedValueOnce({ acknowledged: true });
-      findOneAndUpdate.mockResolvedValueOnce({ count: 1 });
+      incrementDailyUsage.mockResolvedValueOnce(1);
 
       const result = await checkAndIncrementDailyQuota(userId);
       expect(result).toEqual({ allowed: true, remaining: 99 });
@@ -64,8 +61,7 @@ describe("dailyQuota", () => {
 
     it("returns allowed false when the atomic limit guard rejects the increment", async () => {
       process.env.DAILY_CHAT_LIMIT = "5";
-      updateOne.mockResolvedValueOnce({ acknowledged: true });
-      findOneAndUpdate.mockResolvedValueOnce(null);
+      incrementDailyUsage.mockResolvedValueOnce(null);
 
       const result = await checkAndIncrementDailyQuota(userId);
       expect(result).toEqual({ allowed: false, remaining: 0 });
@@ -73,7 +69,7 @@ describe("dailyQuota", () => {
 
     it("fails closed and logs error when MongoDB throws", async () => {
       const error = new Error("Database connection failed");
-      updateOne.mockRejectedValueOnce(error);
+      incrementDailyUsage.mockRejectedValueOnce(error);
 
       const result = await checkAndIncrementDailyQuota(userId);
 
@@ -87,15 +83,15 @@ describe("dailyQuota", () => {
 
   describe("refundDailyQuota", () => {
     it("executes update query successfully", async () => {
-      updateOne.mockResolvedValueOnce({ acknowledged: true });
+      refundDailyUsage.mockResolvedValueOnce(undefined);
 
       await expect(refundDailyQuota(userId)).resolves.not.toThrow();
-      expect(updateOne).toHaveBeenCalledTimes(1);
+      expect(refundDailyUsage).toHaveBeenCalledTimes(1);
     });
 
     it("logs error when MongoDB throws", async () => {
       const error = new Error("Database connection failed");
-      updateOne.mockRejectedValueOnce(error);
+      refundDailyUsage.mockRejectedValueOnce(error);
 
       await refundDailyQuota(userId);
 

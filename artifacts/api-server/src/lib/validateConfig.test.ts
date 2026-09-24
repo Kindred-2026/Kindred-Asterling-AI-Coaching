@@ -11,6 +11,7 @@ function baseEnv(): void {
   process.env = {
     ...originalEnv,
     NODE_ENV: "test",
+    DATABASE_PROVIDER: "mongo",
     MONGODB_URI: "mongodb://test:27017",
     MONGODB_DATABASE: "kindred_test",
     PORT: "8080",
@@ -20,8 +21,6 @@ function baseEnv(): void {
   delete process.env.OLLAMA_MODEL;
   delete process.env.OPENAI_API_KEY;
   delete process.env.OPENAI_MODEL;
-  delete process.env.AWS_REGION;
-  delete process.env.BEDROCK_MODEL_ID;
 }
 
 describe("AI provider configuration", () => {
@@ -38,19 +37,10 @@ describe("AI provider configuration", () => {
     expect(validateRuntimeConfig).not.toThrow();
   });
 
-  it("accepts Bedrock with a region and inference profile model ID", () => {
+  it("rejects retired Bedrock configuration", () => {
     baseEnv();
     process.env.AI_PROVIDER = "bedrock";
-    process.env.AWS_REGION = "us-east-1";
-    process.env.BEDROCK_MODEL_ID =
-      "us.anthropic.claude-sonnet-4-5-20250929-v1:0";
-    expect(validateRuntimeConfig).not.toThrow();
-  });
-
-  it("requires both Bedrock variables", () => {
-    baseEnv();
-    process.env.AI_PROVIDER = "bedrock";
-    expect(validateRuntimeConfig).toThrow(/AWS_REGION, BEDROCK_MODEL_ID/);
+    expect(validateRuntimeConfig).toThrow(/ollama, openai, disabled/);
   });
 
   it("reports only the selected provider's missing variables", () => {
@@ -83,6 +73,24 @@ describe("MongoDB runtime configuration", () => {
 
     process.env.MONGODB_URI = "mongodb+srv://mongo.example";
     expect(validateRuntimeConfig).toThrow(/MONGODB_DATABASE must contain/);
+  });
+});
+
+describe("PostgreSQL runtime configuration", () => {
+  it("accepts PostgreSQL without requiring MongoDB credentials", () => {
+    baseEnv();
+    process.env.DATABASE_PROVIDER = "postgres";
+    process.env.POSTGRES_URL = "postgresql://db.example/kindred";
+    delete process.env.MONGODB_URI;
+    delete process.env.MONGODB_DATABASE;
+    expect(validateRuntimeConfig).not.toThrow();
+  });
+
+  it("rejects non-PostgreSQL connection URLs", () => {
+    baseEnv();
+    process.env.DATABASE_PROVIDER = "postgres";
+    process.env.POSTGRES_URL = "https://db.example/kindred";
+    expect(validateRuntimeConfig).toThrow(/POSTGRES_URL must use/);
   });
 });
 
