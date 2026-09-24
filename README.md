@@ -85,12 +85,16 @@ release. See [docs/release-rollback.md](docs/release-rollback.md).
 
 - [docs/local-development.md](docs/local-development.md) — first-run setup, env
   precedence, database modes, troubleshooting
-- [docs/release-rollback.md](docs/release-rollback.md) — Coolify release and
-  rollback responsibilities, evidence, acceptance
-- [docs/COOLIFY_DEPLOYMENT.md](docs/COOLIFY_DEPLOYMENT.md) — production
-  deployment on Coolify
+- [docs/FLY_DEPLOYMENT.md](docs/FLY_DEPLOYMENT.md) — selected Fly.io staging,
+  migration, and cutover runbook; provider steps remain unverified until run
+- [docs/release-rollback.md](docs/release-rollback.md) — release evidence and
+  rollback responsibilities during and after the hosting transition
+- [docs/COOLIFY_DEPLOYMENT.md](docs/COOLIFY_DEPLOYMENT.md) — retained legacy
+  Coolify deployment record for the current rollback baseline
+- [docs/FINALIZATION_RECORD.md](docs/FINALIZATION_RECORD.md) — foundation
+  decisions, repository dispositions, and remaining external gates
 - [docs/operations-tools.md](docs/operations-tools.md) — MongoDB / identity tool
   inventory and the archive review list
-- [docs/mongodb-migration.md](docs/mongodb-migration.md) — completed PostgreSQL
-  cutover record and rollback tools
+- [docs/mongodb-migration.md](docs/mongodb-migration.md) — historical
+  PostgreSQL-to-MongoDB migration procedure and rollback tools
 - [docs/auth0-migration.md](docs/auth0-migration.md) — Auth0 rollout record

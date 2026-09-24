@@ -32,6 +32,8 @@ production gates; a checked-in plan is not proof of a live cutover.
 | Area | Disposition | Evidence / remaining gate |
 | --- | --- | --- |
 | Experimental Next.js `frontend/` | Removed from workspace, scripts, docs, and standalone CI; production React/Vite app retained | Verify the resulting single production build path in CI |
+| Dormant Clerk dependency override | Removed from `pnpm-workspace.yaml` and `pnpm-lock.yaml` after repository-wide search found no dependency or import consumer | Clerk identity mapping, webhook, and rollback utilities remain retained behind the Auth0 reconciliation and rollback gates |
+| Superseded release SOP exports | Removed the stale HTML, DOCX, and PDF that prescribed Coolify, Clerk, Ollama, and a future GitLab pipeline | README now points to the Fly runbook and release/rollback guide; Coolify's separately labeled legacy deployment record remains available while cutover gates are open |
 | AWS Bedrock provider | Removed from API runtime, dependency, examples, and provider instructions | Confirm no active deployment/workflow still sets Bedrock variables before deleting them from external stores |
 | Legacy AWS EKS/KEDA assets | Removed after the owner confirmed there is no AWS cluster; repository search found no active workflow or application-runtime consumer | Removed the EKS Terraform, Karpenter/KEDA/metrics-server manifests, deploy scripts, and version pins. AWS resources were not changed |
 | TODO/FIXME cleanup | No unresolved TODO, FIXME, XXX, or HACK markers remain in current source; matches are UI `ListTodo` symbols and usage text | Recheck when code changes are finalized |
