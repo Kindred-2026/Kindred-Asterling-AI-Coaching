@@ -1,5 +1,8 @@
 # GitHub branch cleanup record
 
+> Historical snapshot from the earlier branch cleanup. It is not a live branch
+> inventory; see `FINALIZATION_RECORD.md` for the later finalization follow-up.
+
 **Audit date:** 2026-09-24. **Canonical repository:**
 `Kindred-2026/Kindred-Asterling-AI-Coaching`.
 
