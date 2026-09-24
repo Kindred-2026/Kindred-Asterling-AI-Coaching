@@ -9,7 +9,11 @@ can deploy the existing application from GitHub, run PostgreSQL, provide
 scheduled volume backups and PostgreSQL point-in-time recovery, and expose
 hard compute spending limits. This is a candidate, not proof that Railway will
 accept the same payment method or that actual Kindred costs will fit the
-under-$50/month target.
+under-$50/month target. Railway's currently listed deployment regions are
+California (US West), Virginia (US East), Amsterdam, and Singapore; there is no
+Canadian region. Because Kindred stores sensitive coaching histories, confirm
+that US data processing and storage meet the product's privacy and contractual
+requirements before using live user data.
 
 ## Application deployment shape
 
@@ -80,6 +84,13 @@ details in chat or commit them to this repository.
 Pricing and operating references checked 2026-09-23: [Railway pricing](https://railway.com/pricing),
 [usage plans](https://docs.railway.com/pricing/plans),
 [cost controls](https://docs.railway.com/pricing/cost-control),
+[deployment regions](https://docs.railway.com/deployments/regions),
 [monorepo deployments](https://docs.railway.com/deployments/monorepo),
 [PostgreSQL backups and restore](https://docs.railway.com/guides/postgres-backups-restores),
 and [point-in-time recovery](https://docs.railway.com/volumes/point-in-time-recovery).
+
+If a Canadian hosting region is a requirement, evaluate [Fly.io Managed
+Postgres](https://fly.io/docs/mpg/) in its Toronto (`yyz`) region. The listed
+Basic database plan is $38/month plus provisioned storage, before application
+compute; this is a location-oriented alternative, not the low-cost default.
+Confirm the full bill and app deployment workflow first.
