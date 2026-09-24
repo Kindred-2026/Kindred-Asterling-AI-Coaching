@@ -1,6 +1,6 @@
 # Kindred credential and configuration inventory
 
-**Canonical source baseline:** `49e0be1` (2026-09-24); inventory reflects GitHub `main` before the Snyk IaC workflow follow-up. **Owner for every entry:** Kindred owner unless marked unknown. This is a value-free inventory of names and code requirements, not an attestation that an account, vault item, production deployment, or GitHub secret is populated. Evidence: root and `auth0-deploy/` `.env.example` **names only**, `artifacts/api-server/src/lib/validateConfig.ts`, application consumers, migration scripts, frontend build validator, `.github/workflows/`, and redacted Gitleaks scans of the current tree and Git history. Secret values must never enter Git or browser `VITE_*` builds.
+**Canonical source baseline:** `504cdf3` (2026-09-24); inventory reflects the merged finalization and Snyk IaC workflow. **Owner for every entry:** Kindred owner unless marked unknown. This is a value-free inventory of names and code requirements, not an attestation that an account, vault item, production deployment, or GitHub secret is populated. Evidence: root and `auth0-deploy/` `.env.example` **names only**, `artifacts/api-server/src/lib/validateConfig.ts`, application consumers, migration scripts, frontend build validator, `.github/workflows/`, and redacted Gitleaks scans of the current tree and Git history. Secret values must never enter Git or browser `VITE_*` builds.
 
 ## Current finalization-branch contract
 
