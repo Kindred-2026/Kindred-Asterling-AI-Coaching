@@ -6,6 +6,7 @@ import {
   db,
   eq,
   getMongoDatabase,
+  inArray,
   messages,
   usersTable,
 } from "@workspace/db";
@@ -25,6 +26,42 @@ afterEach(async () => {
 afterAll(closeDatabase);
 
 describe("database-derived query identifiers", () => {
+  it("rejects operator-bearing request values and forged filters before MongoDB access", () => {
+    expect(() => eq(usersTable.id, { $ne: null })).toThrow(
+      "MongoDB conditions accept scalar values only",
+    );
+    expect(() => eq(usersTable.id, /.*/)).toThrow(
+      "MongoDB conditions accept scalar values only",
+    );
+    expect(() => inArray(usersTable.id, ["safe", { $ne: null }])).toThrow(
+      "MongoDB conditions accept scalar values only",
+    );
+    expect(() =>
+      db.update(usersTable).where({ filter: { $where: "return true" } } as never),
+    ).toThrow("Invalid database condition");
+  });
+
+  it("uses its validated condition expression even if a filter view is mutated", async () => {
+    const mongo = await getMongoDatabase();
+    const targetId = `${marker}-target`;
+    const otherId = `${marker}-other`;
+    await mongo.collection<FixtureRow>("users").insertMany([
+      { _id: targetId, id: targetId, firstName: "before", queryIdTest: marker },
+      { _id: otherId, id: otherId, firstName: "before", queryIdTest: marker },
+    ]);
+    const safeCondition = eq(usersTable.id, targetId);
+    (safeCondition.filter as Record<string, unknown>).id = { $ne: "never-match" };
+
+    await db.update(usersTable).set({ firstName: "after" }).where(safeCondition);
+
+    expect(await mongo.collection<FixtureRow>("users").findOne({ _id: targetId })).toMatchObject({
+      firstName: "after",
+    });
+    expect(await mongo.collection<FixtureRow>("users").findOne({ _id: otherId })).toMatchObject({
+      firstName: "before",
+    });
+  });
+
   it("updates only the selected string ID, treating regex-looking strings literally", async () => {
     const mongo = await getMongoDatabase();
     await mongo.collection<FixtureRow>("users").insertMany([
