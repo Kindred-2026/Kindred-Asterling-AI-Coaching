@@ -1,6 +1,6 @@
 # Kindred foundation finalization record
 
-**Baseline:** GitHub `main` at `7c264f6e5fecdee0739075bd66d432bb9fa6ba85` (2026-09-23).
+**Baseline:** GitHub `main` at `01dc341fb14bee1d4ef568bb9d21a992b00abdbd` (2026-09-24, before this follow-up cleanup).
 **Purpose:** Close the foundation phase before routine maintenance and focused
 feature work. This record distinguishes repository changes from provider and
 production gates; a checked-in plan is not proof of a live cutover.
@@ -33,7 +33,7 @@ production gates; a checked-in plan is not proof of a live cutover.
 | --- | --- | --- |
 | Experimental Next.js `frontend/` | Removed from workspace, scripts, docs, and standalone CI; production React/Vite app retained | Verify the resulting single production build path in CI |
 | AWS Bedrock provider | Removed from API runtime, dependency, examples, and provider instructions | Confirm no active deployment/workflow still sets Bedrock variables before deleting them from external stores |
-| Legacy AWS EKS/KEDA assets | No current GitHub workflow or application-runtime consumer found; docs identify them as pre-Coolify tooling | Preserve until the owner confirms no AWS cluster or rollback deployment depends on them; remove the manifests/scripts after that check |
+| Legacy AWS EKS/KEDA assets | Removed after the owner confirmed there is no AWS cluster; repository search found no active workflow or application-runtime consumer | Removed the EKS Terraform, Karpenter/KEDA/metrics-server manifests, deploy scripts, and version pins. AWS resources were not changed |
 | TODO/FIXME cleanup | No unresolved TODO, FIXME, XXX, or HACK markers remain in current source; matches are UI `ListTodo` symbols and usage text | Recheck when code changes are finalized |
 | OpenAI-compatible AI | Retained; Cloudflare Gateway endpoint supported; request payload logging header added | Provider account, upstream model, privacy contract, Gateway settings, and staging verification remain external gates |
 | Snyk | Retained as an observable scanner. Messages now carry the stable internal Kindred `userId`; chat reads/writes, account exports, and account deletion use that owner instead of rebuilding message selectors from database-returned conversation IDs. No suppression was added. | At PR SHA `238ab8ab886a3cbbe2d1dd124b804de53405b7d1`, CI, Security Audit, and Snyk passed. Snyk Code SARIF contained 0 findings; IaC test and production-image build/container monitor completed. Open Source and Container use `monitor`, which submits results but does not gate on findings; review their project results in Snyk before merge. Production remains blocked on ownership backfill and cutover gates below |
