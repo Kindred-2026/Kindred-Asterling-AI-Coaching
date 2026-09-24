@@ -9,7 +9,8 @@ import {
   type CreateIndexesOptions,
   type Sort,
 } from "mongodb";
-import mongoSanitize from "express-mongo-sanitize";
+// @ts-expect-error mongo-sanitize is a CommonJS sanitizer without declarations.
+import mongoSanitize from "mongo-sanitize";
 import { trace } from "@opentelemetry/api";
 import {
   allTables,
@@ -436,9 +437,9 @@ function documentId(table: Table, row: Row): unknown {
 }
 
 function canonicalStoredQueryId(value: unknown): string | number {
-  // Use the analyzer-recognized sanitizer, then accept only Kindred's scalar
-  // keys. MongoDB-returned documents are data, never query expressions.
-  const sanitized = mongoSanitize.sanitize({ value }).value;
+  // Sanitize database-derived data, then accept only Kindred's scalar keys.
+  // MongoDB-returned documents are data, never query expressions.
+  const sanitized = mongoSanitize(value);
   if (
     !(typeof sanitized === "string" && sanitized.length > 0) &&
     !(typeof sanitized === "number" && Number.isSafeInteger(sanitized))
@@ -770,26 +771,11 @@ class UpdateQuery<TableRow extends Row> implements PromiseLike<TableRow[]> {
     if (this.table.updatedAtField)
       changes[this.table.updatedAtField] = new Date();
     if (this.shouldReturn) {
-      const matches = await target
-        .find(this.filter, {
-          projection: { _id: 1 },
-          session: this.session,
-        })
-        .toArray();
+      const matches = await target.find(this.filter, { session: this.session }).toArray();
       if (matches.length === 0) return [];
-      // Validate the database-derived values at the source, before either
-      // MongoDB query. Do not allow a BSON object or RegExp into $in.
-      const ids = matches.map((match) => canonicalStoredQueryId(match._id));
-      await target.updateMany(
-        { _id: { $in: ids } },
-        { $set: changes },
-        { session: this.session },
-      );
-      const updated = await target
-        .find({ _id: { $in: ids } }, { session: this.session })
-        .toArray();
-      return updated.map((document) =>
-        project(stripMongoId(document), this.selection),
+      await target.updateMany(this.filter, { $set: changes }, { session: this.session });
+      return matches.map((document) =>
+        project({ ...stripMongoId(document), ...changes }, this.selection),
       ) as TableRow[];
     }
     await target.updateMany(

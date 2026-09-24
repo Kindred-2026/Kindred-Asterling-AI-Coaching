@@ -134,7 +134,7 @@ describe("database-derived query identifiers", () => {
     expect(changed[0]).toMatchObject({ userId: marker, count: 2 });
   });
 
-  it("rejects a non-scalar stored _id before updating any selected row", async () => {
+  it("does not reuse non-scalar stored _ids in a returning update selector", async () => {
     const mongo = await getMongoDatabase();
     await mongo.collection<FixtureRow>("users").insertMany([
       { _id: marker, id: `${marker}-good`, firstName: "before", bio: marker, queryIdTest: marker },
@@ -146,21 +146,20 @@ describe("database-derived query identifiers", () => {
         queryIdTest: marker,
       },
     ]);
-    await expect(
-      db
-        .update(usersTable)
-        .set({ firstName: "after" })
-        .where(eq(usersTable.bio, marker))
-        .returning(),
-    ).rejects.toThrow("Invalid stored query identifier");
+    const updated = await db
+      .update(usersTable)
+      .set({ firstName: "after" })
+      .where(eq(usersTable.bio, marker))
+      .returning();
+    expect(updated).toHaveLength(2);
     expect(
       await mongo
         .collection<FixtureRow>("users")
-        .countDocuments({ queryIdTest: marker, firstName: "before" }),
+        .countDocuments({ queryIdTest: marker, firstName: "after" }),
     ).toBe(2);
   });
 
-  it("rejects a non-integer stored _id before either update or return lookup", async () => {
+  it("does not reuse fractional stored _ids in a returning update selector", async () => {
     const mongo = await getMongoDatabase();
     await mongo.collection<FixtureRow>("users").insertMany([
       { _id: marker, id: marker, firstName: "before", bio: marker, queryIdTest: marker },
@@ -172,17 +171,16 @@ describe("database-derived query identifiers", () => {
         queryIdTest: marker,
       },
     ]);
-    await expect(
-      db
-        .update(usersTable)
-        .set({ firstName: "after" })
-        .where(eq(usersTable.bio, marker))
-        .returning(),
-    ).rejects.toThrow("Invalid stored query identifier");
+    const updated = await db
+      .update(usersTable)
+      .set({ firstName: "after" })
+      .where(eq(usersTable.bio, marker))
+      .returning();
+    expect(updated).toHaveLength(2);
     expect(
       await mongo
         .collection<FixtureRow>("users")
-        .countDocuments({ queryIdTest: marker, firstName: "before" }),
+        .countDocuments({ queryIdTest: marker, firstName: "after" }),
     ).toBe(2);
   });
 
