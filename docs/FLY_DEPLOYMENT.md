@@ -29,11 +29,14 @@ runtime credentials in Fly's secret store; do not put values in `fly.toml`,
 GitHub Actions, or chat. Build only a reviewed commit and inspect the resulting
 browser bundle for the expected Auth0 domain/audience before staging checks.
 
-The production application still uses MongoDB. Do not bind Fly Managed
-Postgres as `DATABASE_URL` until the PostgreSQL runtime adapter exists and the
-full API integration checks pass. Keep the current `MONGODB_URI` and
-`MONGODB_DATABASE` configuration in the Fly staging app until the adapter and
-migration are ready.
+The API now has an **opt-in PostgreSQL runtime adapter on this finalization
+branch**. MongoDB remains the default (`DATABASE_PROVIDER=mongo`), and no Fly
+staging app or real PostgreSQL integration has been verified. Do not select
+`DATABASE_PROVIDER=postgres` or provision production credentials until the
+adapter passes real PostgreSQL integration/restore checks and staging acceptance.
+When that gate is reached, set `DATABASE_PROVIDER=postgres` and store
+`POSTGRES_URL` as a server-only Fly secret. Keep MongoDB as the active runtime
+and rollback source until cutover is verified.
 
 ## Cost and data controls
 
@@ -70,9 +73,10 @@ make the upstream model provider Canadian-hosted.
 2. Deploy the existing app image to staging from the reviewed commit. Verify
    build arguments, health check, Auth0 sign-in, database connectivity, logs,
    and resource use. Keep production traffic on Coolify.
-3. Finish the PostgreSQL runtime adapter and integration checks for every
-   application query and write path, including quotas, leases, subscriptions,
-   webhooks, ownership-scoped reads, exports, account deletion, and reminders.
+3. Validate the branch's opt-in PostgreSQL runtime adapter against real
+   PostgreSQL, including every application query and write path, quotas, leases,
+   subscriptions, webhooks, ownership-scoped reads, exports, account deletion,
+   and reminders. The `pg-mem` tests are not a substitute for this gate.
 4. Rehearse a consistent MongoDB backup, data/ownership reconciliation,
    PostgreSQL migration, encrypted backup, and restore with non-production
    data. Preserve stable Kindred user IDs and separate histories; never merge
