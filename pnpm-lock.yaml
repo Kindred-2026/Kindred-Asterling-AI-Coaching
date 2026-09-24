@@ -401,6 +401,9 @@ importers:
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
+      express-mongo-sanitize:
+        specifier: 2.2.0
+        version: 2.2.0
       mongodb:
         specifier: ^7.6.0
         version: 7.6.0
@@ -2519,6 +2522,10 @@ packages:
   expect-type@1.4.0:
     resolution: {integrity: sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA==}
     engines: {node: '>=12.0.0'}
+
+  express-mongo-sanitize@2.2.0:
+    resolution: {integrity: sha512-PZBs5nwhD6ek9ZuP+W2xmpvcrHwXZxD5GdieX2dsjPbAbH4azOkrHbycBud2QRU+YQF1CT+pki/lZGedHgo/dQ==}
+    engines: {node: '>=10'}
 
   express-oauth2-jwt-bearer@1.10.0:
     resolution: {integrity: sha512-sicg3wCTOdxiipC2noQ9XRVK94SO0wky8NmBbS6fsYZg8vWHizjvNt2HiPlUp6vLFu2eyIcWsqnJkZonqy1vzg==}
@@ -6205,6 +6212,8 @@ snapshots:
       yoctocolors: 2.2.0
 
   expect-type@1.4.0: {}
+
+  express-mongo-sanitize@2.2.0: {}
 
   express-oauth2-jwt-bearer@1.10.0:
     dependencies:

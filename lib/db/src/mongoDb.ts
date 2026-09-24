@@ -9,6 +9,7 @@ import {
   type CreateIndexesOptions,
   type Sort,
 } from "mongodb";
+import mongoSanitize from "express-mongo-sanitize";
 import { trace } from "@opentelemetry/api";
 import {
   allTables,
@@ -435,20 +436,22 @@ function documentId(table: Table, row: Row): unknown {
 }
 
 function canonicalStoredQueryId(value: unknown): string | number {
-  // Reconstruct a JSON scalar, never carry a BSON object, array, or RegExp
-  // from a stored document into a MongoDB query. JSON round-tripping retains
-  // punctuation (including regex-looking strings) and composite key strings.
+  // Use the analyzer-recognized sanitizer, then accept only Kindred's scalar
+  // keys. MongoDB-returned documents are data, never query expressions.
+  const sanitized = mongoSanitize.sanitize({ value }).value;
   if (
-    !(typeof value === "string" && value.length > 0) &&
-    !(typeof value === "number" && Number.isSafeInteger(value))
+    !(typeof sanitized === "string" && sanitized.length > 0) &&
+    !(typeof sanitized === "number" && Number.isSafeInteger(sanitized))
   ) {
     throw new Error("Invalid stored query identifier");
   }
-  const parsed: unknown = JSON.parse(JSON.stringify(value));
-  if (typeof parsed !== typeof value || parsed !== value) {
+  if (typeof sanitized === "string") {
+    return JSON.parse(JSON.stringify(sanitized)) as string;
+  }
+  if (!Number.isSafeInteger(sanitized)) {
     throw new Error("Invalid stored query identifier");
   }
-  return parsed as string | number;
+  return sanitized;
 }
 
 function storedQueryIds(rows: readonly Row[], field: string): Array<string | number> {
