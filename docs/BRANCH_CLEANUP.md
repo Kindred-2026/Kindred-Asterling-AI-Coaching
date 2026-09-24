@@ -6,18 +6,18 @@
 **Audit date:** 2026-09-24. **Canonical repository:**
 `Kindred-2026/Kindred-Asterling-AI-Coaching`.
 
-GitHub's current branch inventory contains two active refs: `main` and
-`codex/snyk-iac-no-files` for open PR #148. PR #147 merged at
-`49e0be1199d1ce91e951d2b0d468fb352fb13381`; PR #148 carries the Snyk workflow
-follow-up. Before cleanup, 16 historical work branches had exactly one commit
-outside canonical `main`. All 16 exact tips were archived as annotated GitHub
-tags and verified against the live branch SHAs before the old branch names
-were deleted. No unique commit was lost. The temporary post-merge branch
-`codex/remove-confirmed-unused-eks-assets` was deleted after its follow-up
-workflow commits were copied to PR #148.
+At the earlier cleanup snapshot, GitHub had `main` and
+`codex/snyk-iac-no-files` for PR #148. The later inventory also has
+`codex/remove-dead-clerk-release-docs` for PR #149, which includes the Snyk fix
+and targets `main`. PR #147 merged at
+`49e0be1199d1ce91e951d2b0d468fb352fb13381`. Before cleanup, 16 historical work
+branches had exactly one commit outside canonical `main`. All 16 exact tips
+were archived as annotated GitHub tags and verified against the live branch
+SHAs before the old branch names were deleted. No unique commit was lost. The
+temporary post-merge branch `codex/remove-confirmed-unused-eks-assets` was
+deleted after its follow-up workflow commits were copied to PR #148.
 
 Canonical `main` is at `49e0be1199d1ce91e951d2b0d468fb352fb13381`. Each archive
-Each archive
 tag retains its original branch tip and history:
 
 | Original branch | Archived tip commit | GitHub archive tag | Remaining disposition |
