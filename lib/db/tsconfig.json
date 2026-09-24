@@ -14,6 +14,7 @@
     "src/mongoDb.ts",
     "src/mongoSchema.ts",
     "src/postgresRehearsal.ts",
-    "src/postgresDb.ts"
+    "src/postgresDb.ts",
+    "src/postgresSchema.ts"
   ]
 }
