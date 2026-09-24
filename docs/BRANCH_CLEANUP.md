@@ -1,9 +1,15 @@
 # GitHub branch cleanup record
 
-**Audit date:** 2026-09-23. **Canonical repository:**
+**Audit date:** 2026-09-23; refreshed 2026-09-24. **Canonical repository:**
 `Kindred-2026/Kindred-Asterling-AI-Coaching`. The audit inspected all 18 remote
 branch refs and queried GitHub pull requests. No PRs were returned, so there is
 no PR merge record to use as proof of incorporation.
+
+The initial 18-ref count predates this finalization work. On 2026-09-24,
+GitHub listed 19 refs including the new `codex/kindred-finalization` branch;
+draft PR [#146](https://github.com/Kindred-2026/Kindred-Asterling-AI-Coaching/pull/146)
+is open against `main`. No branches have been deleted. The canonical `main`
+SHA is still `7c264f6e5fecdee0739075bd66d432bb9fa6ba85`.
 
 Only `main` and `codex/auth0-identity-resolution-observability-20260921` are
 ancestor-equivalent to canonical `main`; that feature branch's tip is present

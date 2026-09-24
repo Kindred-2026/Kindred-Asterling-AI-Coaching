@@ -89,7 +89,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Compile-only fixtures. Coolify must use the reviewed production values.
+      # Compile-only fixtures. Deployments must use reviewed public Auth0 values.
       - name: Build production artifacts
         env:
           VITE_AUTH0_DOMAIN: tenant.example.invalid

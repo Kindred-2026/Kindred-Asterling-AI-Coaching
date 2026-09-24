@@ -30,7 +30,6 @@ In the tables, **S** = secret (including sensitive identifiers such as access-ke
 | `OPENAI_API_KEY` | S; OpenAI provider auth; required when `AI_PROVIDER=openai` | local secret | unverified | DO secret or gateway credential if chosen | verify/rotate or remove |
 | `OPENAI_BASE_URL` | N; OpenAI-compatible endpoint override; optional | local config | unverified | DO config; Cloudflare AI Gateway endpoint after account setup | verify/retain or replace |
 | `OPENAI_MODEL` | N; OpenAI model; required when `AI_PROVIDER=openai` | local config | unverified | DO config | verify/retain |
-| `AWS_SESSION_TOKEN` | S; optional temporary AWS credential | local secret | unverified | DO secret only if needed | verify/rotate or remove |
 | `HELCIM_PAYMENTS_ENABLED` | N; payments feature gate; optional, CI explicitly disables | local config | unverified | DO config | verify/retain |
 | `HELCIM_API_KEY` | S; Helcim API; required if payments enabled | local secret | unverified | DO secret | verify/rotate |
 | `HELCIM_WEBHOOK_SECRET` | S; webhook signature; required if payments enabled | local secret | unverified | DO secret | verify/rotate |
@@ -59,6 +58,38 @@ In the tables, **S** = secret (including sensitive identifiers such as access-ke
 | `VITE_SOCIAL_LINKEDIN_URL` | P; browser social link; optional | local config | unverified | DO build | verify/retain |
 | `VITE_SOCIAL_GOOGLE_BUSINESS_URL` | P; browser social link; optional | local config | unverified | DO build | verify/retain |
 | `VITE_SOCIAL_PATREON_URL` | P; browser social link; optional | local config | unverified | DO build | verify/retain |
+
+### Minimum access scope for secrets
+
+The owner for every entry is **Kindred owner**. The following are minimum
+permissions to request when provisioning credentials; no provider-side grant
+was inspected. Where a provider does not offer granular scopes, use a dedicated
+project/account credential and restrict it to the listed API, database, or
+environment. Confirm the real grant and rotation owner in the provider before
+cutover.
+
+| Secret | Minimum required scope | Scope status |
+| --- | --- | --- |
+| `MONGODB_URI` | Application database read/write on the Kindred database only; no cluster administration. Migration/restore jobs use separate source-read and target-write identities. | Proposed; verify provider grant |
+| `OPENAI_API_KEY` | Inference for the selected project/model only; no organization administration, billing, or key management. | Proposed; verify provider grant |
+| `HELCIM_API_KEY` | Only the checkout, customer, subscription, and portal operations exercised by the API; no account administration if Helcim supports narrower credentials. | Proposed; verify provider grant |
+| `HELCIM_WEBHOOK_SECRET` | Signature verification for Kindred's configured webhook endpoint only. | Endpoint-specific shared secret; verify rotation |
+| `HELCIM_CUSTOMER_REFERENCE_SECRET` | Local HMAC signing/verification for stable customer references; no provider API access. | App-only secret; verify rotation compatibility |
+| `RESEND_API_KEY` | Send email from the verified Kindred sender/domain only; no account, domain, or API-key administration. | Proposed; verify provider grant |
+| `TWILIO_ACCOUNT_SID` | Identify the dedicated Kindred messaging subaccount/service only; do not use a parent-account credential. | Proposed; verify provider grant |
+| `TWILIO_AUTH_TOKEN` | SMS send/status operations for the Kindred messaging service only; no account administration. | Proposed; verify provider grant |
+| `ELEVENLABS_API_KEY` | Voice generation for the selected project/voice only; no workspace administration. | Proposed; verify provider grant |
+| `POSTGRES_SOURCE_URL` | Read-only access to the isolated migration source database. | Job-only; do not place in app runtime |
+| `POSTGRES_RESTORE_URL` | Create schema and write data only in the isolated rehearsal target; no production access. | Job-only; not currently provisioned |
+| `AUTH0_CLIENT_SECRET` | Auth0 Deploy CLI machine-to-machine scopes limited to the explicitly managed tenant resources; no user impersonation or runtime API access. | Exact Deploy CLI scopes require tenant review |
+| `CLERK_SECRET_KEY` | Read-only Clerk user/identity inspection only while legacy account reconciliation is authorized. | Legacy-only; exact grant and continued need unverified |
+| `CLERK_WEBHOOK_SECRET` | Verify signatures for a legacy Clerk webhook only if that endpoint is still intentionally operated. | Unmounted code; remove after migration/rollback review |
+| `GOOGLE_CLIENT_SECRET` | No new scope: retired Calendar integration. Retain only for an approved token-disconnect or rollback procedure. | Retired; revoke after stored-token disposition |
+| `CALENDAR_OAUTH_STATE_SECRET` | Local OAuth state signing only while the retired Calendar flow remains available. | Retired; remove after disconnect audit |
+| `CALENDAR_TOKEN_ENCRYPTION_KEY` | Local decrypt/re-encrypt of stored Calendar refresh tokens for disconnect or recovery; never share with the browser. | Temporary; remove after stored-token disposition |
+| `SNYK_TOKEN` | Read-only project dependency/code scanning sufficient for the CI scans; no organization administration. | Verify token type and org scope in Snyk |
+| `OPENCODE_API_KEY` | Model/API access needed for the trusted-comment workflow only; GitHub write access comes from the separate job-scoped `GITHUB_TOKEN`. | Verify provider project and spending limits |
+| `GITHUB_TOKEN` | Per-job permissions only; OpenCode workflow currently requests contents, issues, and pull-request writes for trusted maintainers. Other CI jobs stay read-only. | Workflow-declared; review necessity before expanding |
 
 ### One-off jobs, retired integration references and development switches
 
