@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { newDb } from "pg-mem";
+import { DataType, newDb } from "pg-mem";
 import {
   PostgresDataApi,
   DatabaseLeaseUnavailableError,
@@ -22,6 +22,12 @@ const schemaPath = fileURLToPath(new URL("../migrations-postgres/0001_rehearsal_
 
 async function fixture(): Promise<{ api: PostgresDataApi; pool: any }> {
   const memory = newDb();
+  memory.public.registerFunction({
+    name: "clock_timestamp",
+    returns: DataType.timestamptz,
+    implementation: () => new Date(),
+    impure: true,
+  });
   memory.public.none(await readFile(schemaPath, "utf8"));
   const Pg = memory.adapters.createPg();
   const pool = new Pg.Pool();
@@ -128,12 +134,34 @@ test("rolls back failed transactions and serializes database-backed leases", asy
       `ROLLBACK TO SAVEPOINT ${savepoint}`,
       `RELEASE SAVEPOINT ${savepoint}`,
     ]);
+    let heldToken: string | null = null;
+    const leaseQueries = {
+      async query(sql: string, values?: unknown[]) {
+        if (sql.startsWith('INSERT INTO "database_leases"')) {
+          if (heldToken) return { rows: [] };
+          heldToken = String(values?.[1]);
+          return { rows: [{ token: heldToken }] };
+        }
+        if (sql.startsWith('UPDATE "database_leases"')) {
+          return { rows: heldToken === values?.[1] ? [{ token: heldToken }] : [] };
+        }
+        if (sql.startsWith('DELETE FROM "database_leases"')) {
+          if (heldToken === values?.[1]) heldToken = null;
+          return { rows: [] };
+        }
+        throw new Error(`Unexpected lease query: ${sql}`);
+      },
+    };
     let held = false;
-    await api.withDatabaseLease("test", "one", 1000, async () => {
+    await withDatabaseLease("test", "one", 1000, async () => {
       held = true;
-      await assert.rejects(api.withDatabaseLease("test", "one", 1000, async () => undefined), DatabaseLeaseUnavailableError);
-    });
+      await assert.rejects(
+        withDatabaseLease("test", "one", 1000, async () => undefined, leaseQueries),
+        DatabaseLeaseUnavailableError,
+      );
+    }, leaseQueries);
     assert.equal(held, true);
+    assert.equal(heldToken, null);
   } finally { await pool.end(); }
 });
 
@@ -152,13 +180,13 @@ test("computes lease claim and renewal expiry in UTC using PostgreSQL time", asy
   }, queryable);
 
   const claim = calls[0]!;
-  assert.match(claim.sql, /VALUES \(\$1, \$2, \(clock_timestamp\(\) AT TIME ZONE 'UTC'\) \+ \(\$3 \* INTERVAL '1 millisecond'\)\)/);
-  assert.match(claim.sql, /expires_at <= \(clock_timestamp\(\) AT TIME ZONE 'UTC'\)/);
+  assert.match(claim.sql, /VALUES \(\$1, \$2, clock_timestamp\(\) \+ \(\$3::integer \* INTERVAL '1 millisecond'\)\)/);
+  assert.match(claim.sql, /expires_at <= clock_timestamp\(\)/);
   assert.deepEqual(claim.values?.slice(0, 1), ["test:utc-expiry"]);
   assert.equal(claim.values?.[2], 100);
 
   const renewal = calls.find(({ sql }) => sql.startsWith('UPDATE "database_leases"'))!;
-  assert.match(renewal.sql, /SET expires_at = \(clock_timestamp\(\) AT TIME ZONE 'UTC'\) \+ \(\$3 \* INTERVAL '1 millisecond'\)/);
+  assert.match(renewal.sql, /SET expires_at = clock_timestamp\(\) \+ \(\$3::integer \* INTERVAL '1 millisecond'\)/);
   assert.match(renewal.sql, /WHERE lease_key = \$1 AND token = \$2 RETURNING token$/);
   assert.equal(renewal.values?.[2], 100);
   assert.equal(calls.some(({ sql }) => /LOCALTIMESTAMP/.test(sql)), false);

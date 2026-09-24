@@ -239,5 +239,5 @@ CREATE TABLE subscriptions (
 CREATE TABLE database_leases (
   lease_key text PRIMARY KEY,
   token text NOT NULL,
-  expires_at timestamp NOT NULL
+  expires_at timestamptz NOT NULL
 );

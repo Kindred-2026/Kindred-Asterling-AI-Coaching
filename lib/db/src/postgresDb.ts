@@ -262,9 +262,9 @@ export async function withDatabaseLease<T>(namespace: string, key: string, ttlMs
   const leaseKey = `${namespace}:${key}`;
   const token = randomUUID();
   const leaseTable = identifier("database_leases");
-  const expirySql = "(clock_timestamp() AT TIME ZONE 'UTC') + ($3 * INTERVAL '1 millisecond')";
+  const expirySql = "clock_timestamp() + ($3::integer * INTERVAL '1 millisecond')";
   const claim = await queryable.query(
-    `INSERT INTO ${leaseTable} (lease_key, token, expires_at) VALUES ($1, $2, ${expirySql}) ON CONFLICT (lease_key) DO UPDATE SET token = EXCLUDED.token, expires_at = EXCLUDED.expires_at WHERE ${leaseTable}.expires_at <= (clock_timestamp() AT TIME ZONE 'UTC') RETURNING token`,
+    `INSERT INTO ${leaseTable} (lease_key, token, expires_at) VALUES ($1, $2, ${expirySql}) ON CONFLICT (lease_key) DO UPDATE SET token = EXCLUDED.token, expires_at = EXCLUDED.expires_at WHERE ${leaseTable}.expires_at <= clock_timestamp() RETURNING token`,
     [leaseKey, token, ttlMs],
   );
   if (claim.rows.length !== 1 || claim.rows[0]?.token !== token) throw new DatabaseLeaseUnavailableError(`Database lease is already held: ${namespace}`);
