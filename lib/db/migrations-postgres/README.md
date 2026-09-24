@@ -41,7 +41,9 @@ server-side `MONGODB_REHEARSAL_URI`, `MONGODB_REHEARSAL_DATABASE` (named
 test/dev/fixture/rehearsal, different from the configured runtime source),
 `PG_REHEARSAL_URL` and
 `NODE_ENV=test` or `development`. It requires no `.env` file loader. The
-optional `DATABASE_URL` is used only to reject an identical application target.
+optional `DATABASE_URL` is used to reject any target on the runtime database host,
+even when the database name differs. When `DATABASE_URL` is not configured, the
+operator must independently verify the target host is non-production.
 The default invocation is `corepack pnpm --filter @workspace/db
 rehearse:mongo-to-postgres`; the explicit staging-write invocation appends
 `-- --write --non-production`.

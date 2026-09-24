@@ -44,9 +44,12 @@ active workflow specifically needs them.
 The current application data layer is MongoDB-specific. Do not attach the
 managed PostgreSQL database to the current build and do not remove
 `MONGODB_URI`. First restore the historical PostgreSQL schema as a reviewed
-baseline, implement a PostgreSQL runtime adapter and a MongoDB-to-PostgreSQL
-rehearsal, then validate all account-owned data and SQL constraints. The
-existing PostgreSQL-to-MongoDB script is not a reverse migration tool.
+baseline and implement the PostgreSQL runtime adapter. A value-free,
+all-collection rehearsal foundation now lives in `lib/db/migrations-postgres`
+and `lib/db/src/postgresRehearsal.ts`; its CLI defaults to transaction rollback,
+and write mode requires an explicitly named isolated database. It is not a
+runtime adapter, a real backup/restore rehearsal, or production migration.
+The existing PostgreSQL-to-MongoDB script is not a reverse migration tool.
 
 The migration must preserve each internal Kindred user ID and all associated
 history. Reconcile users, conversations, messages, assessments, body scans,

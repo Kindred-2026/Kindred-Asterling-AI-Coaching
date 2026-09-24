@@ -26,8 +26,8 @@ export function authorizeTarget(
     throw new Error("Target must be a dedicated kindred_rehearsal_ database");
   if (activeUrl) {
     const active = new URL(activeUrl);
-    if (active.host === target.host && active.pathname === target.pathname)
-      throw new Error("Target cannot be the runtime database");
+    if (active.host === target.host)
+      throw new Error("Target cannot share a host with the configured runtime database");
   }
   if (args.includes("--non-production") && !args.includes("--write"))
     throw new Error("--non-production requires --write");

@@ -277,7 +277,17 @@ test("requires a dedicated non-production target and two explicit write flags", 
     /NODE_ENV/,
   );
   assert.throws(() => authorizeTarget([], "test", "postgresql://localhost/kindred"), /dedicated/);
-  assert.throws(() => authorizeTarget([], "test", url, url), /runtime database/);
+  assert.throws(() => authorizeTarget([], "test", url, url), /share a host/);
+  assert.throws(
+    () =>
+      authorizeTarget(
+        ["--write", "--non-production"],
+        "development",
+        "postgresql://staging:secret@localhost:5432/kindred_rehearsal_stage",
+        "postgresql://runtime:secret@localhost:5432/kindred",
+      ),
+    /share a host/,
+  );
   assert.throws(() => authorizeTarget(["--unknown"], "test", url), /Unrecognized/);
 });
 
