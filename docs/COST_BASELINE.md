@@ -34,7 +34,13 @@ price and app memory requirement remain unverified. That scenario totals about
 **$46.72/month** for app plus database before network transfer, other providers,
 AI inference, backups beyond included retention, and all remaining services.
 The $50 target therefore has at most $3.28/month left for those costs under
-this estimate, and is not yet supported by measured bills. Cloudflare currently
+this estimate, and is not yet supported by measured bills.
+
+**Caveat:** The Fly MPG docs confirm automatic backups/recovery, HA/failover,
+and connection pooling are included, but state that security patches and
+version upgrades are still under development. Before production selection or
+cutover, confirm the operator, patch/upgrade procedure, and a successful
+restore test. Cloudflare currently
 prices core AI Gateway features at $0, but inference is billed by the upstream
 provider. For accounts whose first Gateway is created on or after 2026-09-24,
 Gateway logs follow Workers Logs pricing: Workers Free includes 200,000 log
