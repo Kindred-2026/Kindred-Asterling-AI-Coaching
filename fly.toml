@@ -11,7 +11,7 @@ primary_region = 'yyz'
 
 [env]
   AI_PROVIDER = 'disabled'
-  APP_PUBLIC_URL = 'https://kindred-asterling-staging-20260924.fly.dev'
+  APP_PUBLIC_URL = 'https://kindred-asterling-ai-coaching.fly.dev'
   DATABASE_PROVIDER = 'mongo'
   NODE_ENV = 'production'
   PORT = '8080'
