@@ -4,6 +4,51 @@ export type Column<T = unknown> = {
   readonly __value?: T;
 };
 
+export type Condition =
+  | { readonly filter: Readonly<Record<string, unknown>> }
+  | { readonly __postgresCondition: true };
+export type SortExpression =
+  | { readonly sort: Readonly<Record<string, 1 | -1>> }
+  | { readonly __postgresSort: true; readonly column: Column; readonly direction: "ASC" | "DESC" };
+type AdapterRow = Record<string, unknown>;
+export type SelectionRow<S, R extends AdapterRow> = S extends Record<string, unknown>
+  ? { [K in keyof S]: S[K] extends Column<infer V> ? V : unknown }
+  : R;
+export interface SelectBuilder<Selection extends Record<string, unknown> | undefined> {
+  from<R extends AdapterRow>(table: Table<R>): SelectQuery<SelectionRow<Selection, R>>;
+}
+export interface SelectQuery<R extends AdapterRow> extends PromiseLike<R[]> {
+  where(condition: Condition): this;
+  orderBy(...values: Array<SortExpression | Column>): this;
+  limit(value: number): this;
+}
+export interface InsertQuery<R extends AdapterRow> extends PromiseLike<R[]> {
+  values(value: Partial<R> | Array<Partial<R>>): this;
+  onConflictDoNothing(options: { target: Column | Column[] }): this;
+  onConflictDoUpdate(options: { target: Column | Column[]; set: Record<string, unknown>; setWhere?: Condition }): this;
+  returning(selection?: Record<string, unknown>): this;
+}
+export interface UpdateQuery<R extends AdapterRow> extends PromiseLike<R[]> {
+  set(value: Partial<R>): this;
+  where(condition: Condition): this;
+  returning(selection?: Record<string, unknown>): this;
+}
+export interface DeleteQuery<R extends AdapterRow> extends PromiseLike<R[]> {
+  where(condition: Condition): this;
+  returning(selection?: Record<string, unknown>): this;
+}
+export interface DataApi {
+  select<Selection extends Record<string, unknown> | undefined = undefined>(selection?: Selection): SelectBuilder<Selection>;
+  insert<R extends AdapterRow>(table: Table<R>): InsertQuery<R>;
+  update<R extends AdapterRow>(table: Table<R>): UpdateQuery<R>;
+  delete<R extends AdapterRow>(table: Table<R>): DeleteQuery<R>;
+  count(table: Table, condition?: Condition): Promise<number>;
+  incrementDailyUsage(userId: string, date: string, limit: number): Promise<number | null>;
+  refundDailyUsage(userId: string, date: string): Promise<void>;
+  findUsersByEmail(email: string, limit?: number): Promise<string[]>;
+  transaction<T>(callback: (tx: DataApi) => Promise<T>): Promise<T>;
+}
+
 export type DefaultValue = unknown | (() => unknown);
 
 export type Table<
