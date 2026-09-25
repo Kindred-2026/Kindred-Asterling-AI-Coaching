@@ -58,16 +58,17 @@ production gates; a checked-in plan is not proof of a live cutover.
 
 ## Current source and staging state (2026-09-24)
 
-Canonical GitHub `main` is `a1afe48ba470ca8a905751592ab6a851b5370dd6` (PR #172).
-The Fly app configuration is in the uncommitted root `fly.toml`; Fly validated
-it with internal port `8080`, `/api/healthz/db`, `auto_stop_machines = 'off'`,
-and `min_machines_running = 1`. Fly reports no app machines. Managed Postgres
-cluster `w76geop28dnrplk4` is ready with 10 GB storage and one replica, but is
-not attached. No code deployment, runtime credentials, production data, or
-production traffic was changed. The estimated published-price database cost is
-about $40.80/month; with one always-on 1 GB app machine the estimate is about
-$46.72/month before network, AI, backups, and other services. Actual billing is
-unverified. See [the staging record](FLY_DEPLOYMENT.md).
+The Fly staging deployment SHA is not yet recorded: immediately before
+deployment, the operator must run `git rev-parse HEAD` from the clean, approved
+post-merge checkout and deploy that exact SHA. The committed root `fly.toml`
+was validated with internal port `8080`, `/api/healthz/db`,
+`auto_stop_machines = 'off'`, and `min_machines_running = 1`. Fly reports no
+app machines. Managed Postgres cluster `w76geop28dnrplk4` is ready with 10 GB
+storage and one replica, but is not attached. No code deployment, runtime
+credentials, production data, or production traffic was changed. The estimated
+published-price database cost is about $40.80/month; with one always-on 1 GB
+app machine the estimate is about $46.72/month before network, AI, backups, and
+other services. Actual billing is unverified. See [the staging record](FLY_DEPLOYMENT.md).
 
 ## Cutover gates
 
