@@ -37,9 +37,9 @@ non-production backup restore rehearsal.
 ### 1. Review and prepare
 
 1. Immediately before deployment, record the reviewed commit SHA from the
-   clean canonical `main` checkout using `git rev-parse HEAD`. Build and deploy
-   that exact SHA; do not deploy a moving branch name. No staging deployment
-   candidate has been selected.
+   clean, approved post-merge checkout using `git rev-parse HEAD`. Build and
+   deploy that exact SHA; do not deploy a moving branch name. No staging
+   deployment candidate has been selected.
 2. **[DASHBOARD/PROVIDER ACCESS - NOT EXECUTED]** Confirm access to the Fly
    organization, Toronto (`yyz`) app region, billing controls, an isolated
    non-production MongoDB endpoint, and the authorized Auth0 tenant/application.
@@ -183,7 +183,7 @@ be resolved or the path explicitly retired with a documented sunset disposition.
 
 | Evidence item | Record |
 | --- | --- |
-| Reviewed SHA and deploy timestamp | Not selected; no staging deployment has been run |
+| Reviewed SHA and deploy timestamp | Not run; record `git rev-parse HEAD` from the clean, approved post-merge checkout immediately before deployment |
 | Fly app name, verified region, internal port | `kindred-asterling-staging-20260924`, `yyz`, `8080`; no app machines |
 | Managed Postgres cluster | `kindred-staging-db-20260924`, `w76geop28dnrplk4`, ready, Basic, 10 GB, one replica; app unattached. Empty rehearsal database `kindred_rehearsal_pg_adapter_20260925` created; no schema or fixtures applied |
 | Image digest and Fly release ID | Not run |
@@ -191,7 +191,7 @@ be resolved or the path explicitly retired with a documented sunset disposition.
 | Auth0 fresh sign-in, sign-out, authenticated API result (tenant name/reference only) | Not run |
 | Redacted app-log review and reference | Not run |
 | Two synthetic account IDs/labels and separate-history result (no personal data) | Not run |
-| PostgreSQL integration / restore gate | Pending: isolated rehearsal database is provisioned but remains empty. Live adapter test could not authenticate through the local Fly proxy; no real integration or restore rehearsal passed |
+| PostgreSQL integration / restore gate | **FAIL** (2026-09-25): live adapter authentication through the local Fly proxy failed before schema application; the isolated rehearsal database remains empty. Full PostgreSQL integration and restore rehearsal remain **BLOCKED** and have not passed |
 | Reminder scheduler | Not run; record `auto_stop_machines = "off"`, running machine count/status, and cost |
 | Cost measurement date, source, current estimate/actual and `$50/month` comparison | Published starting estimate: MPG Basic $38 + 10 GB storage $2.80/month; app compute not started (no machines). Billing/invoice not verified. About $46.72/month after one 1 GB app machine runs, before network, AI, backups, and other services. |
 | Spend alert and provider/model quota thresholds | Not run |

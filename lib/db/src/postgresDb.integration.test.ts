@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { lookup } from "node:dns/promises";
 import { randomUUID } from "node:crypto";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -20,9 +21,16 @@ import { affirmationsTable, conversations, dailyUsageTable, usersTable } from ".
 const optIn = "I_UNDERSTAND_THIS_IS_A_DISPOSABLE_REHEARSAL_DATABASE";
 const migrationPath = fileURLToPath(new URL("../migrations-postgres/0001_rehearsal_core.sql", import.meta.url));
 
-type GuardConfig = { nodeEnv?: string; confirmation?: string; targetUrl?: string; runtimeUrl?: string };
+type HostResolver = (hostname: string) => Promise<readonly string[]>;
+type GuardConfig = {
+  nodeEnv?: string;
+  confirmation?: string;
+  targetUrl?: string;
+  runtimeUrl?: string;
+  resolveHost?: HostResolver;
+};
 
-function targetFromEnvironment(env: GuardConfig): string {
+async function targetFromEnvironment(env: GuardConfig): Promise<string> {
   if (env.nodeEnv !== "test") throw new Error("PostgreSQL integration requires NODE_ENV=test");
   if (env.confirmation !== optIn) throw new Error(`Set POSTGRES_INTEGRATION_CONFIRM=${optIn} to opt in`);
   if (!env.targetUrl) throw new Error("POSTGRES_INTEGRATION_URL is required");
@@ -40,26 +48,37 @@ function targetFromEnvironment(env: GuardConfig): string {
     if (!["postgres:", "postgresql:"].includes(runtime.protocol) || !runtime.hostname) {
       throw new Error("POSTGRES_URL is not a valid PostgreSQL URL");
     }
-    if (target.hostname.toLowerCase() === runtime.hostname.toLowerCase() &&
-        (target.port || "5432") === (runtime.port || "5432")) {
+    const resolveHost = env.resolveHost ?? (async (hostname: string) =>
+      (await lookup(hostname, { all: true })).map(({ address }) => address));
+    const [targetAddresses, runtimeAddresses] = await Promise.all([
+      resolveHost(target.hostname),
+      resolveHost(runtime.hostname),
+    ]);
+    const runtimeEndpoints = new Set(runtimeAddresses.map((address) =>
+      `${address.toLowerCase()}|${runtime.port || "5432"}`));
+    if (targetAddresses.some((address) =>
+      runtimeEndpoints.has(`${address.toLowerCase()}|${target.port || "5432"}`))) {
       throw new Error("Integration target must not use the runtime POSTGRES_URL host");
     }
   }
   return env.targetUrl;
 }
 
-test("no-database guards fail closed before creating a connection", () => {
+test("no-database guards fail closed before creating a connection", async () => {
   const base = { nodeEnv: "test", confirmation: optIn, targetUrl: "postgres://user:pass@localhost/kindred_rehearsal_fixture" };
-  assert.throws(() => targetFromEnvironment({ ...base, nodeEnv: "development" }), /NODE_ENV=test/);
-  assert.throws(() => targetFromEnvironment({ ...base, confirmation: "" }), /POSTGRES_INTEGRATION_CONFIRM/);
-  assert.throws(() => targetFromEnvironment({ ...base, targetUrl: "postgres://localhost/other" }), /kindred_rehearsal_/);
-  assert.throws(() => targetFromEnvironment({ ...base, runtimeUrl: "postgres://runtime:secret@LOCALHOST:5432/app" }), /runtime POSTGRES_URL host/);
-  assert.throws(() => targetFromEnvironment({ ...base, targetUrl: "not a url" }), /must be a PostgreSQL URL/);
+  await assert.rejects(targetFromEnvironment({ ...base, nodeEnv: "development" }), /NODE_ENV=test/);
+  await assert.rejects(targetFromEnvironment({ ...base, confirmation: "" }), /POSTGRES_INTEGRATION_CONFIRM/);
+  await assert.rejects(targetFromEnvironment({ ...base, targetUrl: "postgres://localhost/other" }), /kindred_rehearsal_/);
+  await assert.rejects(targetFromEnvironment({ ...base, runtimeUrl: "postgres://runtime:secret@LOCALHOST:5432/app" }), /runtime POSTGRES_URL host/);
+  await assert.rejects(targetFromEnvironment({ ...base, targetUrl: "not a url" }), /must be a PostgreSQL URL/);
+  const aliases = { resolveHost: async (hostname: string) =>
+    hostname === "localhost" ? ["127.0.0.1"] : [hostname] };
+  await assert.rejects(targetFromEnvironment({ ...base, runtimeUrl: "postgres://127.0.0.1:5432/app", ...aliases }), /runtime POSTGRES_URL host/);
 });
 
 const live = !!process.env.POSTGRES_INTEGRATION_URL;
 test("real PostgreSQL rehearsal exercises PostgresDataApi", { skip: !live }, async () => {
-  const connectionString = targetFromEnvironment({
+  const connectionString = await targetFromEnvironment({
     nodeEnv: process.env.NODE_ENV,
     confirmation: process.env.POSTGRES_INTEGRATION_CONFIRM,
     targetUrl: process.env.POSTGRES_INTEGRATION_URL,
@@ -81,6 +100,10 @@ test("real PostgreSQL rehearsal exercises PostgresDataApi", { skip: !live }, asy
       (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
         WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p', 'S', 'v', 'm', 'f')) +
       (SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = 'public') +
+      (SELECT count(*) FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace
+        WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
+          AND n.nspname NOT LIKE 'pg_toast%' AND n.nspname NOT LIKE 'pg_temp_%'
+          AND (t.typtype IN ('e', 'd', 'r', 'b') OR (t.typtype = 'c' AND t.typrelid = 0))) +
       (SELECT count(*) FROM pg_namespace WHERE nspname NOT IN ('pg_catalog', 'information_schema', 'public')
         AND nspname NOT LIKE 'pg_toast%' AND nspname NOT LIKE 'pg_temp_%')
     )::int AS total`);
