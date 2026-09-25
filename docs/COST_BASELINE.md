@@ -1,13 +1,13 @@
 # Kindred recurring cost baseline
 
-**As of:** 2026-09-24. **Status:** planning inventory; no provider invoices or
+**As of:** 2026-09-25. **Status:** planning inventory; no provider invoices or
 billing dashboards were inspected. The under-$50/month target excludes Helcim
 payment-processing charges and remains unverified until every applicable row
 has a current bill or usage export.
 
 | Service | Current or target purpose | Published starting estimate | Kindred actual monthly cost | Status / measurement source |
 | --- | --- | ---: | ---: | --- |
-| Fly.io app compute | Selected app/API hosting; staging app registered in Toronto (`yyz`); no machines deployed | About $5.92/month for one always-on shared-cpu-1x machine with 1 GB RAM at the current reference rate; regional price must be confirmed | No app compute started | App `kindred-asterling-staging-20260924` has no machines; no invoice inspected |
+| Fly.io app compute | Selected app/API hosting; repository-linked staging app registered; no machines deployed | About $5.92/month for one always-on shared-cpu-1x machine with 1 GB RAM at the current reference rate; regional price must be confirmed | No app compute started | App `kindred-asterling-ai-coaching` has no saved app configuration or machines; no invoice inspected |
 | Fly Managed Postgres Basic | Staging primary database in Toronto (`yyz`); provisioned and ready, not attached to the app | $38.00/month plus $0.28/GB/month provisioned storage; current 10 GB allocation estimates $2.80/month | Not measured; resource is provisioned and billable | Cluster `kindred-staging-db-20260924` has one replica; verify invoice, account capacity, backup/restore before cutover |
 | Cloudflare AI Gateway | AI routing, metadata, rate limits, and spend controls | $0 for core Gateway features | Not measured | Upstream inference is usage-billed. Log cost/retention depends on when the account created its first Gateway; verify the account's applicable plan and configured limits |
 | OpenAI or selected Gateway upstream | Model inference | Usage-based; no Kindred estimate | Not measured | Record tokens, model, invoice, quota, and spend alert |
