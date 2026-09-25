@@ -2,9 +2,10 @@
 
 This page records how to capture release/rollback evidence during Kindred's
 hosting transition. **Coolify/MongoDB remain the current production rollback
-baseline until the Fly.io cutover passes its gates.** Fly.io account/payment
-access is confirmed, but no Fly app or Managed Postgres instance has been
-reported. Do not guess provider state here; record only what an operator can
+baseline until the Fly.io cutover passes its gates.** A Toronto staging app
+and Managed Postgres cluster were provisioned on 2026-09-24. The app has no
+machines or deployment, and the database is unattached. No production cutover
+is verified. Do not guess provider state here; record only what an operator can
 verify in GitHub Actions or the relevant provider dashboard.
 
 ## Responsibilities

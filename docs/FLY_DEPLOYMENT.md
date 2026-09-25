@@ -1,14 +1,15 @@
 # Fly.io deployment and migration runbook
 
-**Status:** Fly.io is the selected hosting provider. Read-only CLI checks on
-2026-09-24 verified access to the `personal` organization and found no apps or
-Managed Postgres clusters. `flyctl platform regions` lists Toronto (`yyz`) as
-available for Managed Postgres. No deployment is in place. Account-specific
-capacity, pricing, billing, and payment details have not been inspected.
-Keep the current Coolify and MongoDB release available through the cutover and
-rollback gates.
+**Status (2026-09-24):** Fly.io is the selected hosting provider. A staging app
+(`kindred-asterling-staging-20260924`) and Managed Postgres Basic cluster
+(`kindred-staging-db-20260924`, cluster ID `w76geop28dnrplk4`) were provisioned
+in Toronto (`yyz`). The database reports ready with 10 GB allocated storage and
+one replica. The app is registered but has no machines, deployment, attached
+database, or runtime credentials. The generated app config is in `fly.toml`.
+Capacity and billing details have not been inspected. Keep the current Coolify
+and MongoDB release available through the cutover and rollback gates.
 
-## First-time staging runbook (operator-executed; not yet run)
+## First-time staging runbook (resources provisioned; deployment not run)
 
 In Bash, add the installed CLI directory to `PATH` for the current shell and
 verify that `flyctl` resolves:
@@ -35,15 +36,18 @@ non-production backup restore rehearsal.
 
 1. Record the reviewed commit SHA (`git rev-parse HEAD`) and confirm the
    working tree is clean. Build and deploy that exact SHA; do not deploy a
-   moving branch name.
+   moving branch name. The current review candidate is
+   `a1afe48ba470ca8a905751592ab6a851b5370dd6`; deployment has not been run.
 2. **[DASHBOARD/PROVIDER ACCESS - NOT EXECUTED]** Confirm access to the Fly
    organization, Toronto (`yyz`) app region, billing controls, an isolated
    non-production MongoDB endpoint, and the authorized Auth0 tenant/application.
    Confirm the database is reachable from the Fly app and is not production.
-3. Choose a globally unique Fly app name yourself; examples in commands below
-   use `YOUR_UNIQUE_STAGING_APP` as a placeholder and must be replaced. Keep
-   `yyz` as the region and `8080` as the internal port. From the repository root,
-   create the app configuration without deploying:
+3. The staging app name is `kindred-asterling-staging-20260924`. It was created
+   in `yyz` without deploying. `fly.toml` sets internal port `8080`, the
+   `/api/healthz/db` readiness check, `auto_stop_machines = 'off'`, and
+   `min_machines_running = 1`. `flyctl config validate` passed. Recheck these
+   settings before deploying this app. For a future staging app, use a unique
+   name in place of the example below:
 
    ```sh
    flyctl launch --no-deploy --name YOUR_UNIQUE_STAGING_APP --region yyz --dockerfile Dockerfile
@@ -177,16 +181,17 @@ be resolved or the path explicitly retired with a documented sunset disposition.
 
 | Evidence item | Record |
 | --- | --- |
-| Reviewed SHA and deploy timestamp | Not run |
-| Fly app name, verified region, internal port | Not run |
+| Reviewed SHA and deploy timestamp | Candidate `a1afe48ba470ca8a905751592ab6a851b5370dd6`; not deployed |
+| Fly app name, verified region, internal port | `kindred-asterling-staging-20260924`, `yyz`, `8080`; no app machines |
+| Managed Postgres cluster | `kindred-staging-db-20260924`, `w76geop28dnrplk4`, ready, Basic, 10 GB, one replica; unattached |
 | Image digest and Fly release ID | Not run |
 | `/api/healthz` and `/api/healthz/db` results; DB endpoint identity (no URI) | Not run |
 | Auth0 fresh sign-in, sign-out, authenticated API result (tenant name/reference only) | Not run |
 | Redacted app-log review and reference | Not run |
 | Two synthetic account IDs/labels and separate-history result (no personal data) | Not run |
-| PostgreSQL integration / restore gate | BLOCKED: real non-production PostgreSQL endpoint does not exist/has not been verified |
+| PostgreSQL integration / restore gate | BLOCKED: isolated Managed Postgres is provisioned but not attached or exercised by the app; real integration and restore rehearsal remain outstanding |
 | Reminder scheduler | Not run; record `auto_stop_machines = "off"`, running machine count/status, and cost |
-| Cost measurement date, source, current estimate/actual and `$50/month` comparison | Not run |
+| Cost measurement date, source, current estimate/actual and `$50/month` comparison | Published starting estimate: MPG Basic $38 + 10 GB storage $2.80/month; app compute not started (no machines). Billing/invoice not verified. About $46.72/month after one 1 GB app machine runs, before network, AI, backups, and other services. |
 | Spend alert and provider/model quota thresholds | Not run |
 
 ## Application deployment shape
@@ -257,10 +262,9 @@ make the upstream model provider Canadian-hosted.
 
 ## Migration and cutover gates
 
-1. Create the Fly organization/app and Managed Postgres resources in Toronto
-   (`yyz`) after confirming the region and billing in the dashboard. Keep
-   credentials in Fly's secret store. The user has confirmed account/payment
-   access only; no resources have been reported as created.
+1. The staging app and Managed Postgres cluster have been created in Toronto
+   (`yyz`). Billing controls and actual invoice have not been inspected. Keep
+   credentials in Fly's secret store; none have been configured.
 2. Deploy the existing app image to staging from the reviewed commit. Verify
    build arguments, health check, Auth0 sign-in, database connectivity, logs,
    and resource use. Keep production traffic on Coolify.
