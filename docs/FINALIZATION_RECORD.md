@@ -58,7 +58,7 @@ production gates; a checked-in plan is not proof of a live cutover.
 
 ## Current source and staging state (2026-09-24)
 
-Canonical GitHub `main` is `a1afe48ba470ca8a905751592ab6a851b5370dd6` (PR #172).
+Canonical GitHub `main` is `099343a884bc0460b799d416eeb4801d2e9d1c24` (PR #173, following PR #172).
 The Fly app configuration is in the uncommitted root `fly.toml`; Fly validated
 it with internal port `8080`, `/api/healthz/db`, `auto_stop_machines = 'off'`,
 and `min_machines_running = 1`. Fly reports no app machines. Managed Postgres

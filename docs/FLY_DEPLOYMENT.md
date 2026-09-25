@@ -36,8 +36,8 @@ non-production backup restore rehearsal.
 
 1. Record the reviewed commit SHA (`git rev-parse HEAD`) and confirm the
    working tree is clean. Build and deploy that exact SHA; do not deploy a
-   moving branch name. The current review candidate is
-   `a1afe48ba470ca8a905751592ab6a851b5370dd6`; deployment has not been run.
+   moving branch name. The current canonical candidate is
+   `099343a884bc0460b799d416eeb4801d2e9d1c24`; deployment has not been run.
 2. **[DASHBOARD/PROVIDER ACCESS - NOT EXECUTED]** Confirm access to the Fly
    organization, Toronto (`yyz`) app region, billing controls, an isolated
    non-production MongoDB endpoint, and the authorized Auth0 tenant/application.
@@ -181,7 +181,7 @@ be resolved or the path explicitly retired with a documented sunset disposition.
 
 | Evidence item | Record |
 | --- | --- |
-| Reviewed SHA and deploy timestamp | Candidate `a1afe48ba470ca8a905751592ab6a851b5370dd6`; not deployed |
+| Reviewed SHA and deploy timestamp | Candidate `099343a884bc0460b799d416eeb4801d2e9d1c24`; not deployed |
 | Fly app name, verified region, internal port | `kindred-asterling-staging-20260924`, `yyz`, `8080`; no app machines |
 | Managed Postgres cluster | `kindred-staging-db-20260924`, `w76geop28dnrplk4`, ready, Basic, 10 GB, one replica; unattached |
 | Image digest and Fly release ID | Not run |
