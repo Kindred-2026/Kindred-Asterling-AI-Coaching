@@ -38,6 +38,28 @@ To run only the synthetic fixture (Node 24, pnpm 10.28.1):
 corepack pnpm --filter @workspace/db test:postgres-rehearsal
 ```
 
+For the separately gated real-PostgreSQL adapter integration suite, provide an
+empty, disposable database whose name begins `kindred_rehearsal_`. It refuses
+to proceed unless `NODE_ENV=test` and the exact confirmation value below are
+set. It also rejects a target sharing the configured runtime `POSTGRES_URL`
+host, requires the target to have no user objects, and never drops or truncates
+database objects. The run creates the checked-in rehearsal schema and deletes
+only its UUID-scoped synthetic rows; that schema remains, so provision a fresh
+rehearsal database for another run. Keep the URL out of shell history, source
+control and logs. This suite covers the adapter only; it does not prove the
+complete application migration, data reconciliation or backup restore.
+
+```sh
+NODE_ENV=test \
+POSTGRES_INTEGRATION_CONFIRM=I_UNDERSTAND_THIS_IS_A_DISPOSABLE_REHEARSAL_DATABASE \
+POSTGRES_INTEGRATION_URL='<secret-injected PostgreSQL URL>' \
+corepack pnpm --filter @workspace/db test:postgres-integration
+```
+
+The live test is skipped when `POSTGRES_INTEGRATION_URL` is absent; the
+database-free guard tests still run. Do not treat that skip as real-server
+integration evidence.
+
 For a separately authorized, local, non-production rehearsal, the CLI expects
 server-side `MONGODB_REHEARSAL_URI`, `MONGODB_REHEARSAL_DATABASE` (named
 test/dev/fixture/rehearsal, different from the configured runtime source),

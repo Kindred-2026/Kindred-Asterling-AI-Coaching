@@ -12,6 +12,7 @@
     "validate:restore": "tsx ./scripts/validate-mongodb-restore.ts",
     "test:api": "tsx ./scripts/test-api-server.ts && pnpm run test:postgres-adapter && pnpm run test:postgres-rehearsal",
     "test:postgres-adapter": "tsx --test ./src/postgresDb.test.ts",
+    "test:postgres-integration": "tsx --test ./src/postgresDb.integration.test.ts",
     "typecheck:scripts": "tsc --noEmit --strict --skipLibCheck --module preserve --moduleResolution bundler --target es2022 --types node ./scripts/*.ts",
     "test:journey": "tsx ./scripts/test-coach-journey.ts",
     "test:postgres-rehearsal": "tsx --test ./scripts/postgres-rehearsal.test.ts",
