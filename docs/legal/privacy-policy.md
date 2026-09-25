@@ -35,7 +35,7 @@ Kindred uses information to:
 
 ## Service providers and disclosures
 
-The hosting provider, database provider, and AI processor must be reconciled with the live deployment before publication. Fly.io with Managed Postgres in Toronto (`yyz`) is the selected target. Read-only Fly CLI checks on 2026-09-24 confirmed access to the `personal` organization and found no apps or Managed Postgres clusters; billing and payment details have not been inspected. The planned hosted AI route is Cloudflare AI Gateway to a selected upstream model provider. These are planning choices and are not confirmation of a completed cutover.
+The hosting provider, database provider, and AI processor must be reconciled with the live deployment before publication. A staging app and Managed Postgres cluster were provisioned with Fly.io in Toronto (`yyz`) on 2026-09-24. The app has no deployed machines and the database is unattached; production has not been cut over. Billing and payment details have not been inspected. The planned hosted AI route is Cloudflare AI Gateway to a selected upstream model provider. These are planning choices and are not confirmation of a completed cutover.
 
 The service uses Auth0 for identity, Helcim for payments, Google Calendar for optional read-only calendar access, Sentry for error and performance monitoring when enabled, Twilio for SMS, Resend for email, and ElevenLabs for voice features. Legacy Clerk identity mappings are retained only for account-history reconciliation and rollback. Information should be sent to a provider only when its feature is enabled and needed.
 
