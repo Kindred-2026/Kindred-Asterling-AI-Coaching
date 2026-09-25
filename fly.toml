@@ -1,16 +1,16 @@
-# fly.toml app configuration file generated for kindred-asterling-staging-20260924 on 2026-09-24T18:47:59-06:00
+# fly.toml app configuration for the registered Kindred staging app.
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'kindred-asterling-staging-20260924'
+app = 'kindred-asterling-ai-coaching'
 primary_region = 'yyz'
 
 [env]
   NODE_ENV = 'production'
   PORT = '8080'
   DATABASE_PROVIDER = 'mongo'
-  APP_PUBLIC_URL = 'https://kindred-asterling-staging-20260924.fly.dev'
+  APP_PUBLIC_URL = 'https://kindred-asterling-ai-coaching.fly.dev'
   AI_PROVIDER = 'disabled'
 
 [build]

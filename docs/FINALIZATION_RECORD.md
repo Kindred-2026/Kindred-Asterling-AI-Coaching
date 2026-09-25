@@ -7,11 +7,12 @@ production gates; a checked-in plan is not proof of a live cutover.
 
 ## Direction
 
-- **Application hosting:** Fly.io is the selected provider. On 2026-09-24 a
-  staging app (`kindred-asterling-staging-20260924`) was registered in Toronto
-  (`yyz`) without deploying code or creating app machines. Billing and payment
-  details have not been inspected. Keep Coolify available until a replacement
-  release and rollback window are verified.
+- **Application hosting:** Fly.io is the selected provider. The repository-linked
+  staging app (`kindred-asterling-ai-coaching`) is registered. On 2026-09-25,
+  the Fly dashboard showed no saved app configuration, deployment, or machines.
+  The checked-in `fly.toml` targets Toronto (`yyz`). Billing and payment details
+  have not been inspected. Keep Coolify available until a replacement release
+  and rollback window are verified.
 - **Database:** Fly Managed Postgres Basic staging cluster
   `kindred-staging-db-20260924` (10 GB, one replica) is provisioned and ready
   in Toronto (`yyz`), but remains unattached and untested by the app. Real-server

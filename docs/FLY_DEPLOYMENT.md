@@ -1,8 +1,10 @@
 # Fly.io deployment and migration runbook
 
-**Status (2026-09-24):** Fly.io is the selected hosting provider. A staging app
-(`kindred-asterling-staging-20260924`) and Managed Postgres Basic cluster
-(`kindred-staging-db-20260924`, cluster ID `w76geop28dnrplk4`) were provisioned
+**Status (2026-09-25):** Fly.io is the selected hosting provider. The staging
+app (`kindred-asterling-ai-coaching`) is registered and attached to the
+canonical GitHub repository, but the Fly dashboard reports no saved app
+configuration, deployment, or machines. The Managed Postgres Basic cluster
+(`kindred-staging-db-20260924`, cluster ID `w76geop28dnrplk4`) was provisioned
 in Toronto (`yyz`). The cluster reports ready with 10 GB allocated storage and
 one replica; it contains an empty rehearsal database named
 `kindred_rehearsal_pg_adapter_20260925`. The app is registered but has no
@@ -44,12 +46,14 @@ non-production backup restore rehearsal.
    organization, Toronto (`yyz`) app region, billing controls, an isolated
    non-production MongoDB endpoint, and the authorized Auth0 tenant/application.
    Confirm the database is reachable from the Fly app and is not production.
-3. The staging app name is `kindred-asterling-staging-20260924`. It was created
-   in `yyz` without deploying. `fly.toml` sets internal port `8080`, the
+3. The staging app name is `kindred-asterling-ai-coaching`. It is registered
+   but has no saved Fly configuration or deployment. `fly.toml` targets `yyz`
+   and sets internal port `8080`, the
    `/api/healthz/db` readiness check, `auto_stop_machines = 'off'`, and
-   `min_machines_running = 1`. `flyctl config validate` passed. Recheck these
-   settings before deploying this app. For a future staging app, use a unique
-   name in place of the example below:
+   `min_machines_running = 1`. `flyctl config validate` passed against the
+   current checked-in config on 2026-09-25. Recheck these settings before
+   deploying this app. For future staging apps, use a unique name in place of
+   the example below:
 
    ```sh
    flyctl launch --no-deploy --name YOUR_UNIQUE_STAGING_APP --region yyz --dockerfile Dockerfile
@@ -184,7 +188,7 @@ be resolved or the path explicitly retired with a documented sunset disposition.
 | Evidence item | Record |
 | --- | --- |
 | Reviewed SHA and deploy timestamp | Not run; record `git rev-parse HEAD` from the clean, approved post-merge checkout immediately before deployment |
-| Fly app name, verified region, internal port | `kindred-asterling-staging-20260924`, `yyz`, `8080`; no app machines |
+| Fly app name, configured region, internal port | `kindred-asterling-ai-coaching`, `yyz`, `8080`; dashboard shows no saved app config or machines |
 | Managed Postgres cluster | `kindred-staging-db-20260924`, `w76geop28dnrplk4`, ready, Basic, 10 GB, one replica; app unattached. Empty rehearsal database `kindred_rehearsal_pg_adapter_20260925` created; no schema or fixtures applied |
 | Image digest and Fly release ID | Not run |
 | `/api/healthz` and `/api/healthz/db` results; DB endpoint identity (no URI) | Not run |
