@@ -13,7 +13,15 @@ is in `fly.toml`. Capacity and billing details have not been inspected. Keep
 the current Coolify and MongoDB release available through the cutover and
 rollback gates.
 
-## First-time staging runbook (resources provisioned; deployment not run)
+On 2026-09-25 at 22:42 UTC, Fly Launch attempt `2083359` built commit
+`ed5feeb` and passed Fly config validation and dependency installation, but the
+frontend build stopped because `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, and
+`VITE_AUTH0_AUDIENCE` were not supplied. No image or app deployment resulted.
+The app remains undeployed with no saved configuration, machine, or runtime
+secrets. Use the CLI build-secret procedure below; the Fly Launch UI attempt did
+not pass these required build values.
+
+## First-time staging runbook (resources provisioned; build failure diagnosed)
 
 In Bash, add the installed CLI directory to `PATH` for the current shell and
 verify that `flyctl` resolves:
@@ -86,8 +94,28 @@ image are `PORT`, `DATABASE_PROVIDER`, `MONGODB_URI`, `MONGODB_DATABASE`,
 and `DATABASE_PROVIDER` to `mongo`. The `VITE_AUTH0_DOMAIN`,
 `VITE_AUTH0_CLIENT_ID`, and `VITE_AUTH0_AUDIENCE` names are required public
 build identifiers; they are not secret values. Use the same authorized Auth0
-tenant/audience as the server configuration. Do not put their values in this
-document, source control, shell command arguments, or chat.
+tenant/audience as the server configuration. The first Fly Launch build failed
+because it received none of these values. Supply them to the existing Dockerfile
+as ephemeral BuildKit build secrets when running `flyctl deploy`; Fly documents
+the `--build-secret NAME=value` option at [Build Secrets](https://www.fly.io/docs/apps/build-secrets/).
+These public identifiers will still be embedded in the browser bundle. Do not
+put their literal values in this document, source control, or chat. Read them
+into shell variables so the literal values are not stored in shell history:
+
+```sh
+read -rp 'VITE_AUTH0_DOMAIN: ' VITE_AUTH0_DOMAIN
+read -rp 'VITE_AUTH0_CLIENT_ID: ' VITE_AUTH0_CLIENT_ID
+read -rp 'VITE_AUTH0_AUDIENCE: ' VITE_AUTH0_AUDIENCE
+flyctl deploy --app kindred-asterling-ai-coaching --config fly.toml \
+  --build-secret "VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN" \
+  --build-secret "VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID" \
+  --build-secret "VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE"
+unset VITE_AUTH0_DOMAIN VITE_AUTH0_CLIENT_ID VITE_AUTH0_AUDIENCE
+```
+
+The values are public, but Fly receives them as transient CLI arguments; run
+this from a trusted local shell after configuring the required non-production
+runtime secrets below. Do not use production credentials or real user data.
 
 `AI_PROVIDER` defaults to `ollama`, which requires `OLLAMA_BASE_URL` and
 `OLLAMA_MODEL`; for the initial smoke with no configured AI service, use
@@ -187,10 +215,10 @@ be resolved or the path explicitly retired with a documented sunset disposition.
 
 | Evidence item | Record |
 | --- | --- |
-| Reviewed SHA and deploy timestamp | Not run; record `git rev-parse HEAD` from the clean, approved post-merge checkout immediately before deployment |
-| Fly app name, configured region, internal port | `kindred-asterling-ai-coaching`, `yyz`, `8080`; dashboard shows no saved app config or machines |
+| Reviewed SHA and deploy timestamp | Fly Launch attempt `2083359` used `ed5feeb` at 2026-09-25 22:42 UTC and failed during build; this is not a deployment. Record a separately reviewed post-merge SHA for the next attempt |
+| Fly app name, configured region, internal port | `kindred-asterling-ai-coaching`, configured `yyz`, `8080`; dashboard reports no saved app config or app machines |
 | Managed Postgres cluster | `kindred-staging-db-20260924`, `w76geop28dnrplk4`, ready, Basic, 10 GB, one replica; app unattached. Empty rehearsal database `kindred_rehearsal_pg_adapter_20260925` created; no schema or fixtures applied |
-| Image digest and Fly release ID | Not run |
+| Image digest and Fly release ID | None; image build failed before deployment |
 | `/api/healthz` and `/api/healthz/db` results; DB endpoint identity (no URI) | Not run |
 | Auth0 fresh sign-in, sign-out, authenticated API result (tenant name/reference only) | Not run |
 | Redacted app-log review and reference | Not run |

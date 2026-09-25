@@ -3,6 +3,14 @@
 > The branch table below records historical unique work preserved at the
 > earlier cleanup. For the current branch state, see `FINALIZATION_RECORD.md`.
 
+**Follow-up audit (2026-09-25):** PRs #184 and #185 merged into `main` at
+`8352f14`. Their topic branches were removed after verifying their commits are
+contained in `main`. PR #186 was closed without merge; its only `APP_PUBLIC_URL`
+change was already present in `main`, so its duplicate branch was removed.
+After pruning tracking refs, `git ls-remote --heads origin` listed only
+`main`. The local `auth0-deploy-integration` worktree was repaired, verified
+clean, and removed after confirming PR #142 and its commit were in `main`.
+
 **Audit date:** 2026-09-24. **Canonical repository:**
 `Kindred-2026/Kindred-Asterling-AI-Coaching`.
 
