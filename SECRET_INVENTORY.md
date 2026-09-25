@@ -1,6 +1,6 @@
 # Kindred credential and configuration inventory
 
-**Canonical source baseline:** `2bab75d` (2026-09-24; after PR #164). Inventory includes the merged PR #155 PostgreSQL startup schema validation, finalization/Snyk IaC work, and PR #164 GitHub cleanup. **Owner for tracked active entries:** Kindred owner; the historical SSH-key finding below has an unknown owner. This is a value-free inventory of names and code requirements, not an attestation that an account, vault item, production deployment, or GitHub secret is populated. Evidence: root and `auth0-deploy/` `.env.example` **names only**, `artifacts/api-server/src/lib/validateConfig.ts`, application consumers, migration scripts, frontend build validator, `.github/workflows/`, and redacted Gitleaks scans of the current tree and Git history. Secret values must never enter Git or browser `VITE_*` builds.
+**Canonical source baseline:** `6e2291e` (2026-09-24; after PR #170). Inventory includes the merged PR #155 PostgreSQL startup schema validation, finalization/Snyk IaC work, PR #164 GitHub cleanup, and PR #170's type-safe adapter contract. **Owner for tracked active entries:** Kindred owner; the historical SSH-key finding below has an unknown owner. This is a value-free inventory of names and code requirements, not an attestation that an account, vault item, production deployment, or GitHub secret is populated. Evidence: root and `auth0-deploy/` `.env.example` **names only**, `artifacts/api-server/src/lib/validateConfig.ts`, application consumers, migration scripts, frontend build validator, `.github/workflows/`, and a redacted Gitleaks scan of the tree and history dated 2026-09-23. PR #170 changed only database adapter code and tests; it did not modify credential/configuration files. Secret values must never enter Git or browser `VITE_*` builds.
 
 ## Current repository contract
 
@@ -146,7 +146,7 @@ Fixture-only `FAKE_*`, `BIND_PORT`, `MARKER_FILE`, `GRANDCHILD_*`, `EXIT_CODE`, 
 
 ### GitHub Actions references
 
-These are **workflow references only**; verify active credential references in GitHub. Canonical `main` after PR #164 has no explicit `OPENCODE_API_KEY` or `GITHUB_TOKEN` reference. GitHub automatically provides the per-job `GITHUB_TOKEN` subject to workflow permissions; it is not a repository secret. No GitHub Actions `vars.*` references were found. Workflow-defined `HELCIM_PAYMENTS_ENABLED` and synthetic `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, `VITE_AUTH0_AUDIENCE` are test configuration, not evidence of repository secrets.
+These are **workflow references only**; verify active credential references in GitHub. Canonical `main` at `6e2291e` has no explicit `OPENCODE_API_KEY` or `GITHUB_TOKEN` reference. GitHub automatically provides the per-job `GITHUB_TOKEN` subject to workflow permissions; it is not a repository secret. No GitHub Actions `vars.*` references were found. Workflow-defined `HELCIM_PAYMENTS_ENABLED` and synthetic `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, `VITE_AUTH0_AUDIENCE` are test configuration, not evidence of repository secrets.
 
 | Name | Kind; consumer / purpose; requirement | Dev | Current production / Actions source | Proposed target | Owner / status |
 | --- | --- | --- | --- | --- | --- |
@@ -155,7 +155,7 @@ These are **workflow references only**; verify active credential references in G
 
 ### GitHub repository inventory — names checked 2026-09-24
 
-A read-only GitHub metadata query returned repository-level Actions secret **names only**; no values were accessed. After checking canonical `main` and the finalization branch workflows, unused `CLERK`, `NEON_API_KEY`, and `NEON_PROJECT_ID` entries were removed on 2026-09-24. PR #164 merged on 2026-09-24, removed the OpenCode comment bot, and its sole-consumer secret `OPENCODE_API_KEY` was then deleted. A post-deletion GitHub query returned only `SNYK_TOKEN`. The repository variable list is empty. This is a point-in-time inventory, not proof that the retained Snyk token is correctly scoped.
+A read-only GitHub metadata query returned repository-level Actions secret **names only**; no values were accessed. After checking canonical `main` and the finalization branch workflows, unused `CLERK`, `NEON_API_KEY`, and `NEON_PROJECT_ID` entries were removed on 2026-09-24. PR #164 merged on 2026-09-24, removed the OpenCode comment bot, and its sole-consumer secret `OPENCODE_API_KEY` was then deleted. A fresh names-only query on 2026-09-24, after PR #170, again returned only `SNYK_TOKEN`; repository variables and all three environment secret/variable lists were empty. This is a point-in-time inventory, not proof that the retained Snyk token is correctly scoped.
 
 | Name | Kind; observed consumer | Owner / disposition |
 | --- | --- | --- |
