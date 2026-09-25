@@ -44,7 +44,7 @@ production gates; a checked-in plan is not proof of a live cutover.
 | Snyk | Retained as an observable scanner. Messages use stable Kindred `userId` ownership; no suppression was added. | PR #149 merged at `504cdf3c3019e3550e5a074dc499961ea2540d10` with CI, Security Audit, Snyk IaC, Snyk Code, API tests, frontend tests, and build all passing. The IaC job skips only when no supported IaC files exist; when they exist, `snyk iac test --report` runs and scan failures remain fatal. Open Source and Container use `monitor`, which submits results but does not gate on findings; review their project results in Snyk. Production remains gated on ownership backfill and cutover requirements below |
 | MongoDB and Coolify | Retained temporarily for production and rollback | Do not retire before all cutover gates pass |
 | Hosting provider decision | DigitalOcean rejected the available payment methods; user selected Fly.io. Railway was evaluated but not selected because its listed app/database regions omit Canada. The two DigitalOcean guides, `DIGITALOCEAN_APP_PLATFORM.md` and `digitalocean-cutover.md`, were removed; Fly.io is the active runbook | Staging app and database are provisioned in Toronto, but code is not deployed and the database is unattached. Billing, maintenance responsibility, and measured costs remain unverified. See [Fly.io deployment runbook](FLY_DEPLOYMENT.md) and [cost baseline](COST_BASELINE.md) |
-| PostgreSQL runtime and migration foundation | Added an opt-in `DATABASE_PROVIDER=postgres` runtime adapter and `POSTGRES_URL` contract; MongoDB remains the default. Also added a reviewed all-20-collection rehearsal schema, per-row validation, stable-ID and owner-relationship checks, bounded source snapshot reads, rollback-by-default replay, timezone-safe lease expiry (PR #154), and startup validation for required tables, columns, types, keys, and ownership foreign keys (PR #155) | PR #155 merged at `e91135e`; adapter/schema tests use local fixtures. A real Fly Managed Postgres staging cluster is now provisioned, but it has not been attached or exercised by the runtime adapter. Real PostgreSQL integration, migration, restore, production migration, and staging acceptance remain open |
+| PostgreSQL runtime and migration foundation | Added an opt-in `DATABASE_PROVIDER=postgres` runtime adapter and `POSTGRES_URL` contract; MongoDB remains the default. Also added a reviewed all-20-collection rehearsal schema, per-row validation, stable-ID and owner-relationship checks, bounded source snapshot reads, rollback-by-default replay, timezone-safe lease expiry (PR #154), startup schema validation (PR #155), and a separately gated real-server adapter suite (PR #176) | PR #176 CI passed. Local opt-in guard and existing adapter tests passed (9/9); the real Fly database test has not passed because no usable staging connection credential is available to this host. Full application integration, migration, restore, production migration, and staging acceptance remain open |
 | GitHub Actions OpenCode bot | Removed the comment-triggered bot after checking its full GitHub run history: zero successful runs and the latest 100 runs all skipped. Local OpenCode CLI delegation remains available independently. | PR #164 merged at `2bab75d`; the workflow is absent and the repository secret list confirms `OPENCODE_API_KEY` was deleted. The only remaining repository secret is `SNYK_TOKEN`. |
 | GitHub Actions runtime | CI, Security Audit, and Snyk action references use immutable SHAs for the verified Node 24 releases of checkout, setup-node, pnpm setup, artifact upload, and CodeQL SARIF upload | Exact SHAs were resolved from upstream release tags and each action's `action.yml` runtime was checked; validate behavior with PR checks |
 | GitLab disposition | Owner confirmed GitLab is unused. Repository audit found no active GitLab pipeline or workflow; GitHub Actions is the sole active CI path. Removed the remaining GitLab/Coolify operator SOP and corrected the formatting-boundary comment. Historical release evidence and clearly labeled historical specs remain as records. | No GitLab project or Coolify connection was changed externally. Coolify remains temporarily available until the Fly cutover and rollback gates pass. |
@@ -61,15 +61,17 @@ production gates; a checked-in plan is not proof of a live cutover.
 Canonical source is GitHub `main`. Select and record the exact reviewed SHA
 immediately before staging deployment; no staging deployment candidate is
 selected yet.
-The Fly app configuration is in the uncommitted root `fly.toml`; Fly validated
-it with internal port `8080`, `/api/healthz/db`, `auto_stop_machines = 'off'`,
-and `min_machines_running = 1`. Fly reports no app machines. Managed Postgres
-cluster `w76geop28dnrplk4` is ready with 10 GB storage and one replica, but is
-not attached. No code deployment, runtime credentials, production data, or
-production traffic was changed. The estimated published-price database cost is
-about $40.80/month; with one always-on 1 GB app machine the estimate is about
-$46.72/month before network, AI, backups, and other services. Actual billing is
-unverified. See [the staging record](FLY_DEPLOYMENT.md).
+The root `fly.toml` is tracked; Fly validated it with internal port `8080`,
+`/api/healthz/db`, `auto_stop_machines = 'off'`, and `min_machines_running = 1`.
+Fly reports no app machines. Managed Postgres cluster `w76geop28dnrplk4` is
+ready with 10 GB storage and one replica, but is not attached. The cluster now
+contains an empty `kindred_rehearsal_pg_adapter_20260925` database; the real
+adapter test could not authenticate through the local Fly proxy, so no schema
+or fixtures were applied. No code deployment, runtime credentials, production
+data, or production traffic was changed. The estimated published-price
+database cost is about $40.80/month; with one always-on 1 GB app machine the
+estimate is about $46.72/month before network, AI, backups, and other services.
+Actual billing is unverified. See [the staging record](FLY_DEPLOYMENT.md).
 
 ## Cutover gates
 

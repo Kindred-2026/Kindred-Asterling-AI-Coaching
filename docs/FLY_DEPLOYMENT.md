@@ -3,11 +3,13 @@
 **Status (2026-09-24):** Fly.io is the selected hosting provider. A staging app
 (`kindred-asterling-staging-20260924`) and Managed Postgres Basic cluster
 (`kindred-staging-db-20260924`, cluster ID `w76geop28dnrplk4`) were provisioned
-in Toronto (`yyz`). The database reports ready with 10 GB allocated storage and
-one replica. The app is registered but has no machines, deployment, attached
-database, or runtime credentials. The generated app config is in `fly.toml`.
-Capacity and billing details have not been inspected. Keep the current Coolify
-and MongoDB release available through the cutover and rollback gates.
+in Toronto (`yyz`). The cluster reports ready with 10 GB allocated storage and
+one replica; it contains an empty rehearsal database named
+`kindred_rehearsal_pg_adapter_20260925`. The app is registered but has no
+machines, deployment, attached database, or runtime credentials. The app config
+is in `fly.toml`. Capacity and billing details have not been inspected. Keep
+the current Coolify and MongoDB release available through the cutover and
+rollback gates.
 
 ## First-time staging runbook (resources provisioned; deployment not run)
 
@@ -183,13 +185,13 @@ be resolved or the path explicitly retired with a documented sunset disposition.
 | --- | --- |
 | Reviewed SHA and deploy timestamp | Not selected; no staging deployment has been run |
 | Fly app name, verified region, internal port | `kindred-asterling-staging-20260924`, `yyz`, `8080`; no app machines |
-| Managed Postgres cluster | `kindred-staging-db-20260924`, `w76geop28dnrplk4`, ready, Basic, 10 GB, one replica; unattached |
+| Managed Postgres cluster | `kindred-staging-db-20260924`, `w76geop28dnrplk4`, ready, Basic, 10 GB, one replica; app unattached. Empty rehearsal database `kindred_rehearsal_pg_adapter_20260925` created; no schema or fixtures applied |
 | Image digest and Fly release ID | Not run |
 | `/api/healthz` and `/api/healthz/db` results; DB endpoint identity (no URI) | Not run |
 | Auth0 fresh sign-in, sign-out, authenticated API result (tenant name/reference only) | Not run |
 | Redacted app-log review and reference | Not run |
 | Two synthetic account IDs/labels and separate-history result (no personal data) | Not run |
-| PostgreSQL integration / restore gate | BLOCKED: isolated Managed Postgres is provisioned but not attached or exercised by the app; real integration and restore rehearsal remain outstanding |
+| PostgreSQL integration / restore gate | Pending: isolated rehearsal database is provisioned but remains empty. Live adapter test could not authenticate through the local Fly proxy; no real integration or restore rehearsal passed |
 | Reminder scheduler | Not run; record `auto_stop_machines = "off"`, running machine count/status, and cost |
 | Cost measurement date, source, current estimate/actual and `$50/month` comparison | Published starting estimate: MPG Basic $38 + 10 GB storage $2.80/month; app compute not started (no machines). Billing/invoice not verified. About $46.72/month after one 1 GB app machine runs, before network, AI, backups, and other services. |
 | Spend alert and provider/model quota thresholds | Not run |
