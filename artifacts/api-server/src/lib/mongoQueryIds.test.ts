@@ -50,6 +50,7 @@ describe("database-derived query identifiers", () => {
       { _id: otherId, id: otherId, firstName: "before", queryIdTest: marker },
     ]);
     const safeCondition = eq(usersTable.id, targetId);
+    if (!("filter" in safeCondition)) throw new Error("Expected MongoDB condition filter");
     (safeCondition.filter as Record<string, unknown>).id = { $ne: "never-match" };
 
     await db.update(usersTable).set({ firstName: "after" }).where(safeCondition);

@@ -4,17 +4,20 @@ import {
   allTables,
   dailyUsageTable,
   type Column,
+  type SelectBuilder,
+  type SelectionRow,
   type Table,
   usersTable,
 } from "./mongoSchema";
 import { snakeCase, camelCase } from "./migrationSupport";
 import { validatePostgresSchemaCatalog } from "./postgresSchema";
+import type { Condition as SharedCondition, SortExpression as SharedSortExpression } from "./mongoSchema";
 
 type Row = Record<string, any>;
 type Queryable = { query: (sql: string, values?: any[]) => Promise<QueryResult<any>>; connect?: () => Promise<any>; release?: () => void; end?: () => Promise<void> };
 
-export type Condition = { readonly __postgresCondition: true };
-export type SortExpression = { readonly __postgresSort: true; readonly column: Column; readonly direction: "ASC" | "DESC" };
+export type Condition = Extract<SharedCondition, { readonly __postgresCondition: true }>;
+export type SortExpression = Extract<SharedSortExpression, { readonly __postgresSort: true }>;
 type Scalar = string | number | boolean | Date | null;
 type Expression =
   | { kind: "comparison"; column: Column; operator: "=" | ">" | ">=" | "<" | "<=" | "IN"; value: Scalar | readonly Scalar[] }
@@ -61,10 +64,10 @@ export function or(...values: Condition[]): Condition { values.forEach(condition
 export function asc(c: Column): SortExpression { validateColumn(c); return { __postgresSort: true, column: c, direction: "ASC" }; }
 export function desc(c: Column): SortExpression { validateColumn(c); return { __postgresSort: true, column: c, direction: "DESC" }; }
 
-function tableOf(value: Table): Table {
+function tableOf<TableRow extends Row>(value: Table<TableRow>): Table<TableRow> {
   const found = allTables.find((candidate) => candidate.collectionName === value?.collectionName);
-  if (!found || found !== value) throw new Error("Invalid database table");
-  return found;
+  if (!found || !Object.is(found, value)) throw new Error("Invalid database table");
+  return value;
 }
 function validateColumn(value: unknown, table?: Table): asserts value is Column {
   if (!column(value)) throw new Error("Invalid database column");
@@ -168,7 +171,7 @@ export async function getPostgresPool(options?: PostgresOptions): Promise<Pool> 
 export async function pingPostgresDatabase(): Promise<void> { await getPool().query("SELECT 1"); }
 export async function closePostgresDatabase(): Promise<void> { const current = pool; pool = null; if (current) await current.end(); }
 
-class SelectQuery implements PromiseLike<Row[]> {
+class SelectQuery<Result extends Row> implements PromiseLike<Result[]> {
   private filter?: Condition; private sorts: Array<SortExpression | Column> = []; private maximum?: number;
   constructor(private readonly api: PostgresDataApi, private readonly table: Table, private readonly selection?: Record<string, unknown>) {}
   where(value: Condition): this { condition(value); this.filter = value; return this; }
@@ -185,35 +188,41 @@ class SelectQuery implements PromiseLike<Row[]> {
     return this;
   }
   limit(value: number): this { if (!Number.isSafeInteger(value) || value < 0) throw new Error("Invalid limit"); this.maximum = value; return this; }
-  async execute(): Promise<Row[]> { const params: unknown[] = []; const selected = selectionSql(this.selection, this.table); let sql = `SELECT ${selected.sql} FROM ${identifier(this.table.collectionName)}`; if (this.filter) sql += ` WHERE ${compile(this.filter, this.table, params)}`; if (this.sorts.length) sql += ` ORDER BY ${this.sorts.map((v) => { const sort = v as SortExpression; const c = sort.column ?? (v as Column); return `${sqlColumn(c, this.table)} ${sort.direction ?? "ASC"}`; }).join(", ")}`; if (this.maximum !== undefined) sql += ` LIMIT ${this.maximum}`; const result = await this.api.query(sql, params); return result.rows.map((r) => project(r, this.selection, this.table)); }
-  then<T = Row[], E = never>(ok?: ((v: Row[]) => T | PromiseLike<T>) | null, fail?: ((e: unknown) => E | PromiseLike<E>) | null): PromiseLike<T | E> { return this.execute().then(ok, fail); }
+  async execute(): Promise<Result[]> { const params: unknown[] = []; const selected = selectionSql(this.selection, this.table); let sql = `SELECT ${selected.sql} FROM ${identifier(this.table.collectionName)}`; if (this.filter) sql += ` WHERE ${compile(this.filter, this.table, params)}`; if (this.sorts.length) sql += ` ORDER BY ${this.sorts.map((v) => { const sort = v as SortExpression; const c = sort.column ?? (v as Column); return `${sqlColumn(c, this.table)} ${sort.direction ?? "ASC"}`; }).join(", ")}`; if (this.maximum !== undefined) sql += ` LIMIT ${this.maximum}`; const result = await this.api.query(sql, params); return result.rows.map((r) => project(r, this.selection, this.table) as Result); }
+  then<T = Result[], E = never>(ok?: ((v: Result[]) => T | PromiseLike<T>) | null, fail?: ((e: unknown) => E | PromiseLike<E>) | null): PromiseLike<T | E> { return this.execute().then(ok, fail); }
 }
-class InsertQuery implements PromiseLike<Row[]> {
+class PostgresSelectBuilder<Selection extends Record<string, unknown> | undefined> implements SelectBuilder<Selection> {
+  constructor(private readonly api: PostgresDataApi, private readonly selection?: Selection) {}
+  from<TableRow extends Row>(table: Table<TableRow>): SelectQuery<SelectionRow<Selection, TableRow>> {
+    return new SelectQuery<SelectionRow<Selection, TableRow>>(this.api, tableOf(table), this.selection);
+  }
+}
+class InsertQuery<TableRow extends Row> implements PromiseLike<TableRow[]> {
   private inputs: Row[] = []; private conflict?: { kind: "nothing" | "update"; target: Column | Column[]; set?: Row; setWhere?: Condition }; private selection?: Record<string, unknown>;
-  constructor(private readonly api: PostgresDataApi, private readonly table: Table) {}
+  constructor(private readonly api: PostgresDataApi, private readonly table: Table<TableRow>) {}
   values(value: Row | Row[]): this { this.inputs = (Array.isArray(value) ? value : [value]).map((v) => defaults(this.table, v)); return this; }
   onConflictDoNothing(options: { target: Column | Column[] }): this { targetColumns(options.target, this.table); this.conflict = { kind: "nothing", target: options.target }; return this; }
   onConflictDoUpdate(options: { target: Column | Column[]; set: Row; setWhere?: Condition }): this { targetColumns(options.target, this.table); if (options.setWhere) condition(options.setWhere); rowValues(this.table, options.set); this.conflict = { kind: "update", ...options }; return this; }
   returning(selection?: Record<string, unknown>): this { selectionSql(selection, this.table); this.selection = selection; return this; }
-  async execute(): Promise<Row[]> { const out: Row[] = []; for (const input of this.inputs) { const prepared = { ...input }; if (this.table.autoIncrement && prepared[this.table.autoIncrement] == null) delete prepared[this.table.autoIncrement]; const { columns, values } = rowValues(this.table, prepared); if (!columns.length) throw new Error("Insert requires at least one value"); const placeholders = values.map((_, i) => `$${i + 1}`); let sql = `INSERT INTO ${identifier(this.table.collectionName)} (${columns.join(", ")}) VALUES (${placeholders.join(", ")})`; if (this.conflict) { const targets = targetColumns(this.conflict.target, this.table).map((c) => sqlColumn(c, this.table)).join(", "); if (this.conflict.kind === "nothing") sql += ` ON CONFLICT (${targets}) DO NOTHING`; else { const set = this.conflict.set!; const assignments = Object.keys(set).map((key) => `${identifier(snakeCase(key))} = $${values.push(set[key])}`).join(", "); const updated = this.table.updatedAtField && !Object.hasOwn(set, this.table.updatedAtField) ? `, ${identifier(snakeCase(this.table.updatedAtField))} = $${values.push(new Date())}` : ""; sql += ` ON CONFLICT (${targets}) DO UPDATE SET ${assignments || `${identifier(snakeCase(this.table.primaryKey[0]!))} = EXCLUDED.${identifier(snakeCase(this.table.primaryKey[0]!))}`}${updated}`; if (this.conflict.setWhere) sql += ` WHERE ${compile(this.conflict.setWhere, this.table, values, true)}`; } } sql += " RETURNING *"; const result = await this.api.query(sql, values); out.push(...result.rows.map((r) => project(r, this.selection, this.table))); } return out; }
-  then<T = Row[], E = never>(ok?: ((v: Row[]) => T | PromiseLike<T>) | null, fail?: ((e: unknown) => E | PromiseLike<E>) | null): PromiseLike<T | E> { return this.execute().then(ok, fail); }
+  async execute(): Promise<TableRow[]> { const out: TableRow[] = []; for (const input of this.inputs) { const prepared = { ...input }; if (this.table.autoIncrement && prepared[this.table.autoIncrement] == null) delete prepared[this.table.autoIncrement]; const { columns, values } = rowValues(this.table, prepared); if (!columns.length) throw new Error("Insert requires at least one value"); const placeholders = values.map((_, i) => `$${i + 1}`); let sql = `INSERT INTO ${identifier(this.table.collectionName)} (${columns.join(", ")}) VALUES (${placeholders.join(", ")})`; if (this.conflict) { const targets = targetColumns(this.conflict.target, this.table).map((c) => sqlColumn(c, this.table)).join(", "); if (this.conflict.kind === "nothing") sql += ` ON CONFLICT (${targets}) DO NOTHING`; else { const set = this.conflict.set!; const assignments = Object.keys(set).map((key) => `${identifier(snakeCase(key))} = $${values.push(set[key])}`).join(", "); const updated = this.table.updatedAtField && !Object.hasOwn(set, this.table.updatedAtField) ? `, ${identifier(snakeCase(this.table.updatedAtField))} = $${values.push(new Date())}` : ""; sql += ` ON CONFLICT (${targets}) DO UPDATE SET ${assignments || `${identifier(snakeCase(this.table.primaryKey[0]!))} = EXCLUDED.${identifier(snakeCase(this.table.primaryKey[0]!))}`}${updated}`; if (this.conflict.setWhere) sql += ` WHERE ${compile(this.conflict.setWhere, this.table, values, true)}`; } } sql += " RETURNING *"; const result = await this.api.query(sql, values); out.push(...result.rows.map((r) => project(r, this.selection, this.table) as TableRow)); } return out; }
+  then<T = TableRow[], E = never>(ok?: ((v: TableRow[]) => T | PromiseLike<T>) | null, fail?: ((e: unknown) => E | PromiseLike<E>) | null): PromiseLike<T | E> { return this.execute().then(ok, fail); }
 }
-class UpdateQuery implements PromiseLike<Row[]> {
+class UpdateQuery<TableRow extends Row> implements PromiseLike<TableRow[]> {
   private changes: Row = {}; private filter?: Condition; private selection?: Record<string, unknown>; private shouldReturn = false;
-  constructor(private readonly api: PostgresDataApi, private readonly table: Table) {}
+  constructor(private readonly api: PostgresDataApi, private readonly table: Table<TableRow>) {}
   set(value: Row): this { if (!Object.keys(value).length) throw new Error("Update requires at least one value"); rowValues(this.table, value); this.changes = value; return this; }
   where(value: Condition): this { condition(value); this.filter = value; return this; }
   returning(selection?: Record<string, unknown>): this { selectionSql(selection, this.table); this.selection = selection; this.shouldReturn = true; return this; }
-  async execute(): Promise<Row[]> { const values: unknown[] = []; const assignments = Object.keys(this.changes).map((key) => `${identifier(snakeCase(key))} = $${values.push(this.changes[key])}`).join(", "); const all = this.table.updatedAtField && !Object.hasOwn(this.changes, this.table.updatedAtField) ? `${assignments}, ${identifier(snakeCase(this.table.updatedAtField))} = $${values.push(new Date())}` : assignments; let sql = `UPDATE ${identifier(this.table.collectionName)} SET ${all}`; if (this.filter) sql += ` WHERE ${compile(this.filter, this.table, values)}`; if (this.shouldReturn) sql += " RETURNING *"; const result = await this.api.query(sql, values); return this.shouldReturn ? result.rows.map((r) => project(r, this.selection, this.table)) : []; }
-  then<T = Row[], E = never>(ok?: ((v: Row[]) => T | PromiseLike<T>) | null, fail?: ((e: unknown) => E | PromiseLike<E>) | null): PromiseLike<T | E> { return this.execute().then(ok, fail); }
+  async execute(): Promise<TableRow[]> { const values: unknown[] = []; const assignments = Object.keys(this.changes).map((key) => `${identifier(snakeCase(key))} = $${values.push(this.changes[key])}`).join(", "); const all = this.table.updatedAtField && !Object.hasOwn(this.changes, this.table.updatedAtField) ? `${assignments}, ${identifier(snakeCase(this.table.updatedAtField))} = $${values.push(new Date())}` : assignments; let sql = `UPDATE ${identifier(this.table.collectionName)} SET ${all}`; if (this.filter) sql += ` WHERE ${compile(this.filter, this.table, values)}`; if (this.shouldReturn) sql += " RETURNING *"; const result = await this.api.query(sql, values); return this.shouldReturn ? result.rows.map((r) => project(r, this.selection, this.table) as TableRow) : []; }
+  then<T = TableRow[], E = never>(ok?: ((v: TableRow[]) => T | PromiseLike<T>) | null, fail?: ((e: unknown) => E | PromiseLike<E>) | null): PromiseLike<T | E> { return this.execute().then(ok, fail); }
 }
-class DeleteQuery implements PromiseLike<Row[]> {
+class DeleteQuery<TableRow extends Row> implements PromiseLike<TableRow[]> {
   private filter?: Condition; private selection?: Record<string, unknown>; private shouldReturn = false;
-  constructor(private readonly api: PostgresDataApi, private readonly table: Table) {}
+  constructor(private readonly api: PostgresDataApi, private readonly table: Table<TableRow>) {}
   where(value: Condition): this { condition(value); this.filter = value; return this; }
   returning(selection?: Record<string, unknown>): this { selectionSql(selection, this.table); this.selection = selection; this.shouldReturn = true; return this; }
-  async execute(): Promise<Row[]> { const values: unknown[] = []; let sql = `DELETE FROM ${identifier(this.table.collectionName)}`; if (this.filter) sql += ` WHERE ${compile(this.filter, this.table, values)}`; if (this.shouldReturn) sql += " RETURNING *"; const result = await this.api.query(sql, values); return this.shouldReturn ? result.rows.map((r) => project(r, this.selection, this.table)) : []; }
-  then<T = Row[], E = never>(ok?: ((v: Row[]) => T | PromiseLike<T>) | null, fail?: ((e: unknown) => E | PromiseLike<E>) | null): PromiseLike<T | E> { return this.execute().then(ok, fail); }
+  async execute(): Promise<TableRow[]> { const values: unknown[] = []; let sql = `DELETE FROM ${identifier(this.table.collectionName)}`; if (this.filter) sql += ` WHERE ${compile(this.filter, this.table, values)}`; if (this.shouldReturn) sql += " RETURNING *"; const result = await this.api.query(sql, values); return this.shouldReturn ? result.rows.map((r) => project(r, this.selection, this.table) as TableRow) : []; }
+  then<T = TableRow[], E = never>(ok?: ((v: TableRow[]) => T | PromiseLike<T>) | null, fail?: ((e: unknown) => E | PromiseLike<E>) | null): PromiseLike<T | E> { return this.execute().then(ok, fail); }
 }
 
 export class PostgresDataApi {
@@ -256,10 +265,10 @@ export class PostgresDataApi {
     }
     await closePostgresDatabase();
   }
-  select(selection?: Record<string, unknown>): { from: (table: Table) => SelectQuery } { return { from: (table) => new SelectQuery(this, tableOf(table), selection) }; }
-  insert(table: Table): InsertQuery { return new InsertQuery(this, tableOf(table)); }
-  update(table: Table): UpdateQuery { return new UpdateQuery(this, tableOf(table)); }
-  delete(table: Table): DeleteQuery { return new DeleteQuery(this, tableOf(table)); }
+  select<Selection extends Record<string, unknown> | undefined = undefined>(selection?: Selection): SelectBuilder<Selection> { return new PostgresSelectBuilder(this, selection); }
+  insert<TableRow extends Row>(table: Table<TableRow>): InsertQuery<TableRow> { return new InsertQuery(this, tableOf(table)); }
+  update<TableRow extends Row>(table: Table<TableRow>): UpdateQuery<TableRow> { return new UpdateQuery(this, tableOf(table)); }
+  delete<TableRow extends Row>(table: Table<TableRow>): DeleteQuery<TableRow> { return new DeleteQuery(this, tableOf(table)); }
   async count(table: Table, filter?: Condition): Promise<number> { const current = tableOf(table); const values: unknown[] = []; let sql = `SELECT count(*) AS total FROM ${identifier(current.collectionName)}`; if (filter) sql += ` WHERE ${compile(filter, current, values)}`; const result = await this.query(sql, values); return Number(result.rows[0]?.total ?? 0); }
   async transaction<T>(callback: (tx: PostgresDataApi) => Promise<T>): Promise<T> {
     const nested = this.transactionBound;

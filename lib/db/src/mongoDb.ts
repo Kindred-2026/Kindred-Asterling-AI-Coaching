@@ -23,6 +23,8 @@ import {
   messages,
   usersTable,
   type Column,
+  type Condition as SharedCondition,
+  type SortExpression as SharedSortExpression,
   type Table,
 } from "./mongoSchema";
 
@@ -31,8 +33,10 @@ type Row = Record<string, unknown>;
 // MongoDB `_id` values instead of replacing them with ObjectIds.
 type MongoRow = Row & { _id: any };
 
-export type Condition = { readonly filter: Filter<Document> };
-export type SortExpression = { readonly sort: Sort };
+export type Condition = SharedCondition;
+type MongoCondition = { readonly filter: Filter<Document> };
+export type SortExpression = SharedSortExpression;
+type MongoSortExpression = { readonly sort: Readonly<Record<string, 1 | -1>> };
 
 type ScalarValue = string | number | boolean | Date | null;
 type ConditionExpression =
@@ -95,7 +99,7 @@ function expressionFilter(expression: ConditionExpression): Filter<Document> {
   return { [column.key]: { [expression.operator]: value } };
 }
 
-function condition(expression: ConditionExpression): Condition {
+function condition(expression: ConditionExpression): MongoCondition {
   const result = { filter: expressionFilter(expression) };
   conditionExpressions.set(result, expression);
   return result;
@@ -105,7 +109,7 @@ function mongoFilter(value: Condition): Filter<Document> {
   const expression = value && typeof value === "object"
     ? conditionExpressions.get(value as object)
     : undefined;
-  if (!expression) throw new Error("Invalid database condition");
+  if (!expression || !("filter" in value)) throw new Error("Invalid database condition");
   return expressionFilter(expression);
 }
 
@@ -153,11 +157,11 @@ export function inArray(column: Column, values: readonly unknown[]): Condition {
   });
 }
 
-export function asc(column: Column): SortExpression {
+export function asc(column: Column): MongoSortExpression {
   return { sort: { [column.key]: 1 } };
 }
 
-export function desc(column: Column): SortExpression {
+export function desc(column: Column): MongoSortExpression {
   return { sort: { [column.key]: -1 } };
 }
 
@@ -559,9 +563,11 @@ class SelectQuery<Result extends Row> implements PromiseLike<Result[]> {
   orderBy(...values: Array<SortExpression | Column>): this {
     this.sort = Object.assign(
       {},
-      ...values.map((value) =>
-        isColumn(value) ? { [value.key]: 1 } : value.sort,
-      ),
+      ...values.map((value) => {
+        if (isColumn(value)) return { [value.key]: 1 };
+        if ("sort" in value) return value.sort;
+        throw new Error("Invalid database sort");
+      }),
     );
     return this;
   }

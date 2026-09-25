@@ -38,8 +38,10 @@ afterAll(async () => {
 
 describe("MongoDB data API semantics", () => {
   it("treats zero-argument and/or conditions as neutral matches", () => {
-    expect(and().filter).toEqual({});
-    expect(or().filter).toEqual({});
+    const andCondition = and();
+    const orCondition = or();
+    expect("filter" in andCondition ? andCondition.filter : undefined).toEqual({});
+    expect("filter" in orCondition ? orCondition.filter : undefined).toEqual({});
   });
 
   it("updates and returns every matching document", async () => {
