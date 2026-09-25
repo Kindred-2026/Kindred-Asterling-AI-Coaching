@@ -191,7 +191,7 @@ be resolved or the path explicitly retired with a documented sunset disposition.
 | Auth0 fresh sign-in, sign-out, authenticated API result (tenant name/reference only) | Not run |
 | Redacted app-log review and reference | Not run |
 | Two synthetic account IDs/labels and separate-history result (no personal data) | Not run |
-| PostgreSQL integration / restore gate | Pending: isolated rehearsal database is provisioned but remains empty. Live adapter test could not authenticate through the local Fly proxy; no real integration or restore rehearsal passed |
+| PostgreSQL integration / restore gate | **FAIL** (2026-09-25): live adapter authentication attempt through the local Fly proxy failed; isolated rehearsal database remains empty. Full PostgreSQL integration and restore rehearsal remain **BLOCKED** and have not passed |
 | Reminder scheduler | Not run; record `auto_stop_machines = "off"`, running machine count/status, and cost |
 | Cost measurement date, source, current estimate/actual and `$50/month` comparison | Published starting estimate: MPG Basic $38 + 10 GB storage $2.80/month; app compute not started (no machines). Billing/invoice not verified. About $46.72/month after one 1 GB app machine runs, before network, AI, backups, and other services. |
 | Spend alert and provider/model quota thresholds | Not run |
