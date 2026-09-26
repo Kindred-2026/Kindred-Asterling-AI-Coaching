@@ -44,22 +44,27 @@ Auth0 rules worktree remains on `codex/auth0-rules-to-actions` with modified
 review. The merged `auth0-deploy-integration` worktree and its local branch
 were removed after the clean-state and ancestry checks described above.
 
-## Follow-up audit — 2026-09-26 UTC
+## Follow-up audit — 2026-09-26 UTC, after PR #198
 
-Canonical GitHub `main` is `c3a79b0` after PR #193. The remote lists only
-`main`, and no PRs are open. The primary checkout is clean apart from the
-preserved untracked `.vscode/` directory. The PostgreSQL rehearsal worktree is
-clean at `e9f41e8`; that commit is already contained in `main`. Keep this
-worktree available while the real Fly PostgreSQL adapter and restore gates
-remain open.
+Canonical GitHub `main` is `1664618`. The remote lists only `main`, and no PRs
+are open. PR #198's TLS and redirect fix is merged with all required checks
+passing. The now-redundant Qodo remediation branch was deleted after verifying
+its redirect change was included in #198. The primary checkout is on `main`
+apart from the preserved untracked `.vscode/` directory.
 
-The `kindred-auth0-migration` worktree is preserved without edits. Its branch
-`codex/auth0-rules-to-actions` is 337 commits behind and one unique commit ahead
-of canonical `main`; the unique commit adds an Auth0 Rule-to-Action migration,
-deployment scripts, and tests. Current `main` has no `AUTHZ_EXT_*` or
-`auth0-authorization-extension` consumer. The working tree also has an invalid
-`@clerk/shared` `allowBuilds` value in its modified `pnpm-workspace.yaml` and an
-untracked `auth0-deploy/` tenant export. Do not merge the stale branch wholesale
-or discard the export until the Auth0 owner verifies whether the remote Rule or
-Action is still bound and whether the export is needed for rollback. The branch
-is not on GitHub.
+The PostgreSQL rehearsal worktree is clean at `e9f41e8`, zero commits ahead and
+24 behind `main`; its contents are already in canonical history. Keep it
+available while real PostgreSQL adapter and restore gates remain open. The
+`kindred-auth0-migration` worktree is preserved with its pre-existing modified
+`pnpm-workspace.yaml` and untracked `auth0-deploy/` tenant export. Its branch
+`codex/auth0-rules-to-actions` is one unique commit ahead and 342 commits behind
+`main`; the unique commit adds an Auth0 Rule-to-Action migration, deployment
+scripts, and tests. Current `main` has no `AUTHZ_EXT_*` or
+`auth0-authorization-extension` consumer. Do not merge the stale branch
+wholesale or discard the export until the Auth0 owner verifies whether the
+remote Rule or Action is still bound and whether the export is needed for
+rollback. The branch is not on GitHub.
+
+The local Devin session list is empty. Its CLI currently lists model families,
+but does not report account quota or establish that each model is usable. No
+Devin changes are included in this audit.

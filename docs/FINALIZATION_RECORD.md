@@ -14,8 +14,9 @@ production gates; a checked-in plan is not proof of a live cutover.
   have not been inspected. Keep Coolify available until a replacement release
   and rollback window are verified.
 - **Database:** Fly Managed Postgres Basic staging cluster
-  `kindred-staging-db-20260924` (10 GB, one replica) is provisioned and ready
-  in Toronto (`yyz`), but remains unattached and untested by the app. Real-server
+  `kindred-staging-db-20260924` (20 GB provisioned, one replica, v2) is
+  provisioned and ready in Toronto (`yyz`), but remains unattached and untested
+  by the app. Real-server
   adapter validation and migration/restore rehearsal remain open.
   Preserve internal
   Kindred user IDs and each user's existing histories. Never merge accounts by
@@ -53,29 +54,35 @@ production gates; a checked-in plan is not proof of a live cutover.
 | Repository secrets | Value-free inventory; current repository Actions secret is `SNYK_TOKEN`; repository variables are empty. | Refreshed names-only query on 2026-09-25 confirms only `SNYK_TOKEN`; repository variables are empty. All four GitHub deployment environments have zero secret names and zero variable names. Fly's `secrets list` for the staging app returned no names. No secret values were accessed. |
 | Git history secret scan | Redacted Gitleaks scan covered the current tree and 417 commits; generic matches mapped to public IDs/examples/tests. No matching fingerprint was found in the repo deploy key or the current GitHub login's public SSH keys | A valid encrypted SSH private key remains in reachable history; its owner and registration outside the checked GitHub profile/repo remain unknown. Revoke where registered and coordinate all-ref history rewrite before claiming this gate complete |
 | GitHub branch cleanup | Deleted the merged PR #145 branch after verifying its tip was an ancestor of canonical `main`; archived all 16 unique historical branch tips under verified GitHub tags, then deleted their stale branch names. PR #147 removed the confirmed-unused AWS EKS assets and merged at `49e0be1`. PR #149 merged the finalization and Snyk work; redundant PR #148 was closed without merge after verifying its workflow changes were included. | PRs #184, #185, #187, #189, #190, #191, #192, #193, #194, #195, and #196 are merged. PRs #186 and #188 are closed without merge. The latest branch audit found only `main` after both cleanup PRs merged. See [the branch cleanup record](BRANCH_CLEANUP.md). The Fly app remains undeployed, so its expected hostname is not verified live. |
-| Local checkout cleanup | The initial finalization checkout was aligned to canonical `e91135e`; its former unique commit remains at local archive ref `archive/kindred-local-main-40c8841`. | The primary checkout is `main` at `89f3922` after PR #196; untracked `.vscode/` is preserved. The PostgreSQL rehearsal worktree is clean at `e9f41e8`, and its tip is contained in `main`. The separate Auth0 migration worktree remains modified and untracked: one unique commit, 340 commits behind `main`, modified `pnpm-workspace.yaml`, and untracked `auth0-deploy/`. Preserve it until the Auth0 owner confirms whether the remote Rule/Action is live and whether the export is needed for rollback. The old merged Auth0 deploy worktree was removed after verification. See [workspace checkout audit](WORKSPACE_CHECKOUTS.md) |
+| Local checkout cleanup | The initial finalization checkout was aligned to canonical `e91135e`; its former unique commit remains at local archive ref `archive/kindred-local-main-40c8841`. | At the latest audited snapshot, the primary checkout is `main` at `1664618`; untracked `.vscode/` is preserved. The PostgreSQL rehearsal worktree is clean at `e9f41e8`, zero commits ahead and 24 behind `main`, with its content contained in `main`. The separate Auth0 migration worktree remains modified and untracked: one unique commit, 342 commits behind `main`, modified `pnpm-workspace.yaml`, and untracked `auth0-deploy/`. Preserve it until the Auth0 owner confirms whether the remote Rule/Action is live and whether the export is needed for rollback. The old merged Auth0 deploy worktree was removed after verification. See [workspace checkout audit](WORKSPACE_CHECKOUTS.md) |
 | Old branches and duplicate checkouts | Unique local checkout and branch preserved; canonical GitHub baseline selected; 16 stale remote branch names removed after exact tip archive and open-PR checks | Unique historical commits remain retrievable from archive tags; see [the branch cleanup record](BRANCH_CLEANUP.md) |
 | Clerk webhook and identity disposition | Runtime authentication uses Auth0; no Clerk webhook router is mounted in app.ts/routes/index.ts; the test-only identity adapter mounts only when `NODE_ENV=test` or `VITEST=true`; legacy `clerkUserId` data/schema and migration/admin inspection artifacts remain in codebase | No provider dashboard, live webhook target, or external credential store was verified in this audit; keep legacy data/recovery paths until separate account-history reconciliation, external webhook/key disposition, and rollback retention gates pass; Clerk account deletion and credential rotation are not claimed |
 
 ## Current source and staging state (2026-09-26 UTC)
 
-Canonical source is GitHub `main` at `89f3922` after PR #196. Immediately before
-deployment, the operator must run `git rev-parse HEAD` from the clean, approved
-post-merge checkout and deploy that exact SHA. No staging deployment candidate
-is selected yet. The root `fly.toml` is tracked and `flyctl config validate`
-passes with internal port `8080`, `/api/healthz/db`,
-`auto_stop_machines = 'off'`, and `min_machines_running = 1`. A read-only Fly
-CLI check on 2026-09-26 reports the registered app is pending with no deployment
-or machines; `flyctl secrets list` returns no names. The Managed Postgres cluster
-is ready in `yyz` but remains unattached to any app. The
-expected app URL is `https://kindred-asterling-ai-coaching.fly.dev`, but it is
-not verified live until Fly assigns the hostname. Launch attempt `2083359`
-(commit `ed5feeb`) failed because the three public Auth0 `VITE_*` build
-identifiers were not supplied; no image or app deployment resulted. The
-rehearsal database remains empty; no schema/fixture write has passed. The real
-adapter attempt failed authentication before schema application. No
-production data, traffic, or deployment was changed. Published-price estimates
-and actual billing remain unverified. See [the staging record](FLY_DEPLOYMENT.md).
+Canonical source snapshot for this audit is GitHub `main` at `1664618` after
+PR #198. That PR requires HTTPS for production OpenAI-compatible endpoints and
+rejects redirects that could forward coaching prompts to plaintext; its CI,
+Snyk, build, and test checks passed. The remote branch audit found only `main`
+and no open PRs. Immediately before deployment, the operator must run
+`git rev-parse HEAD` from the clean, approved post-merge checkout and deploy
+that exact SHA. No staging deployment candidate is selected yet. The root
+`fly.toml` is tracked and `flyctl config validate` passes with internal port
+`8080`, `/api/healthz/db`, `auto_stop_machines = 'off'`, and
+`min_machines_running = 1`. A read-only Fly CLI check on 2026-09-26 reports the
+registered app is pending with no deployment, machines, or app runtime secrets.
+The v2 Managed Postgres cluster is ready in `yyz` with one replica and 20 GB
+provisioned capacity, but remains unattached to any app. Its latest status
+reported 2.95 GB used. It contains the default `fly-db` database and the
+isolated `kindred_rehearsal_pg_adapter_20260925` database. No successful schema
+or fixture write has been verified. The expected app URL is
+`https://kindred-asterling-ai-coaching.fly.dev`, but it is not
+verified live until Fly assigns the hostname. Launch attempt `2083359` (commit
+`ed5feeb`) failed because the three public Auth0 `VITE_*` build identifiers
+were not supplied; no image or app deployment resulted. The real adapter
+attempt failed authentication before schema application. No production data,
+traffic, or deployment was changed. Published-price estimates and actual
+billing remain unverified. See [the staging record](FLY_DEPLOYMENT.md).
 
 ## Cutover gates
 
@@ -140,10 +147,10 @@ usage, and plan tiers have not yet been verified.
 
 | Service | Published starting estimate | Actual monthly cost | Notes |
 | --- | ---: | ---: | --- |
-| Fly Managed Postgres Basic + app | $38.00/month plus $0.28/GB/month storage; 10GB storage default adds $2.80; about $5.92/month for a continuously running 1GB shared-cpu-1x app machine at current reference rate | Not measured | Illustrative subtotal $46.72 before transfer, AI, backups, and retained services; actual region rate and app memory are unverified; no Fly invoice was inspected |
+| Fly Managed Postgres Basic + app | $38.00/month plus $0.28/GB-month based on v2 storage used; latest status showed 2.95 GB used (about $0.83/month); about $5.92/month for a continuously running 1GB shared-cpu-1x app machine at current reference rate | Not measured | Illustrative subtotal $44.75 at observed storage use, before transfer, AI, backups, and retained services; actual region rate and app memory are unverified; no Fly invoice was inspected |
 | Cloudflare AI Gateway | $0 for core features; gateway logs may follow Workers Logs pricing depending on first-Gateway date | Not measured | Upstream inference is billed by the selected model provider; configure a global Gateway spend limit and verify log retention/pricing |
 | Auth0, Resend, Sentry, Helcim, SMS, voice, domain/DNS, storage, backups | Account-dependent | Not measured | Verify actual plans, usage and renewal amounts |
-| **Illustrative Fly app + database subtotal** | **About $46.72/month** with 1GB always-on app compute and the CLI's default 10GB database storage | **Not measured** | Leaves at most $3.28 under the $50 target before network use, AI, other providers, and backup extras; actual region pricing and bills remain unverified |
+| **Illustrative Fly app + database subtotal** | **About $44.75/month** with 1GB always-on app compute and the latest reported v2 database storage use | **Not measured** | Leaves about $5.25 under the $50 target before network use, AI, other providers, and backup extras; actual region pricing and bills remain unverified |
 
 The **under-$50/month goal is unverified**, not guaranteed by starting prices.
 Before cutover, record recurring invoices, usage-based bills, AI token spend,
