@@ -2,8 +2,10 @@
 
 > **Historical document.** This assignment prompt is superseded operational guidance.
 > GitLab is confirmed unused by the owner; GitHub Actions is the sole active CI path.
+> Fly.io is the selected hosting target; Coolify is retained only for rollback.
 > Current instructions and source of truth are in `docs/FINALIZATION_RECORD.md`
-> and the current release/rollback documentation. No Fly.io deployment is claimed.
+> and the current release/rollback documentation (`docs/release-rollback.md`,
+> `docs/FLY_DEPLOYMENT.md`). No Fly.io deployment has been completed.
 
 You are implementing Part 3A only. Complete the authorized code, tests and local
 documentation; do not stop at a proposed plan. Founder/Codex will review the diff
@@ -16,8 +18,9 @@ Primary repository:
 `/home/griffixchips/Documents/Default Project/Kindred-Asterling-AI-Coaching`
 
 Read `AGENTS.md` and `docs/specs/phase-3-developer-workflow.md` before editing.
-GitLab `origin` is authoritative; never push to the GitHub mirror. Production is
-React/Vite (`artifacts/kindred-coach`) plus Express (`artifacts/api-server`), with
+At the time of this assignment, GitLab `origin` was authoritative. That source
+instruction is superseded; GitHub `main` is now authoritative.
+Production is React/Vite (`artifacts/kindred-coach`) plus Express (`artifacts/api-server`), with
 Auth0 and MongoDB. The founder reports the cutover complete. Do not reopen it or
 infer current provider values from historical notes. Next.js `frontend/` is an
 experiment. Use Node 24 and the repository's declared pnpm 10 version.
