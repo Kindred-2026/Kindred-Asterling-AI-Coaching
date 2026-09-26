@@ -16,6 +16,7 @@ import {
   initializePostgresDatabase,
   closePostgresDatabase,
 } from "./postgresDb";
+import { assertEmptyTarget } from "./postgresTargetGuard";
 import { affirmationsTable, conversations, dailyUsageTable, usersTable } from "./mongoSchema";
 
 const optIn = "I_UNDERSTAND_THIS_IS_A_DISPOSABLE_REHEARSAL_DATABASE";
@@ -95,19 +96,34 @@ test("real PostgreSQL rehearsal exercises PostgresDataApi", { skip: !live }, asy
   let seeded = false;
   let precheckPoolOpen = true;
   try {
-    // Check database-wide user objects, not just public tables. Nothing is changed before this check.
-    const existing = await pool.query(`SELECT (
-      (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-        WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p', 'S', 'v', 'm', 'f')) +
-      (SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = 'public') +
-      (SELECT count(*) FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace
-        WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
-          AND n.nspname NOT LIKE 'pg_toast%' AND n.nspname NOT LIKE 'pg_temp_%'
-          AND (t.typtype IN ('e', 'd', 'r', 'b') OR (t.typtype = 'c' AND t.typrelid = 0))) +
-      (SELECT count(*) FROM pg_namespace WHERE nspname NOT IN ('pg_catalog', 'information_schema', 'public')
-        AND nspname NOT LIKE 'pg_toast%' AND nspname NOT LIKE 'pg_temp_%')
-    )::int AS total`);
-    assert.equal(Number(existing.rows[0]?.total), 0, "target database must contain no user objects");
+    // Check database-wide user objects using the empty-target guard.
+    // This allows only objects belonging to explicitly allowlisted extensions
+    // (plpgsql, pg_stat_monitor, pgaudit) and rejects everything else.
+    await assertEmptyTarget(pool);
+    // Real catalogs prove extension membership cannot be spoofed by object names.
+    const guardClient = await pool.connect();
+    try {
+      for (const ddl of [
+        "CREATE TABLE public.kindred_guard_probe (id int)",
+        "CREATE VIEW public.kindred_guard_probe AS SELECT 1 AS id",
+        "CREATE SEQUENCE public.kindred_guard_probe",
+        "CREATE FUNCTION public.pg_stat_monitor_version(integer) RETURNS integer LANGUAGE SQL AS 'SELECT $1'",
+        "CREATE TYPE public.kindred_guard_probe AS ENUM ('fixture')",
+        "CREATE DOMAIN public.kindred_guard_probe AS integer",
+        "CREATE TYPE public.kindred_guard_probe AS RANGE (subtype = integer)",
+        "CREATE TYPE public.kindred_guard_probe AS (id integer)",
+        "CREATE SCHEMA kindred_guard_probe",
+      ]) {
+        await guardClient.query("BEGIN");
+        try {
+          await guardClient.query(ddl);
+          await assert.rejects(assertEmptyTarget(guardClient), /unreviewed objects/, ddl);
+        } finally {
+          await guardClient.query("ROLLBACK");
+        }
+        await assertEmptyTarget(guardClient);
+      }
+    } finally { guardClient.release(); }
     await pool.end();
     precheckPoolOpen = false;
 

@@ -1,25 +1,21 @@
 # Fly.io deployment and migration runbook
 
-**Status (2026-09-26):** Fly.io is the selected hosting provider. The staging
-app (`kindred-asterling-ai-coaching`) is registered and attached to the
-canonical GitHub repository, but the Fly dashboard reports no saved app
-configuration, deployment, or machines. The Managed Postgres Basic cluster
-(`kindred-staging-db-20260924`, cluster ID `w76geop28dnrplk4`) was provisioned
-in Toronto (`yyz`). The v2 cluster reports ready with one replica, 20 GB
-provisioned capacity, and 2.95 GB used at the latest status check. It contains
-the default `fly-db` database and the isolated rehearsal database
-`kindred_rehearsal_pg_adapter_20260925`; no successful schema or fixture write
-has been verified. The app is registered but has no
-machines, deployment, attached database, or runtime credentials. The app config
-is in `fly.toml`. Capacity and billing details have not been inspected. Keep
-the current Coolify and MongoDB release available through the cutover and
-rollback gates.
+**Status (2026-09-26):** The staging app
+`kindred-asterling-ai-coaching` remains undeployed. `POSTGRES_URL` is staged
+with current cluster credentials; unused `DATABASE_URL` has been removed.
+The owner confirmed password rotation and a real connection succeeded.
+The existing Toronto Managed Postgres cluster `kindred-staging-db-20260924`
+(`w76geop28dnrplk4`) passed live adapter checks and a synthetic 20-collection
+migration plus encrypted backup/restore. See [the execution evidence](POSTGRES_STAGING_EVIDENCE.md)
+for scope, commands, database disposition, and remaining gates. No production
+migration or full application staging acceptance has passed. Keep Coolify and
+MongoDB available through cutover and rollback gates.
 
 On 2026-09-25 at 22:42 UTC, Fly Launch attempt `2083359` built commit
 `ed5feeb` and passed Fly config validation and dependency installation, but the
 frontend build stopped because `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, and
 `VITE_AUTH0_AUDIENCE` were not supplied. No image or app deployment resulted.
-The app remains undeployed with no saved configuration, machine, or runtime
+At that failed build, the app had no saved configuration, machine, or runtime
 secrets. Use the CLI build-secret procedure below; the Fly Launch UI attempt did
 not pass these required build values.
 
@@ -219,13 +215,13 @@ be resolved or the path explicitly retired with a documented sunset disposition.
 | --- | --- |
 | Reviewed SHA and deploy timestamp | Fly Launch attempt `2083359` used `ed5feeb` at 2026-09-25 22:42 UTC and failed during build; this is not a deployment. Record a separately reviewed post-merge SHA for the next attempt |
 | Fly app name, configured region, internal port | `kindred-asterling-ai-coaching`, configured `yyz`, `8080`; dashboard reports no saved app config or app machines |
-| Managed Postgres cluster | `kindred-staging-db-20260924`, `w76geop28dnrplk4`, v2 ready, Basic, 20 GB provisioned, 2.95 GB used, one replica; app unattached. Isolated rehearsal database `kindred_rehearsal_pg_adapter_20260925` exists; no successful schema or fixture write verified |
+| Managed Postgres cluster | `kindred-staging-db-20260924`, `w76geop28dnrplk4`, v2 ready, Basic, 20 GB provisioned, 2.95 GB used, one replica; app unattached. Live adapter and synthetic migration/restore now passed in dedicated rehearsal databases; see [execution evidence](POSTGRES_STAGING_EVIDENCE.md) |
 | Image digest and Fly release ID | None; image build failed before deployment |
 | `/api/healthz` and `/api/healthz/db` results; DB endpoint identity (no URI) | Not run |
 | Auth0 fresh sign-in, sign-out, authenticated API result (tenant name/reference only) | Not run |
 | Redacted app-log review and reference | Not run |
-| Two synthetic account IDs/labels and separate-history result (no personal data) | Not run |
-| PostgreSQL integration / restore gate | **FAIL** (2026-09-25): live adapter authentication through the local Fly proxy failed before schema application; the isolated rehearsal database remains empty. Full PostgreSQL integration and restore rehearsal remain **BLOCKED** and have not passed |
+| Two synthetic account IDs/labels and separate-history result (no personal data) | Database rehearsal passed for `kindred-owner-a` / `kindred-owner-b`; app sign-in/history checks still not run |
+| PostgreSQL integration / restore gate | **PASS, synthetic database scope only** (2026-09-26): live adapter, 20-collection migration, encrypted backup/restore, row/index/constraint comparison, ownership and sequences. [Evidence](POSTGRES_STAGING_EVIDENCE.md). Production-like snapshot and full app acceptance remain open |
 | Reminder scheduler | Not run; record `auto_stop_machines = "off"`, running machine count/status, and cost |
 | Cost measurement date, source, current estimate/actual and `$50/month` comparison | Published estimate: MPG Basic $38 + v2 storage at $0.28/GB-month; latest Fly status reported 2.95 GB used (~$0.83/month). App compute not started (no machines). Billing/invoice not verified. About $44.75/month after one 1 GB app machine runs, before network, AI, backups, and other services. |
 | Spend alert and provider/model quota thresholds | Not run |

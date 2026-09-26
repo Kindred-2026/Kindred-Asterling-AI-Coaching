@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { MongoClient, type ClientSession, type Db } from "mongodb";
 import pg from "pg";
+import { assertEmptyTarget } from "../src/postgresTargetGuard";
 import { rehearsalTables, replayRehearsal, type RehearsalSnapshot } from "../src/postgresRehearsal";
 
 const MAX_ROWS = 250_000; // bounded, batched read; exceed the cap rather than exhaust memory
@@ -97,15 +98,7 @@ export async function runRehearsal(args: readonly string[] = process.argv.slice(
   try {
     const target = await pool.connect();
     try {
-      const objects = await target.query(
-        "SELECT relname FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_namespace.oid = pg_class.relnamespace WHERE pg_namespace.nspname = 'public'",
-      );
-      if (objects.rows.length)
-        throw new Error("Target is nonempty; use a new isolated rehearsal database");
-      const functions = await target.query(
-        "SELECT proname FROM pg_catalog.pg_proc JOIN pg_catalog.pg_namespace ON pg_namespace.oid = pg_proc.pronamespace WHERE pg_namespace.nspname = 'public'",
-      );
-      if (functions.rows.length) throw new Error("Target has unreviewed public functions");
+      await assertEmptyTarget(target);
       await source.connect();
       const session = source.startSession();
       let snapshot!: RehearsalSnapshot;
