@@ -15,8 +15,8 @@ production gates; a checked-in plan is not proof of a live cutover.
   and rollback window are verified.
 - **Database:** Fly Managed Postgres Basic staging cluster
   `kindred-staging-db-20260924` (20 GB provisioned, one replica, v2) is
-  provisioned and ready in Toronto (`yyz`), but remains unattached and untested
-  by the app. Real-server adapter validation and synthetic migration/restore
+  provisioned and ready in Toronto (`yyz`). The app attachment and staged writer
+  connection are configured; app startup and runtime schema rollout remain unverified. Real-server adapter validation and synthetic migration/restore
   now pass; [execution evidence](POSTGRES_STAGING_EVIDENCE.md) records the limits.
   Production-like snapshot and full application acceptance remain open.
   Preserve internal

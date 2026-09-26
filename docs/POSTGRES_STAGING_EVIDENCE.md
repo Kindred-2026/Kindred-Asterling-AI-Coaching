@@ -14,8 +14,15 @@ and working current credentials, not an independent old-password revocation test
 The Fly app now has `POSTGRES_URL` staged; the unused `DATABASE_URL` was removed.
 No machine, image or app release was created. `DATABASE_PROVIDER` remains
 `mongo` until the reviewed PostgreSQL deployment configuration is ready.
-The staged schema-admin connection must be replaced by an app role with only
-required runtime privileges before deployment.
+The staged connection now uses the dedicated `kindred-staging-app` writer
+role, and the app/cluster attachment is recorded. The schema-admin credential
+is no longer the app secret. Writer login, CRUD, sequence use, and transaction
+rollback passed against the synthetic restore database. `CREATE TABLE`,
+`ALTER TABLE`, and `DROP TABLE` were denied with error `42501`; the role has
+no superuser, role-creation, database-creation, or RLS-bypass privileges.
+Fly's writer role covers data in the staging cluster; this is not per-database
+isolation. Keep unrelated applications/production data out of this cluster.
+The runtime `fly-db` schema is not yet rolled out and app startup is unverified.
 
 ## Failures found and fixed
 
@@ -82,7 +89,7 @@ application databases. Local backup artifacts are in the operator's temporary
 ## Gates still open
 
 A production-like source snapshot, production backup custody/retention, a
-least-privilege runtime database role and schema rollout, Auth0 staging build
+runtime schema rollout and application startup with the writer role, Auth0 staging build
 and runtime settings, test-safe service credentials, full app staging acceptance,
 AI Gateway and spending controls, and production cutover are not verified here.
 Coolify and MongoDB remain in place. Synthetic database evidence does not pass
