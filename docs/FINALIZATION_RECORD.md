@@ -77,8 +77,14 @@ The first successful staging image was built from clean reviewed GitHub source
 passed. The deployment used an explicit PostgreSQL environment override; this
 follow-up persists it in `fly.toml`. The exact release/image and observed checks
 are recorded in [the staging record](FLY_DEPLOYMENT.md). Earlier missing build
-inputs and adapter authentication failures have been resolved. Auth0 still
-rejects the Fly callback, so full application staging acceptance is incomplete.
+inputs and adapter authentication failures have been resolved. The owner added
+the Fly Auth0 callback/origin entries and completed Google sign-in. Authenticated
+API reads and a labeled synthetic habit persisted across reload. Sign-out and
+two-account application isolation remain unverified; the owner has no second
+controlled Google account available. Full application staging acceptance is incomplete.
+Fly AI remains disabled. Production is configured for Bedrock and has no
+OpenAI-compatible key/endpoint to reuse; Cloudflare account, model, privacy,
+and spend settings must be verified before enabling staging AI.
 No production data, traffic, or deployment was changed. Actual billing and the
 under-$50 target remain unverified.
 
