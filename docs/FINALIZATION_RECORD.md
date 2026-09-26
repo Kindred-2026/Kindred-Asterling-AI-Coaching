@@ -50,36 +50,32 @@ production gates; a checked-in plan is not proof of a live cutover.
 | GitHub Actions runtime | CI, Security Audit, and Snyk action references use immutable SHAs for the verified Node 24 releases of checkout, setup-node, pnpm setup, artifact upload, and CodeQL SARIF upload | Exact SHAs were resolved from upstream release tags and each action's `action.yml` runtime was checked; validate behavior with PR checks |
 | GitLab disposition | Owner confirmed GitLab is unused. Repository audit found no active GitLab pipeline or workflow; GitHub Actions is the sole active CI path. Removed the remaining GitLab/Coolify operator SOP and corrected the formatting-boundary comment. Historical release evidence and clearly labeled historical specs remain as records. | No GitLab project or Coolify connection was changed externally. Coolify remains temporarily available until the Fly cutover and rollback gates pass. |
 | Delegated work | OpenCode authenticated with `openai/gpt-6-luna`, passed a read-only checkout smoke test, and authored the Fly staging runbook in an isolated worktree (`8b67f0a`); its reviewed documentation change is integrated here as `335508b`. OpenCode also fixed selected PostgreSQL aliases (`0c3ce2a`, integrated as `5cb7592`) and implemented the bounded Snyk IaC workflow follow-up in isolated worktree commits `1492e01` and `347399b` (cherry-picked here as `6a148d4` and `ca6ed21`); fixture checks passed and no Snyk command was invoked. | Devin authenticated on the Free tier; this read-only audit attempt was blocked because the selected model requires Pro, and no Devin files changed. A prior same-day read-only audit had also hit the Free-tier daily quota. Neither tool received provider credentials or account access. Real PostgreSQL integration/restore remains an external gate, and `pg-mem` fixtures do not satisfy it |
-| Repository secrets | Value-free inventory; current repository Actions secret is `SNYK_TOKEN`; repository variables are empty. | Names-only query on 2026-09-25 confirms `SNYK_TOKEN`; Fly app Secrets page shows no staging secrets. Environment-level secret/variable lists were last checked on 2026-09-24; refresh before cleanup. No secret values were accessed. |
+| Repository secrets | Value-free inventory; current repository Actions secret is `SNYK_TOKEN`; repository variables are empty. | Refreshed names-only query on 2026-09-25 confirms only `SNYK_TOKEN`; repository variables are empty. All four GitHub deployment environments have zero secret names and zero variable names. Fly's `secrets list` for the staging app returned no names. No secret values were accessed. |
 | Git history secret scan | Redacted Gitleaks scan covered the current tree and 417 commits; generic matches mapped to public IDs/examples/tests. No matching fingerprint was found in the repo deploy key or the current GitHub login's public SSH keys | A valid encrypted SSH private key remains in reachable history; its owner and registration outside the checked GitHub profile/repo remain unknown. Revoke where registered and coordinate all-ref history rewrite before claiming this gate complete |
-| GitHub branch cleanup | Deleted the merged PR #145 branch after verifying its tip was an ancestor of canonical `main`; archived all 16 unique historical branch tips under verified GitHub tags, then deleted their stale branch names. PR #147 removed the confirmed-unused AWS EKS assets and merged at `49e0be1`. PR #149 merged the finalization and Snyk work; redundant PR #148 was closed without merge after verifying its workflow changes were included. | On 2026-09-25, PRs #184, #185, and #189 merged. Their remote branches and the merged local PR #184 branch were removed after ancestry checks. The closed PR #186 `APP_PUBLIC_URL` correction was described as already present in `main`, but this audit found `fly.toml` still pointed at the obsolete staging hostname; this follow-up updates it to the registered app's expected hostname. Fly currently reports no assigned hostname because the app is undeployed, so the URL remains unverified live. Redundant PR #187 follow-up work was verified in `main` before its branch removal. The merged, clean `auth0-deploy-integration` worktree and local branch were removed after verifying PR #142 and its commit were in `main`. No unique commits were lost; historical tip dispositions remain in [the branch cleanup record](BRANCH_CLEANUP.md) |
-| Local checkout cleanup | The initial finalization checkout was aligned to canonical `e91135e`; its former unique commit remains at local archive ref `archive/kindred-local-main-40c8841`. | The primary checkout is canonical `main` at `8352f14`; untracked `.vscode/` is preserved. The PostgreSQL rehearsal worktree is clean at `e9f41e8` on `codex/postgres-rehearsal`. The separate Auth0 migration worktree has a modified `pnpm-workspace.yaml` and untracked `auth0-deploy/`; it remains untouched. The old merged Auth0 deploy worktree was repaired, verified clean, then removed. See [workspace checkout audit](WORKSPACE_CHECKOUTS.md) |
+| GitHub branch cleanup | Deleted the merged PR #145 branch after verifying its tip was an ancestor of canonical `main`; archived all 16 unique historical branch tips under verified GitHub tags, then deleted their stale branch names. PR #147 removed the confirmed-unused AWS EKS assets and merged at `49e0be1`. PR #149 merged the finalization and Snyk work; redundant PR #148 was closed without merge after verifying its workflow changes were included. | PRs #184, #185, #187, #189, #190, #191, and #192 are merged. PRs #186 and #188 are closed without merge. Their branch cleanup and patch dispositions are recorded in [the branch cleanup record](BRANCH_CLEANUP.md). At the `e5d3bbc` audit snapshot, the remote listed only `main` and GitHub had no open PRs. The Fly URL is set to the registered app's expected hostname, but Fly has assigned no hostname because the app is undeployed. |
+| Local checkout cleanup | The initial finalization checkout was aligned to canonical `e91135e`; its former unique commit remains at local archive ref `archive/kindred-local-main-40c8841`. | This audit used canonical `main` at `e5d3bbc` after PR #192. The primary checkout is now `main` at `e5d3bbc`; untracked `.vscode/` is preserved. The PostgreSQL rehearsal worktree is clean at `e9f41e8`, and its tip is contained in `main`. The separate Auth0 migration worktree remains untouched with a modified `pnpm-workspace.yaml` and untracked `auth0-deploy/`. The old merged Auth0 deploy worktree was repaired, verified clean, then removed. See [workspace checkout audit](WORKSPACE_CHECKOUTS.md) |
 | Old branches and duplicate checkouts | Unique local checkout and branch preserved; canonical GitHub baseline selected; 16 stale remote branch names removed after exact tip archive and open-PR checks | Unique historical commits remain retrievable from archive tags; see [the branch cleanup record](BRANCH_CLEANUP.md) |
 | Clerk webhook and identity disposition | Runtime authentication uses Auth0; no Clerk webhook router is mounted in app.ts/routes/index.ts; the test-only identity adapter mounts only when `NODE_ENV=test` or `VITEST=true`; legacy `clerkUserId` data/schema and migration/admin inspection artifacts remain in codebase | No provider dashboard, live webhook target, or external credential store was verified in this audit; keep legacy data/recovery paths until separate account-history reconciliation, external webhook/key disposition, and rollback retention gates pass; Clerk account deletion and credential rotation are not claimed |
 
-## Current source and staging state (2026-09-25)
+## Current source and staging state (2026-09-26 UTC)
 
-Canonical source is GitHub `main`, currently `8352f14` after PR #185. PRs #184
-and #185 aligned the repository's `fly.toml` with the registered app. The Fly
-staging deployment SHA is not yet recorded. Immediately before deployment, the
-operator must run `git rev-parse HEAD` from the clean, approved post-merge
-checkout and deploy that exact SHA. No staging deployment candidate is selected
-yet. The root `fly.toml` is tracked and validated locally with internal port
-`8080`, `/api/healthz/db`, `auto_stop_machines = 'off'`, and
-`min_machines_running = 1`. The Fly dashboard on 2026-09-25 showed the staging
-app has no saved configuration, deployment, app machines, or secrets. A Fly
-Launch attempt (`2083359`, commit `ed5feeb`) failed during the frontend build
-because the three required public Auth0 `VITE_*` build identifiers were not
-passed; it produced no image or app deployment. Managed Postgres cluster
-`w76geop28dnrplk4` is ready with 10 GB storage and one replica, but is not
-attached. The cluster now
-contains an empty `kindred_rehearsal_pg_adapter_20260925` database; the real
-adapter test could not authenticate through the local Fly proxy, so no schema
-or fixtures were applied. No code deployment, runtime credentials, production
-data, or production traffic was changed. The estimated published-price
-database cost is about $40.80/month; with one always-on 1 GB app machine the
-estimate is about $46.72/month before network, AI, backups, and other services.
-Actual billing is unverified. See [the staging record](FLY_DEPLOYMENT.md).
+Canonical source is GitHub `main` at `e5d3bbc` after PR #192. Immediately before
+deployment, the operator must run `git rev-parse HEAD` from the clean, approved
+post-merge checkout and deploy that exact SHA. No staging deployment candidate
+is selected yet. The root `fly.toml` is tracked and `flyctl config validate`
+passes with internal port `8080`, `/api/healthz/db`,
+`auto_stop_machines = 'off'`, and `min_machines_running = 1`. A read-only Fly
+CLI check on 2026-09-26 reports the registered app is pending with no assigned
+hostname, deployment, or machines; `flyctl secrets list` returns no names. The
+expected app URL is `https://kindred-asterling-ai-coaching.fly.dev`, but it is
+not verified live until Fly assigns the hostname. Launch attempt `2083359`
+(commit `ed5feeb`) failed because the three public Auth0 `VITE_*` build
+identifiers were not supplied; no image or app deployment resulted. Managed
+Postgres cluster `kindred-staging-db-20260924` remains ready in `yyz` with its
+empty rehearsal database; no app connection or schema/fixture write has passed.
+The real adapter attempt failed authentication before schema application. No
+production data, traffic, or deployment was changed. Published-price estimates
+and actual billing remain unverified. See [the staging record](FLY_DEPLOYMENT.md).
 
 ## Cutover gates
 
