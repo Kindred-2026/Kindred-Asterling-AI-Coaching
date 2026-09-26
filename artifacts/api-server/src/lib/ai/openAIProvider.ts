@@ -8,6 +8,7 @@ export class OpenAIProvider implements AIProvider {
     private readonly apiKey: string,
     private readonly model: string,
     private readonly baseUrl = "https://api.openai.com/v1",
+    private readonly cloudflareGatewayId?: string,
   ) {}
 
   async chat(request: AIRequest): Promise<AIResponse> {
@@ -15,12 +16,17 @@ export class OpenAIProvider implements AIProvider {
       "content-type": "application/json",
       authorization: `Bearer ${this.apiKey}`,
     };
-    if (isCloudflareAIGateway(this.baseUrl)) {
+    const isCloudflare = isCloudflareAIGateway(this.baseUrl);
+    if (isCloudflare) {
       // Keep conversation bodies out of Gateway request logs. Metadata and
       // usage can still be used for operational metrics. Conversation-specific
       // prompts and responses must also bypass Gateway response caching.
       headers["cf-aig-collect-log-payload"] = "false";
       headers["cf-aig-skip-cache"] = "true";
+      const gatewayId = this.cloudflareGatewayId?.trim();
+      if (gatewayId) {
+        headers["cf-aig-gateway-id"] = gatewayId;
+      }
     }
     const response = await fetchWithDeadline(
       `${this.baseUrl.replace(/\/$/, "")}/chat/completions`,
