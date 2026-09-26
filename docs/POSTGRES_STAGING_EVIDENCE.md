@@ -1,7 +1,8 @@
 # PostgreSQL staging evidence — 2026-09-26 UTC
 
-This is a synthetic rehearsal on the existing Fly staging cluster, not a
-production migration, app deployment, or proof of production data completeness.
+This record covers synthetic rehearsals and the first app deployment on the
+existing Fly staging cluster. It does not prove production migration or data
+completeness. The final section records the later application deployment.
 Base: `410cd7f92f493646eff6840d62138447bc7fa78e`, plus the reviewed changes
 in the PR introducing this record. Node 24.19.0; PostgreSQL and client 16.15.
 
@@ -11,10 +12,10 @@ The owner confirmed rotating the exposed staging password. A fresh credential
 lookup followed by a real connection succeeded. Values stayed out of tool
 output, repository files and agent prompts. This records owner confirmation
 and working current credentials, not an independent old-password revocation test.
-The Fly app now has `POSTGRES_URL` staged; the unused `DATABASE_URL` was removed.
-No machine, image or app release was created. `DATABASE_PROVIDER` remains
-`mongo` until the reviewed PostgreSQL deployment configuration is ready.
-The staged connection now uses the dedicated `kindred-staging-app` writer
+At the database-rehearsal milestone, `POSTGRES_URL` was staged and the unused
+`DATABASE_URL` removed. The later release v1 deployed that secret and selected
+`DATABASE_PROVIDER=postgres`; see the application deployment section below.
+The connection uses the dedicated `kindred-staging-app` writer
 role, and the app/cluster attachment is recorded. The schema-admin credential
 is no longer the app secret. Writer login, CRUD, sequence use, and transaction
 rollback passed against the synthetic restore database. `CREATE TABLE`,
@@ -22,7 +23,8 @@ rollback passed against the synthetic restore database. `CREATE TABLE`,
 no superuser, role-creation, database-creation, or RLS-bypass privileges.
 Fly's writer role covers data in the staging cluster; this is not per-database
 isolation. Keep unrelated applications/production data out of this cluster.
-The runtime `fly-db` schema is not yet rolled out and app startup is unverified.
+The later application deployment initialized runtime `fly-db` and passed
+startup/health checks; full product acceptance remains open.
 
 ## Failures found and fixed
 
@@ -94,3 +96,31 @@ and runtime settings, test-safe service credentials, full app staging acceptance
 AI Gateway and spending controls, and production cutover are not verified here.
 Coolify and MongoDB remain in place. Synthetic database evidence does not pass
 sign-in, payments, reminders, voice, or actual account-history acceptance.
+
+## First application deployment — 2026-09-26
+
+- Applied the reviewed schema to empty staging `fly-db`, inside a transaction
+  after `assertEmptyTarget` and a staging database identity guard. Runtime
+  schema catalog validation passed before commit; writer access covered all
+  21 app tables. No source snapshot or production data was imported.
+- Built clean reviewed source `29277d252f19daf489018fc0b14c1d74cab8d852`
+  using the existing Dockerfile and public Auth0 BuildKit inputs recovered
+  from the authorized existing production configuration. Runtime Auth0,
+  Resend, and owner settings were staged through standard input without
+  recording values. No production configuration was changed or email sent.
+- Deployed with `--env DATABASE_PROVIDER=postgres --ha=false --remote-only`.
+  Release v1 completed at 06:01:41 UTC. Machine `847635cee76978` is started in
+  `yyz`, shared CPU x1, 1024 MB, autostop off, minimum one machine.
+- Image: `registry.fly.io/kindred-asterling-ai-coaching:deployment-01M3E4SPJTZGHKRT1PXA15YA46`;
+  digest `sha256:0aee52c4f1e8c7028647a25ac9b2e12c76e6ff2dcaf28a7c8bf264f476b1864e`.
+- Public health and database health both returned 200. The Fly service check
+  passed after an initial boot failure. Runtime configuration inspection
+  confirmed the intended writer, `fly-db`, and staging cluster pooler without
+  emitting the URI. The homepage rendered; unauthenticated `/api/auth/user`
+  returned 401. Startup logs showed the server and reminder scheduler running.
+- **Blocked:** Auth0 rejected the Fly root callback URL. Dashboard and CLI
+  sessions had expired. Fresh sign-in, signed-in API access, separate histories,
+  and the remaining product acceptance checks have not passed.
+- AI is disabled; payments are not enabled. Resend configuration reuse does not
+  prove safe delivery or grant permission to send to uncontrolled addresses.
+  Production remains on the old server/MongoDB. No DNS cutover was performed.

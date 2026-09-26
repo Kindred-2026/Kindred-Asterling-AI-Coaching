@@ -5,18 +5,29 @@
 feature work. This record distinguishes repository changes from provider and
 production gates; a checked-in plan is not proof of a live cutover.
 
+## Latest provider milestone — 2026-09-26
+
+Fly staging release v1 is deployed from reviewed source `29277d252f19daf489018fc0b14c1d74cab8d852`
+with PostgreSQL selected, one 1 GB machine in Toronto, and both health endpoints
+passing. The empty staging runtime schema is installed; no production records
+were migrated. The homepage renders. Auth0 callback registration blocks fresh
+sign-in, so full staging acceptance remains open. AI is disabled and payments
+are not enabled. [Exact release and checks](POSTGRES_STAGING_EVIDENCE.md#first-application-deployment--2026-09-26).
+
+The owner cancelled Coolify Cloud before cutover. Direct server inspection
+confirmed the existing app and database health still return 200. Keep that
+server and MongoDB active through migration, cutover, and rollback gates.
+
 ## Direction
 
-- **Application hosting:** Fly.io is the selected provider. The repository-linked
-  staging app (`kindred-asterling-ai-coaching`) is registered. On 2026-09-25,
-  the Fly dashboard showed no saved app configuration, deployment, or machines.
-  The checked-in `fly.toml` targets Toronto (`yyz`). Billing and payment details
-  have not been inspected. Keep Coolify available until a replacement release
-  and rollback window are verified.
+- **Application hosting:** Fly.io staging is deployed in Toronto (`yyz`) with
+  one 1 GB app machine; health checks pass. Auth0 callback registration and full
+  product acceptance remain open. Billing/invoices have not been inspected.
+  Keep the existing production server through cutover and rollback retention.
 - **Database:** Fly Managed Postgres Basic staging cluster
   `kindred-staging-db-20260924` (20 GB provisioned, one replica, v2) is
-  provisioned and ready in Toronto (`yyz`). The app attachment and staged writer
-  connection are configured; app startup and runtime schema rollout remain unverified. Real-server adapter validation and synthetic migration/restore
+  provisioned and ready in Toronto (`yyz`). The app attachment, deployed writer
+  connection, runtime schema, and application startup are verified. Real-server adapter validation and synthetic migration/restore
   now pass; [execution evidence](POSTGRES_STAGING_EVIDENCE.md) records the limits.
   Production-like snapshot and full application acceptance remain open.
   Preserve internal
@@ -61,29 +72,15 @@ production gates; a checked-in plan is not proof of a live cutover.
 
 ## Current source and staging state (2026-09-26 UTC)
 
-Canonical source snapshot for this audit is GitHub `main` at `1664618` after
-PR #198. That PR requires HTTPS for production OpenAI-compatible endpoints and
-rejects redirects that could forward coaching prompts to plaintext; its CI,
-Snyk, build, and test checks passed. The remote branch audit found only `main`
-and no open PRs. Immediately before deployment, the operator must run
-`git rev-parse HEAD` from the clean, approved post-merge checkout and deploy
-that exact SHA. No staging deployment candidate is selected yet. The root
-`fly.toml` is tracked and `flyctl config validate` passes with internal port
-`8080`, `/api/healthz/db`, `auto_stop_machines = 'off'`, and
-`min_machines_running = 1`. A read-only Fly CLI check on 2026-09-26 reports the
-registered app is pending with no deployment, machines, or app runtime secrets.
-The v2 Managed Postgres cluster is ready in `yyz` with one replica and 20 GB
-provisioned capacity, but remains unattached to any app. Its latest status
-reported 2.95 GB used. It contains the default `fly-db` database and the
-isolated `kindred_rehearsal_pg_adapter_20260925` database. No successful schema
-or fixture write has been verified. The expected app URL is
-`https://kindred-asterling-ai-coaching.fly.dev`, but it is not
-verified live until Fly assigns the hostname. Launch attempt `2083359` (commit
-`ed5feeb`) failed because the three public Auth0 `VITE_*` build identifiers
-were not supplied; no image or app deployment resulted. The real adapter
-attempt failed authentication before schema application. No production data,
-traffic, or deployment was changed. Published-price estimates and actual
-billing remain unverified. See [the staging record](FLY_DEPLOYMENT.md).
+The first successful staging image was built from clean reviewed GitHub source
+`29277d252f19daf489018fc0b14c1d74cab8d852`. Its prior CI, Snyk, build, and tests
+passed. The deployment used an explicit PostgreSQL environment override; this
+follow-up persists it in `fly.toml`. The exact release/image and observed checks
+are recorded in [the staging record](FLY_DEPLOYMENT.md). Earlier missing build
+inputs and adapter authentication failures have been resolved. Auth0 still
+rejects the Fly callback, so full application staging acceptance is incomplete.
+No production data, traffic, or deployment was changed. Actual billing and the
+under-$50 target remain unverified.
 
 ## Cutover gates
 
@@ -148,7 +145,7 @@ usage, and plan tiers have not yet been verified.
 
 | Service | Published starting estimate | Actual monthly cost | Notes |
 | --- | ---: | ---: | --- |
-| Fly Managed Postgres Basic + app | $38.00/month plus $0.28/GB-month based on v2 storage used; latest status showed 2.95 GB used (about $0.83/month); about $5.92/month for a continuously running 1GB shared-cpu-1x app machine at current reference rate | Not measured | Illustrative subtotal $44.75 at observed storage use, before transfer, AI, backups, and retained services; actual region rate and app memory are unverified; no Fly invoice was inspected |
+| Fly Managed Postgres Basic + app | $38.00/month plus $0.28/GB-month based on v2 storage used; latest status showed 2.95 GB used (about $0.83/month); about $5.92/month for a continuously running 1GB shared-cpu-1x app machine at current reference rate | Not measured | Illustrative subtotal $44.75 at observed storage use, before transfer, AI, backups, and retained services; actual billed region rate is unverified; app memory is verified at 1 GB; no Fly invoice was inspected |
 | Cloudflare AI Gateway | $0 for core features; gateway logs may follow Workers Logs pricing depending on first-Gateway date | Not measured | Upstream inference is billed by the selected model provider; configure a global Gateway spend limit and verify log retention/pricing |
 | Auth0, Resend, Sentry, Helcim, SMS, voice, domain/DNS, storage, backups | Account-dependent | Not measured | Verify actual plans, usage and renewal amounts |
 | **Illustrative Fly app + database subtotal** | **About $44.75/month** with 1GB always-on app compute and the latest reported v2 database storage use | **Not measured** | Leaves about $5.25 under the $50 target before network use, AI, other providers, and backup extras; actual region pricing and bills remain unverified |
