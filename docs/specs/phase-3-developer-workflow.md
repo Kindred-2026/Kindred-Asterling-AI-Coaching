@@ -2,8 +2,10 @@
 
 > **Historical document.** This specification is superseded operational guidance.
 > GitLab is confirmed unused by the owner; GitHub Actions is the sole active CI path.
+> Fly.io is the selected hosting target; Coolify is retained only for rollback.
 > Current instructions and source of truth are in `docs/FINALIZATION_RECORD.md`
-> and the current release/rollback documentation. No Fly.io deployment is claimed.
+> and the current release/rollback documentation (`docs/release-rollback.md`,
+> `docs/FLY_DEPLOYMENT.md`). No Fly.io deployment has been completed.
 
 Refined September 12, 2026. Scope proposal based on the original September 1
 roadmap and the founder's confirmation that the Auth0 cutover is complete.
@@ -13,13 +15,16 @@ This document authorizes no deployment, provider change, or data migration.
 
 After documented first-time setup, one command starts the real Kindred product,
 one command verifies it, and one command prepares an honest release report.
-GitLab CI checks the same production packages and contracts as local verification.
+GitLab CI was intended to check the same production packages and contracts as local
+verification. That historical requirement is superseded by the active GitHub Actions path.
 
 ## Baseline and implementation entry
 
 - Production is React/Vite in `artifacts/kindred-coach`, Express in
   `artifacts/api-server`, Auth0 authentication, and MongoDB Atlas storage.
-- Keep GitLab `origin` authoritative, Coolify hosting, Node 24 and pnpm 10.
+- This proposal's baseline used GitLab `origin` and Coolify. Those directions are
+  superseded: GitHub `main` is authoritative and Fly.io is the selected target;
+  Coolify remains only for rollback. Node 24 and pnpm 10.
 - Preserve canonical `/today`, `/talk`, `/insights`, `/you` URLs and legacy links.
 - Preserve coaching, voice, payments, medications, reminders, account security,
   security scanning, and existing monitoring. Calendar stays sunset in the UI;
@@ -27,7 +32,7 @@ GitLab CI checks the same production packages and contracts as local verificatio
 - Preserve both founder accounts separately and retain rollback assets until
   retirement is explicitly approved. Phase 3 does not repeat the cutover.
 - Before implementation, reconcile the completed cutover's deployed SHA and
-  reviewed changes with GitLab main. At this scope audit, fetched `origin/main`
+  reviewed changes with GitLab `main`. At this scope audit, fetched `origin/main`
   was `2205b982401cd809fd0a297eb9cd378e5e0c0159`; the primary checkout was on
   another branch with unrelated edits. That is repository evidence, not a claim
   about the current production revision. Start implementation in an isolated
@@ -73,7 +78,8 @@ provider delivery is used by the automated suite.
 
 ## 3C — Align CI and release checks
 
-- Make GitLab jobs use the same verification components and pinned toolchain.
+- The original proposal called for GitLab jobs to use the same verification
+  components and pinned toolchain. This is superseded by GitHub Actions.
   Reuse caching and remove duplicate work where safe; parallel jobs are acceptable.
 - Preserve SAST, dependency scanning, secret detection and other existing security
   tooling. Avoid unnecessary branch/MR duplicate pipelines without suppressing
@@ -86,8 +92,9 @@ provider delivery is used by the automated suite.
   frontend/API issuer consistency, and the remaining deployment checklist.
 - Distinguish local validation, push, CI, merge, deployment, and production proof.
   Offline or unavailable remote evidence must be reported as unverified.
-- Document the existing Coolify release/rollback process and how to record the
-  deployed revision. The command must not push, merge, deploy, restart services,
+- The original proposal called for documenting the Coolify release/rollback
+  process. That is superseded by the Fly.io runbook and release/rollback guide.
+  Record the deployed revision. The command must not push, merge, deploy, restart services,
   modify provider settings, print secret values, or apply migrations.
 - Report CI quota/runner problems as infrastructure blockers. No billing changes,
   new paid runners, or weakened required checks are part of implementation.
