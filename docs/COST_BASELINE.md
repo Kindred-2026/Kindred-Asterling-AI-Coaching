@@ -1,18 +1,18 @@
 # Kindred recurring cost baseline
 
-**As of:** 2026-09-26. **Status:** planning inventory; no provider invoices or
-billing dashboards were inspected. The under-$50/month target excludes Helcim
+**As of:** 2026-09-26. **Status:** partial provider verification; Auth0 plan and
+quota dashboards were inspected, but no provider invoices were verified. The under-$50/month target excludes Helcim
 payment-processing charges and remains unverified until every applicable row
 has a current bill or usage export.
 
 | Service | Current or target purpose | Published starting estimate | Kindred actual monthly cost | Status / measurement source |
 | --- | --- | ---: | ---: | --- |
-| Fly.io app compute | Selected app/API hosting; repository-linked staging app registered; no machines deployed | About $5.92/month for one always-on shared-cpu-1x machine with 1 GB RAM at the current reference rate; regional price must be confirmed | No app compute started | App `kindred-asterling-ai-coaching` has no saved app configuration or machines; no invoice inspected |
-| Fly Managed Postgres Basic | Staging primary database in Toronto (`yyz`); provisioned and ready, not attached to the app | $38.00/month plus $0.28/GB/month for v2 storage used; latest status reported 2.95 GB, about $0.83/month if usage stays level | Not measured; resource is provisioned and billable | Cluster `kindred-staging-db-20260924` has one replica; 20 GB provisioned capacity; verify invoice, account capacity, backup/restore before cutover |
+| Fly.io app compute | Selected app/API hosting; one staging machine running | About $5.92/month for one always-on shared-cpu-1x machine with 1 GB RAM at the current reference rate; regional price must be confirmed | Not measured; compute started | App `kindred-asterling-ai-coaching` release v1 runs one 1024 MB machine in `yyz`; no invoice inspected |
+| Fly Managed Postgres Basic | Staging primary database in Toronto (`yyz`); attached and serving the app | $38.00/month plus $0.28/GB/month for v2 storage used; latest status reported 2.95 GB, about $0.83/month if usage stays level | Not measured; resource is provisioned and billable | Cluster `kindred-staging-db-20260924` has one replica; 20 GB provisioned capacity; synthetic migration/restore passed, production-like rehearsal and invoice remain pending |
 | Cloudflare AI Gateway | AI routing, metadata, rate limits, and spend controls | $0 for core Gateway features | Not measured | Upstream inference is usage-billed. Log cost/retention depends on when the account created its first Gateway; verify the account's applicable plan and configured limits |
 | OpenAI or selected Gateway upstream | Model inference | Usage-based; no Kindred estimate | Not measured | Record tokens, model, invoice, quota, and spend alert |
 | Cloudflare DNS, proxy, and application security | Domain routing, TLS, edge security | Account/plan dependent | Not measured | Verify plan and any add-ons |
-| Auth0 | Authentication | Account/MAU-plan dependent | Not measured | Verify tenant plan and active MAUs |
+| Auth0 | Authentication | Dashboard shows Free, $0/month | Invoice not verified | September dashboard showed 4 external active users and 9/1000 M2M uses. Always-required MFA includes OTP and recovery codes labeled Pro, and email labeled Enterprise; quota warning reports use of features outside the Free plan. Resolve entitlement/security choice before claiming sustainable $0 cost; no plan or MFA changes made |
 | MongoDB Atlas | Current database until cutover | Account/cluster dependent | Not measured | Verify invoice and storage/backup/egress before retirement |
 | Coolify host / VPS | Current deployment and rollback window | Host/plan dependent | Not measured | Verify current host charge; retain through rollback window |
 | Resend | Transactional email | Plan/volume dependent | Not measured | Verify monthly plan and email volume |
@@ -31,8 +31,8 @@ v2 pricing is based on storage used, not provisioned capacity. At $0.28/GB per
 reminder scheduler must run continuously until it is moved to durable external
 work, so the app estimate uses an always-on machine rather than scale-to-zero.
 A 1 GB shared-cpu-1x machine is listed at about $5.92/month at the current
-reference rate; the actual `yyz` price and app memory requirement remain
-unverified. This scenario totals about **$44.75/month** for app plus database
+reference rate; the actual `yyz` price remains unverified. Staging currently
+runs with 1 GB; broader workload sizing remains unverified. This scenario totals about **$44.75/month** for app plus database
 at the observed storage use, before network transfer, other providers, AI
 inference, backups beyond included retention, and remaining services. It leaves
 about $5.25 under the $50 target for those costs, and is not supported by

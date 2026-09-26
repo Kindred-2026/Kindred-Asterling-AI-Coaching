@@ -93,7 +93,14 @@ export class OpenAIProvider implements AIProvider {
 
 function isCloudflareAIGateway(baseUrl: string): boolean {
   try {
-    return new URL(baseUrl).hostname === "gateway.ai.cloudflare.com";
+    const url = new URL(baseUrl);
+    if (url.hostname === "gateway.ai.cloudflare.com") return true;
+
+    // Cloudflare's account REST endpoint also applies AI Gateway features.
+    return (
+      url.hostname === "api.cloudflare.com" &&
+      /^\/client\/v4\/accounts\/[^/]+\/ai\/v1\/?$/.test(url.pathname)
+    );
   } catch {
     return false;
   }

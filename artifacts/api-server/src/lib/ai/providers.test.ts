@@ -40,25 +40,51 @@ describe("normalized AI provider contract", () => {
     );
   });
 
-  it("disables Cloudflare AI Gateway payload logging for coaching conversations", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({ choices: [{ message: { content: "Hi" } }] }),
-          { status: 200 },
-        ),
-      );
+  it.each([
+    "https://gateway.ai.cloudflare.com/v1/account/gateway/openai",
+    "https://api.cloudflare.com/client/v4/accounts/abc123/ai/v1",
+    "https://api.cloudflare.com/client/v4/accounts/abc123/ai/v1/",
+  ])("disables payload logging and caching for %s", async (baseUrl) => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({ choices: [{ message: { content: "Hi" } }] }),
+        { status: 200 },
+      ),
+    );
     vi.stubGlobal("fetch", fetchMock);
-    await new OpenAIProvider(
-      "secret",
-      "model",
-      "https://gateway.ai.cloudflare.com/v1/account/gateway/openai",
-    ).chat(request);
+    await new OpenAIProvider("secret", "model", baseUrl).chat(request);
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `${baseUrl.replace(/\/$/, "")}/chat/completions`,
+    );
     const init = fetchMock.mock.calls[0][1] as RequestInit;
-    expect((init.headers as Record<string, string>)["cf-aig-collect-log-payload"]).toBe("false");
-    expect((init.headers as Record<string, string>)["cf-aig-skip-cache"]).toBe("true");
+    const headers = init.headers as Record<string, string>;
+    expect(headers["cf-aig-collect-log-payload"]).toBe("false");
+    expect(headers["cf-aig-skip-cache"]).toBe("true");
+    expect(headers.authorization).toBe("Bearer secret");
     expect(JSON.parse(init.body as string).store).toBe(false);
+    expect(init.redirect).toBe("error");
+  });
+
+  it.each([
+    "https://api.openai.com/v1",
+    "https://api.cloudflare.com/client/v4/accounts/abc123/ai/v2",
+    "https://api.cloudflare.com/client/v4/accounts//ai/v1",
+    "https://api.cloudflare.com/client/v4/accounts/abc123/ai/v1/extra",
+    "https://gateway.ai.cloudflare.com.example.com/v1/account/gateway/openai",
+    "https://api.cloudflare.com.example.com/client/v4/accounts/abc123/ai/v1",
+  ])("omits Cloudflare headers for unrelated endpoint %s", async (baseUrl) => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({ choices: [{ message: { content: "Hi" } }] }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    await new OpenAIProvider("secret", "model", baseUrl).chat(request);
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    const headers = init.headers as Record<string, string>;
+    expect(headers["cf-aig-collect-log-payload"]).toBeUndefined();
+    expect(headers["cf-aig-skip-cache"]).toBeUndefined();
   });
 
   it("normalizes Ollama tool calls", async () => {
