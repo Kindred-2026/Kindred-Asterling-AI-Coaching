@@ -1,13 +1,15 @@
 # Fly.io deployment and migration runbook
 
-**Status (2026-09-25):** Fly.io is the selected hosting provider. The staging
+**Status (2026-09-26):** Fly.io is the selected hosting provider. The staging
 app (`kindred-asterling-ai-coaching`) is registered and attached to the
 canonical GitHub repository, but the Fly dashboard reports no saved app
 configuration, deployment, or machines. The Managed Postgres Basic cluster
 (`kindred-staging-db-20260924`, cluster ID `w76geop28dnrplk4`) was provisioned
-in Toronto (`yyz`). The cluster reports ready with 10 GB allocated storage and
-one replica; it contains an empty rehearsal database named
-`kindred_rehearsal_pg_adapter_20260925`. The app is registered but has no
+in Toronto (`yyz`). The v2 cluster reports ready with one replica, 20 GB
+provisioned capacity, and 2.95 GB used at the latest status check. It contains
+the default `fly-db` database and the isolated rehearsal database
+`kindred_rehearsal_pg_adapter_20260925`; no successful schema or fixture write
+has been verified. The app is registered but has no
 machines, deployment, attached database, or runtime credentials. The app config
 is in `fly.toml`. Capacity and billing details have not been inspected. Keep
 the current Coolify and MongoDB release available through the cutover and
@@ -217,7 +219,7 @@ be resolved or the path explicitly retired with a documented sunset disposition.
 | --- | --- |
 | Reviewed SHA and deploy timestamp | Fly Launch attempt `2083359` used `ed5feeb` at 2026-09-25 22:42 UTC and failed during build; this is not a deployment. Record a separately reviewed post-merge SHA for the next attempt |
 | Fly app name, configured region, internal port | `kindred-asterling-ai-coaching`, configured `yyz`, `8080`; dashboard reports no saved app config or app machines |
-| Managed Postgres cluster | `kindred-staging-db-20260924`, `w76geop28dnrplk4`, ready, Basic, 10 GB, one replica; app unattached. Empty rehearsal database `kindred_rehearsal_pg_adapter_20260925` created; no schema or fixtures applied |
+| Managed Postgres cluster | `kindred-staging-db-20260924`, `w76geop28dnrplk4`, v2 ready, Basic, 20 GB provisioned, 2.95 GB used, one replica; app unattached. Isolated rehearsal database `kindred_rehearsal_pg_adapter_20260925` exists; no successful schema or fixture write verified |
 | Image digest and Fly release ID | None; image build failed before deployment |
 | `/api/healthz` and `/api/healthz/db` results; DB endpoint identity (no URI) | Not run |
 | Auth0 fresh sign-in, sign-out, authenticated API result (tenant name/reference only) | Not run |
@@ -225,7 +227,7 @@ be resolved or the path explicitly retired with a documented sunset disposition.
 | Two synthetic account IDs/labels and separate-history result (no personal data) | Not run |
 | PostgreSQL integration / restore gate | **FAIL** (2026-09-25): live adapter authentication through the local Fly proxy failed before schema application; the isolated rehearsal database remains empty. Full PostgreSQL integration and restore rehearsal remain **BLOCKED** and have not passed |
 | Reminder scheduler | Not run; record `auto_stop_machines = "off"`, running machine count/status, and cost |
-| Cost measurement date, source, current estimate/actual and `$50/month` comparison | Published starting estimate: MPG Basic $38 + 10 GB storage $2.80/month; app compute not started (no machines). Billing/invoice not verified. About $46.72/month after one 1 GB app machine runs, before network, AI, backups, and other services. |
+| Cost measurement date, source, current estimate/actual and `$50/month` comparison | Published estimate: MPG Basic $38 + v2 storage at $0.28/GB-month; latest Fly status reported 2.95 GB used (~$0.83/month). App compute not started (no machines). Billing/invoice not verified. About $44.75/month after one 1 GB app machine runs, before network, AI, backups, and other services. |
 | Spend alert and provider/model quota thresholds | Not run |
 
 ## Application deployment shape
@@ -270,13 +272,14 @@ autostart does not recover scheduler ticks missed while stopped.
 
 ## Cost and data controls
 
-Fly Managed Postgres Basic is currently listed at $38/month, plus provisioned
-database storage at $0.28/GB/month. Fly lists high availability, backups, and
-connection pooling as included Managed Postgres features. Application compute,
-network egress, and any other retained services are additional. The database
-baseline alone leaves little room under Kindred's $50/month target, so compare
-actual billing before production cutover; do not claim the target is met from
-published starting prices.
+Fly Managed Postgres Basic is currently listed at $38/month, with v2 database
+storage billed by usage at $0.28/GB per 30-day month. The latest status check
+reports about 2.95 GB used; actual invoices are not verified. Fly lists high
+availability, backups, and connection pooling as included Managed Postgres
+features. Application compute, network egress, and any other retained services
+are additional. The estimated app and database subtotal leaves little room
+under Kindred's $50/month target, so compare actual billing before production
+cutover; do not claim the target is met from published starting prices.
 
 Fly's current Managed Postgres documentation lists security patches, version
 upgrades, and customer-facing alerting as features still under development.
