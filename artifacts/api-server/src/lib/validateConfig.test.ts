@@ -129,3 +129,63 @@ describe("Auth0 production configuration", () => {
     throw new Error("Expected missing Auth0 configuration to fail");
   });
 });
+
+describe("OpenAI base URL validation", () => {
+  function openaiBaseEnv(): void {
+    baseEnv();
+    process.env.AI_PROVIDER = "openai";
+    process.env.OPENAI_API_KEY = "test-key";
+    process.env.OPENAI_MODEL = "gpt-4";
+  }
+
+  function openaiProductionBaseEnv(): void {
+    openaiBaseEnv();
+    process.env.NODE_ENV = "production";
+    process.env.APP_PUBLIC_URL = "https://app.example.com";
+    process.env.SUBSCRIPTION_OWNER_IDS = "owner1,owner2";
+    process.env.RESEND_API_KEY = "re_test";
+    process.env.RESEND_FROM_EMAIL = "test@example.com";
+    process.env.AUTH0_DOMAIN = "auth.example.com";
+    process.env.AUTH0_AUDIENCE = "https://api.example.com";
+  }
+
+  it("rejects invalid URL format for OPENAI_BASE_URL", () => {
+    openaiBaseEnv();
+    process.env.OPENAI_BASE_URL = "not-a-url";
+    expect(validateRuntimeConfig).toThrow(/OPENAI_BASE_URL must be a valid URL/);
+  });
+
+  it("rejects non-HTTP URL schemes", () => {
+    openaiBaseEnv();
+    process.env.OPENAI_BASE_URL = "ftp://api.openai.com/v1";
+    expect(validateRuntimeConfig).toThrow(/must use HTTP or HTTPS/);
+  });
+
+  it.each([
+    "http://api.openai.com/v1",
+    "http://127.0.0.1:8080/v1",
+  ])("rejects non-HTTPS OPENAI_BASE_URL in production: %s", (url) => {
+    openaiProductionBaseEnv();
+    process.env.OPENAI_BASE_URL = url;
+    expect(validateRuntimeConfig).toThrow(/must use HTTPS in production/);
+  });
+
+  it("accepts HTTPS OPENAI_BASE_URL in production", () => {
+    openaiProductionBaseEnv();
+    process.env.OPENAI_BASE_URL = "https://api.openai.com/v1";
+    expect(validateRuntimeConfig).not.toThrow();
+  });
+
+  it("accepts local HTTP OPENAI_BASE_URL outside production", () => {
+    openaiBaseEnv();
+    process.env.NODE_ENV = "development";
+    process.env.OPENAI_BASE_URL = "http://127.0.0.1:8080/v1";
+    expect(validateRuntimeConfig).not.toThrow();
+  });
+
+  it("uses default OpenAI endpoint when OPENAI_BASE_URL is unset", () => {
+    openaiProductionBaseEnv();
+    delete process.env.OPENAI_BASE_URL;
+    expect(validateRuntimeConfig).not.toThrow();
+  });
+});

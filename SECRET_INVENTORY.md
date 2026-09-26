@@ -34,7 +34,7 @@ The tracked files are `.env.example`, `.env.dev.example`, `auth0-deploy/.env.exa
 | `OLLAMA_BASE_URL` | N; Ollama endpoint; required when provider is Ollama | local config | unverified | Fly config only if retained | verify/remove if replaced |
 | `OLLAMA_MODEL` | N; Ollama model; required when provider is Ollama | local config | unverified | Fly config only if retained | verify/remove if replaced |
 | `OPENAI_API_KEY` | S; OpenAI provider auth; required when `AI_PROVIDER=openai` | local secret | unverified | Fly secret or gateway credential if chosen | verify/rotate or remove |
-| `OPENAI_BASE_URL` | N; OpenAI-compatible endpoint override; optional | local config | unverified | Fly config; Cloudflare AI Gateway endpoint after account setup | verify/retain or replace |
+| `OPENAI_BASE_URL` | N; optional OpenAI-compatible endpoint override; HTTPS required in production | local config | unverified | Fly config; Cloudflare AI Gateway endpoint after account setup | verify/retain or replace |
 | `OPENAI_MODEL` | N; OpenAI model; required when `AI_PROVIDER=openai` | local config | unverified | Fly config | verify/retain |
 | `HELCIM_PAYMENTS_ENABLED` | N; payments feature gate; optional, CI explicitly disables | local config | unverified | Fly config | verify/retain |
 | `HELCIM_API_KEY` | S; Helcim API; required if payments enabled | local secret | unverified | Fly secret | verify/rotate |

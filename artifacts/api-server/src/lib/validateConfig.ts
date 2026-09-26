@@ -35,6 +35,23 @@ export function validateRuntimeConfig(): void {
   } else if (aiProvider === "openai") {
     requireValue("OPENAI_API_KEY");
     requireValue("OPENAI_MODEL");
+    const openaiBaseUrl = process.env.OPENAI_BASE_URL?.trim();
+    if (openaiBaseUrl) {
+      let url: URL;
+      try {
+        url = new URL(openaiBaseUrl);
+      } catch {
+        throw new Error("OPENAI_BASE_URL must be a valid URL");
+      }
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        throw new Error("OPENAI_BASE_URL must use HTTP or HTTPS");
+      }
+      if (process.env.NODE_ENV === "production" && url.protocol !== "https:") {
+        throw new Error(
+          "OPENAI_BASE_URL must use HTTPS in production (OPENAI_API_KEY would be sent over plaintext)",
+        );
+      }
+    }
   } else if (!["disabled", "none", "off"].includes(aiProvider)) {
     throw new Error(
       "AI_PROVIDER must be one of: ollama, openai, disabled",

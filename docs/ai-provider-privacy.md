@@ -5,7 +5,8 @@ application keeps the existing OpenAI-compatible provider interface. The target
 hosted route is OpenAI-compatible inference through Cloudflare AI Gateway, with
 the model vendor and account selected after quality, privacy, and contract review.
 Use `OPENAI_BASE_URL` for the Gateway endpoint and keep `OPENAI_API_KEY` only in
-the runtime secret store. The application sends
+the runtime secret store. Production requires HTTPS for an explicit base URL;
+local development may use an HTTP endpoint. The application sends
 `cf-aig-collect-log-payload: false` to disable Gateway payload logging and
 `cf-aig-skip-cache: true` to bypass response caching for every personalized
 coaching request. The operator must also disable payload logging and caching in
