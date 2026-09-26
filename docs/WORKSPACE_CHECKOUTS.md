@@ -43,3 +43,23 @@ Auth0 rules worktree remains on `codex/auth0-rules-to-actions` with modified
 `pnpm-workspace.yaml` and untracked `auth0-deploy/`; preserve it for separate
 review. The merged `auth0-deploy-integration` worktree and its local branch
 were removed after the clean-state and ancestry checks described above.
+
+## Follow-up audit — 2026-09-26 UTC
+
+Canonical GitHub `main` is `c3a79b0` after PR #193. The remote lists only
+`main`, and no PRs are open. The primary checkout is clean apart from the
+preserved untracked `.vscode/` directory. The PostgreSQL rehearsal worktree is
+clean at `e9f41e8`; that commit is already contained in `main`. Keep this
+worktree available while the real Fly PostgreSQL adapter and restore gates
+remain open.
+
+The `kindred-auth0-migration` worktree is preserved without edits. Its branch
+`codex/auth0-rules-to-actions` is 337 commits behind and one unique commit ahead
+of canonical `main`; the unique commit adds an Auth0 Rule-to-Action migration,
+deployment scripts, and tests. Current `main` has no `AUTHZ_EXT_*` or
+`auth0-authorization-extension` consumer. The working tree also has an invalid
+`@clerk/shared` `allowBuilds` value in its modified `pnpm-workspace.yaml` and an
+untracked `auth0-deploy/` tenant export. Do not merge the stale branch wholesale
+or discard the export until the Auth0 owner verifies whether the remote Rule or
+Action is still bound and whether the export is needed for rollback. The branch
+is not on GitHub.
