@@ -1,6 +1,6 @@
 # Kindred credential and configuration inventory
 
-**Canonical source baseline:** `e696630` (2026-09-25; after PR #190). Inventory includes the merged PR #155 PostgreSQL startup schema validation, finalization/Snyk IaC work, PR #164 GitHub cleanup, PR #170's type-safe adapter contract, and the subsequent finalization status updates. The tracked environment templates and runtime validator are unchanged since `4e22035` (2026-09-24), so their prior value-free audit remains applicable. **Owner for tracked active entries:** Kindred owner; the historical SSH-key finding below has an unknown owner. This is a value-free inventory of names and code requirements, not an attestation that an account, vault item, production deployment, or GitHub secret is populated. Evidence: root and `auth0-deploy/` `.env.example` **names only**, `artifacts/api-server/src/lib/validateConfig.ts`, application consumers, migration scripts, frontend build validator, `.github/workflows/`, and a redacted Gitleaks scan of the tree and history dated 2026-09-23. Secret values must never enter Git or browser `VITE_*` builds.
+**Canonical source baseline:** `e696630` (2026-09-25; after PR #190). Inventory includes the merged PR #155 PostgreSQL startup schema validation, finalization/Snyk IaC work, PR #164 GitHub cleanup, PR #170's type-safe adapter contract, and the subsequent finalization status updates. The tracked environment templates and runtime validator are unchanged since `4e22035` (2026-09-24), so their prior value-free audit remains applicable. **Owner for tracked active entries:** Kindred owner; the historical SSH-key finding below has an unknown owner. This is a value-free inventory of names and code requirements, not an attestation that an account, vault item, production deployment, or GitHub secret is populated. Evidence: root and `auth0-deploy/` `.env.example` **names only**, `artifacts/api-server/src/lib/validateConfig.ts`, application consumers, migration scripts, frontend build validator, `.github/workflows/`, and a redacted Gitleaks scan of the tracked `main` tree and local refs/history dated 2026-09-26. Secret values must never enter Git or browser `VITE_*` builds.
 
 ## Current repository contract
 
@@ -161,15 +161,20 @@ A read-only GitHub metadata query returned repository-level Actions secret **nam
 | --- | --- | --- |
 | `SNYK_TOKEN` | S; referenced by `.github/workflows/snyk-security.yml` | Kindred owner; retain while Snyk scanning is active; rotate if exposure or ownership requires it |
 
-GitHub currently lists four deployment environments: `Asterling Coach / production`, `Asterling Coaching / production`, `Asterling Coaching / Staging`, and `production`. Read-only queries of each encoded repository environment endpoint on 2026-09-26 returned zero environment secret names and zero environment variable names. Repository Actions variables are empty. Organization-level Actions settings were not refreshed in this check; the previous settings-page review showed no organization secrets or variables. Environment and deployment records do not prove a currently active provider deployment. Keep the records; verify each environment's external purpose before removing it.
+GitHub currently lists four deployment environments: `Asterling Coach / production`, `Asterling Coaching / production`, `Asterling Coaching / Staging`, and `production`. Read-only queries of each encoded repository environment endpoint on 2026-09-26 returned zero environment secret names and zero environment variable names. Repository Actions variables are empty. Organization-level Actions settings were not refreshed in this check; the previous settings-page review showed no organization secrets or variables. Repository secret scanning was enabled on 2026-09-26; a names-only alerts query returned zero alerts at the time checked. Push protection remains disabled. GitHub's scan-history endpoint returned 404 because Advanced Security is disabled, so backfill completion could not be independently verified. Environment and deployment records do not prove a currently active provider deployment. Keep the records; verify each environment's external purpose before removing it.
 
-### Redacted Git history scan — 2026-09-23
+### Redacted Git history scan — 2026-09-26
 
-Gitleaks 8.30.1 scanned the current tree and all local Git refs/history (417
-commits); the report was redacted and no secret values were printed. The 8
-current-tree `generic-api-key` matches map to public Auth0 client identifiers,
-test fixtures, and documentation examples. History adds old copies of those
-same categories. No active application token was confirmed by code inspection.
+Gitleaks 8.30.1 scanned the tracked tree at canonical `main` (`2555724`) and
+all local Git refs/history with full report redaction. The tracked tree had six
+`generic-api-key` matches, all in Auth0 configuration exports and documentation;
+the exports' matching fields are public `AUTH0_CLIENT_ID` identifiers. Across
+local refs/history, Gitleaks reported 15 `generic-api-key` matches associated
+with public Auth0 client identifiers, test fixtures, and documentation, plus
+one private-key match. Reports were stored outside the repository and no
+credential value was retained in this inventory. Code inspection did not
+confirm an active application token. The scan covers refs present in this local
+clone; GitHub currently has only `main` as a remote branch.
 
 The scan also found a structurally valid, encrypted OpenSSH private-key
 container in commit `900dc255d10666e702c81adf230b1754e9d220ce` (2026-08-02),
