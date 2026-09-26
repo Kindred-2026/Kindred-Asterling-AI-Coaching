@@ -210,7 +210,11 @@ The owner confirmed rotation of the exposed staging password. Current-credential
 authentication and isolated live database checks succeeded; independent rejection
 of the former password was not tested. The app `kindred-asterling-ai-coaching`
 now has only `POSTGRES_URL` staged; unused `DATABASE_URL` was removed. No secret
-value was recorded here. The connection currently uses the staging schema-admin
-role and must be replaced with a scoped runtime role before deployment. No app
-release or runtime process exists yet. [Execution evidence](docs/POSTGRES_STAGING_EVIDENCE.md)
+value was recorded here. The connection now uses the dedicated `kindred-staging-app` writer role.
+Live synthetic checks verified CRUD/sequence access and denial of schema changes;
+superuser, role/database creation and RLS bypass are disabled. The writer role
+covers cluster data, so database-level isolation is not claimed. The app's
+schema-admin credential has been replaced in Fly; retain admin access only for
+operator migrations. Runtime schema rollout and app startup remain unverified.
+No app release or runtime process exists yet. [Execution evidence](docs/POSTGRES_STAGING_EVIDENCE.md)
 records the synthetic database checks and remaining production gates.

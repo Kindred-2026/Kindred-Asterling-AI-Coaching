@@ -2,7 +2,7 @@
 
 **Status (2026-09-26):** The staging app
 `kindred-asterling-ai-coaching` remains undeployed. `POSTGRES_URL` is staged
-with current cluster credentials; unused `DATABASE_URL` has been removed.
+with the dedicated staging writer role; unused `DATABASE_URL` has been removed.
 The owner confirmed password rotation and a real connection succeeded.
 The existing Toronto Managed Postgres cluster `kindred-staging-db-20260924`
 (`w76geop28dnrplk4`) passed live adapter checks and a synthetic 20-collection
@@ -215,7 +215,7 @@ be resolved or the path explicitly retired with a documented sunset disposition.
 | --- | --- |
 | Reviewed SHA and deploy timestamp | Fly Launch attempt `2083359` used `ed5feeb` at 2026-09-25 22:42 UTC and failed during build; this is not a deployment. Record a separately reviewed post-merge SHA for the next attempt |
 | Fly app name, configured region, internal port | `kindred-asterling-ai-coaching`, configured `yyz`, `8080`; dashboard reports no saved app config or app machines |
-| Managed Postgres cluster | `kindred-staging-db-20260924`, `w76geop28dnrplk4`, v2 ready, Basic, 20 GB provisioned, 2.95 GB used, one replica; app unattached. Live adapter and synthetic migration/restore now passed in dedicated rehearsal databases; see [execution evidence](POSTGRES_STAGING_EVIDENCE.md) |
+| Managed Postgres cluster | `kindred-staging-db-20260924`, `w76geop28dnrplk4`, v2 ready, Basic, 20 GB provisioned, 2.95 GB used, one replica; app attachment recorded with a dedicated writer role. Live adapter and synthetic migration/restore now passed in dedicated rehearsal databases; see [execution evidence](POSTGRES_STAGING_EVIDENCE.md) |
 | Image digest and Fly release ID | None; image build failed before deployment |
 | `/api/healthz` and `/api/healthz/db` results; DB endpoint identity (no URI) | Not run |
 | Auth0 fresh sign-in, sign-out, authenticated API result (tenant name/reference only) | Not run |
