@@ -4,7 +4,7 @@
 
 ## Current repository contract
 
-The API uses MongoDB by default (`DATABASE_PROVIDER=mongo`, `MONGODB_URI` / `MONGODB_DATABASE`) and has an opt-in PostgreSQL runtime path (`DATABASE_PROVIDER=postgres`, `POSTGRES_URL`). PostgreSQL has not been verified against a real server or selected in a deployed app. Auth0 uses `AUTH0_DOMAIN` / `AUTH0_AUDIENCE`; the frontend builds with three public Auth0 `VITE_*` values. Helcim is conditional on `HELCIM_PAYMENTS_ENABLED=true`. AI supports Ollama and an OpenAI-compatible provider; Cloudflare AI Gateway is the target route, not a verified live integration. Bedrock runtime support has been removed. Resend is a production startup requirement. These are **code contracts**, not verified facts about a live provider account or deployment. The repository has historical Coolify, Clerk, PostgreSQL-migration and Calendar artifacts; their presence does not prove those services are currently in use. No current production secret store can be confirmed from this checkout.
+The API uses MongoDB by default (`DATABASE_PROVIDER=mongo`, `MONGODB_URI` / `MONGODB_DATABASE`) and has an opt-in PostgreSQL runtime path (`DATABASE_PROVIDER=postgres`, `POSTGRES_URL`). PostgreSQL has passed live adapter and synthetic migration/restore checks; it has not been selected in a deployed app. See [execution evidence](docs/POSTGRES_STAGING_EVIDENCE.md). Auth0 uses `AUTH0_DOMAIN` / `AUTH0_AUDIENCE`; the frontend builds with three public Auth0 `VITE_*` values. Helcim is conditional on `HELCIM_PAYMENTS_ENABLED=true`. AI supports Ollama and an OpenAI-compatible provider; Cloudflare AI Gateway is the target route, not a verified live integration. Bedrock runtime support has been removed. Resend is a production startup requirement. These are **code contracts**, not verified facts about a live provider account or deployment. The repository has historical Coolify, Clerk, PostgreSQL-migration and Calendar artifacts; their presence does not prove those services are currently in use. No current production secret store can be confirmed from this checkout.
 
 In the tables, **S** = secret (including sensitive identifiers such as access-key IDs/SIDs), **P** = public, browser-exposed configuration, **N** = non-secret server/build configuration. **Dev** `local secret` means developer-controlled secret injection (actual store unverified); `local config` means shell or local development configuration (including documented `.env.dev`; actual source unverified). **Current prod** `unverified` means the code requires/consumes the name but neither injection location nor population is established; `not runtime` means a job/legacy-only name. **Target** `Fly secret` / `Fly config` / `Fly build` means proposed Fly.io encrypted runtime secret / ordinary runtime setting / public build setting; `job secret` / `job config` means isolated operator migration/deployment job, not app runtime. These target locations are proposals, not deployed resources. **Status** `verify/rotate` means check use and rotate at cutover as appropriate, not already rotated; `verify/retain` means confirm configuration during cutover; `verify/remove` means confirm no remaining consumer or stored data before revocation/removal. Repository secret removal is recorded below; provider runtime rotations/removals are not claimed complete.
 
@@ -203,3 +203,14 @@ The selected destination is **Fly.io app + Fly Managed Postgres in Toronto (`yyz
 4. Which Fly organization/app and Managed Postgres cluster are selected, is Toronto (`yyz`) available on both, and what is the verified migration/rollback and secret-rotation schedule?
 5. Which Cloudflare AI Gateway account, authentication mode, upstream provider and server-side credential contract are intended?
 6. Verify `SNYK_TOKEN` remains correctly scoped for the active Snyk workflow. `OPENCODE_API_KEY` was deleted after PR #164 removed its sole workflow consumer; GitHub listed only `SNYK_TOKEN` immediately after deletion.
+
+### Fly staging credential follow-up — 2026-09-26
+
+The owner confirmed rotation of the exposed staging password. Current-credential
+authentication and isolated live database checks succeeded; independent rejection
+of the former password was not tested. The app `kindred-asterling-ai-coaching`
+now has only `POSTGRES_URL` staged; unused `DATABASE_URL` was removed. No secret
+value was recorded here. The connection currently uses the staging schema-admin
+role and must be replaced with a scoped runtime role before deployment. No app
+release or runtime process exists yet. [Execution evidence](docs/POSTGRES_STAGING_EVIDENCE.md)
+records the synthetic database checks and remaining production gates.

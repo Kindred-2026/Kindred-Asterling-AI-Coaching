@@ -141,11 +141,11 @@ export async function initializePostgresDatabase(options?: PostgresOptions): Pro
     current.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"),
     current.query("SELECT table_name, column_name, data_type, udt_name FROM information_schema.columns WHERE table_schema = 'public'"),
     current.query(`SELECT child.relname AS table_name, c.contype AS type,
-      ARRAY(SELECT a.attname FROM unnest(c.conkey) WITH ORDINALITY AS key_column(attnum, ordinal_position)
+      ARRAY(SELECT a.attname::text FROM unnest(c.conkey) WITH ORDINALITY AS key_column(attnum, ordinal_position)
         JOIN pg_attribute AS a ON a.attrelid = c.conrelid AND a.attnum = key_column.attnum
         ORDER BY key_column.ordinal_position) AS columns,
       parent.relname AS referenced_table,
-      ARRAY(SELECT a.attname FROM unnest(c.confkey) WITH ORDINALITY AS referenced_column(attnum, ordinal_position)
+      ARRAY(SELECT a.attname::text FROM unnest(c.confkey) WITH ORDINALITY AS referenced_column(attnum, ordinal_position)
         JOIN pg_attribute AS a ON a.attrelid = c.confrelid AND a.attnum = referenced_column.attnum
         ORDER BY referenced_column.ordinal_position) AS referenced_columns,
       CASE c.confdeltype WHEN 'c' THEN 'CASCADE' WHEN 'n' THEN 'SET NULL' WHEN 'r' THEN 'RESTRICT'
