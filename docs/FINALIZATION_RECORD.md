@@ -147,17 +147,17 @@ usage, and plan tiers have not yet been verified.
 
 | Service | Published starting estimate | Actual monthly cost | Notes |
 | --- | ---: | ---: | --- |
-| Fly Managed Postgres Basic + app | $38.00/month plus $0.28/GB-month based on v2 storage used; latest status showed 2.95 GB used (about $0.83/month); about $5.92/month for a continuously running 1GB shared-cpu-1x app machine at current reference rate | Not measured | Illustrative subtotal $44.75 at observed storage use, before transfer, AI, backups, and retained services; actual region rate and app memory are unverified; no Fly invoice was inspected |
+| Fly Managed Postgres Basic + app | $38.00/month plus $0.28/GB-month for 20 GB provisioned v2 storage ($5.60/month); about $5.92/month for a continuously running 1GB shared-cpu-1x app machine at current reference rate | Not measured | Illustrative subtotal $49.52 with 20 GB provisioned storage, before transfer, AI, backups, and retained services; actual region rate and app memory are unverified; no Fly invoice was inspected |
 | Cloudflare AI Gateway | $0 for core features; gateway logs may follow Workers Logs pricing depending on first-Gateway date | Not measured | Upstream inference is billed by the selected model provider; configure a global Gateway spend limit and verify log retention/pricing |
 | Auth0, Resend, Sentry, Helcim, SMS, voice, domain/DNS, storage, backups | Account-dependent | Not measured | Verify actual plans, usage and renewal amounts |
-| **Illustrative Fly app + database subtotal** | **About $44.75/month** with 1GB always-on app compute and the latest reported v2 database storage use | **Not measured** | Leaves about $5.25 under the $50 target before network use, AI, other providers, and backup extras; actual region pricing and bills remain unverified |
+| **Illustrative Fly app + database subtotal** | **About $49.52/month** with 1GB always-on app compute and 20 GB provisioned v2 database storage | **Not measured** | Leaves about $0.48 under the $50 target before network use, AI, other providers, and backup extras; actual region pricing and bills remain unverified |
 
 The **under-$50/month goal is unverified**, not guaranteed by starting prices.
 Before cutover, record recurring invoices, usage-based bills, AI token spend,
 and backup/storage costs; configure provider spend alerts and per-user AI
 quotas. Exclude payment processing from the target as approved.
 
-Published pricing references, checked 2026-09-24: [Fly Managed Postgres](https://docs.fly.io/mpg), [Fly resource pricing](https://fly.io/docs/about/pricing/), [Cloudflare AI Gateway pricing](https://developers.cloudflare.com/ai-gateway/reference/pricing/), and [Cloudflare AI Gateway spend limits](https://developers.cloudflare.com/ai-gateway/features/spend-limits/).
+Published pricing references, checked 2026-09-24: [Fly Managed Postgres](https://fly.io/docs/mpg/), [Fly resource pricing](https://fly.io/docs/about/pricing/), [Cloudflare AI Gateway pricing](https://developers.cloudflare.com/ai-gateway/reference/pricing/), and [Cloudflare AI Gateway spend limits](https://developers.cloudflare.com/ai-gateway/features/spend-limits/).
 
 ## Explicitly not claimed by this record
 
@@ -165,3 +165,4 @@ This repository record does not prove production provider configuration, a
 database migration or restore, a provider-account secret rotation, user
 acceptance, production deployment, measured monthly spend, or service
 retirement. Those items require the recorded gates and evidence above.
+ence above.

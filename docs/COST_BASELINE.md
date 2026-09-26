@@ -8,7 +8,7 @@ has a current bill or usage export.
 | Service | Current or target purpose | Published starting estimate | Kindred actual monthly cost | Status / measurement source |
 | --- | --- | ---: | ---: | --- |
 | Fly.io app compute | Selected app/API hosting; repository-linked staging app registered; no machines deployed | About $5.92/month for one always-on shared-cpu-1x machine with 1 GB RAM at the current reference rate; regional price must be confirmed | No app compute started | App `kindred-asterling-ai-coaching` has no saved app configuration or machines; no invoice inspected |
-| Fly Managed Postgres Basic | Staging primary database in Toronto (`yyz`); provisioned and ready, not attached to the app | $38.00/month plus $0.28/GB/month for v2 storage used; latest status reported 2.95 GB, about $0.83/month if usage stays level | Not measured; resource is provisioned and billable | Cluster `kindred-staging-db-20260924` has one replica; 20 GB provisioned capacity; verify invoice, account capacity, backup/restore before cutover |
+| Fly Managed Postgres Basic | Staging primary database in Toronto (`yyz`); provisioned and ready, not attached to the app | $38.00/month plus $0.28/GB/month for 20 GB provisioned storage ($5.60/month) | Not measured; resource is provisioned and billable | Cluster `kindred-staging-db-20260924` has one replica; 20 GB provisioned capacity; verify invoice, account capacity, backup/restore before cutover |
 | Cloudflare AI Gateway | AI routing, metadata, rate limits, and spend controls | $0 for core Gateway features | Not measured | Upstream inference is usage-billed. Log cost/retention depends on when the account created its first Gateway; verify the account's applicable plan and configured limits |
 | OpenAI or selected Gateway upstream | Model inference | Usage-based; no Kindred estimate | Not measured | Record tokens, model, invoice, quota, and spend alert |
 | Cloudflare DNS, proxy, and application security | Domain routing, TLS, edge security | Account/plan dependent | Not measured | Verify plan and any add-ons |
@@ -24,18 +24,17 @@ has a current bill or usage export.
 | GitHub Actions, Snyk, and OpenCode | CI/security automation | Account/usage dependent | Not measured | Verify included minutes and any paid subscriptions |
 | Helcim payment-processing fees | Payment processing | Excluded from the $50 target | Not measured | Track separately; include any non-processing subscription fee |
 
-Fly Managed Postgres Basic is **$38/month plus storage usage**. The current
-v2 cluster status reported 20 GB provisioned capacity and 2.95 GB used; Fly's
-v2 pricing is based on storage used, not provisioned capacity. At $0.28/GB per
-30-day month, that is about $0.83/month while usage stays level. Kindred's
+Fly Managed Postgres Basic is **$38/month plus $0.28/GB for provisioned storage**. The current
+v2 cluster status reports 20 GB provisioned capacity and 2.95 GB used; at
+$0.28/GB per 30-day month, provisioned storage is $5.60/month. Kindred's
 reminder scheduler must run continuously until it is moved to durable external
 work, so the app estimate uses an always-on machine rather than scale-to-zero.
 A 1 GB shared-cpu-1x machine is listed at about $5.92/month at the current
 reference rate; the actual `yyz` price and app memory requirement remain
-unverified. This scenario totals about **$44.75/month** for app plus database
-at the observed storage use, before network transfer, other providers, AI
+unverified. This scenario totals about **$49.52/month** for app plus database
+with 20 GB provisioned storage, before network transfer, other providers, AI
 inference, backups beyond included retention, and remaining services. It leaves
-about $5.25 under the $50 target for those costs, and is not supported by
+about $0.48 under the $50 target for those costs, and is not supported by
 measured bills.
 
 **Caveat:** The Fly MPG docs confirm automatic backups/recovery, HA/failover,
@@ -64,7 +63,7 @@ retained service, configure model quotas and spend alerts, and record a dated
 invoice/usage source. Reconcile again after 30 days on the selected provider and after
 the rollback window closes.
 
-Pricing references checked 2026-09-26: [Fly Managed Postgres plans, v2 storage pricing, and storage behavior](https://docs.fly.io/postgres),
+Pricing references checked 2026-09-26: [Fly Managed Postgres plans and v2 storage pricing](https://fly.io/docs/mpg/),
 [Fly resource pricing](https://docs.fly.io/about/pricing/),
 [Fly Managed Postgres creation and default storage size](https://fly.io/docs/mpg/create-and-connect/),
 Cloudflare [AI Gateway pricing and logging](https://developers.cloudflare.com/ai-gateway/reference/pricing/),

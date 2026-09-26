@@ -227,7 +227,7 @@ be resolved or the path explicitly retired with a documented sunset disposition.
 | Two synthetic account IDs/labels and separate-history result (no personal data) | Not run |
 | PostgreSQL integration / restore gate | **FAIL** (2026-09-25): live adapter authentication through the local Fly proxy failed before schema application; the isolated rehearsal database remains empty. Full PostgreSQL integration and restore rehearsal remain **BLOCKED** and have not passed |
 | Reminder scheduler | Not run; record `auto_stop_machines = "off"`, running machine count/status, and cost |
-| Cost measurement date, source, current estimate/actual and `$50/month` comparison | Published estimate: MPG Basic $38 + v2 storage at $0.28/GB-month; latest Fly status reported 2.95 GB used (~$0.83/month). App compute not started (no machines). Billing/invoice not verified. About $44.75/month after one 1 GB app machine runs, before network, AI, backups, and other services. |
+| Cost measurement date, source, current estimate/actual and `$50/month` comparison | Published estimate: MPG Basic $38 + $5.60/month for 20 GB provisioned v2 storage at $0.28/GB-month. App compute not started (no machines). Billing/invoice not verified. About $49.52/month after one 1 GB app machine runs, before network, AI, backups, and other services. |
 | Spend alert and provider/model quota thresholds | Not run |
 
 ## Application deployment shape
@@ -273,8 +273,9 @@ autostart does not recover scheduler ticks missed while stopped.
 ## Cost and data controls
 
 Fly Managed Postgres Basic is currently listed at $38/month, with v2 database
-storage billed by usage at $0.28/GB per 30-day month. The latest status check
-reports about 2.95 GB used; actual invoices are not verified. Fly lists high
+storage billed at $0.28/GB per 30-day month for provisioned capacity. The latest
+status check reports 20 GB provisioned and 2.95 GB used, or $5.60/month;
+actual invoices are not verified. Fly lists high
 availability, backups, and connection pooling as included Managed Postgres
 features. Application compute, network egress, and any other retained services
 are additional. The estimated app and database subtotal leaves little room
