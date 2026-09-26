@@ -17,8 +17,8 @@ remain on the current providers until their migration gates are verified.
 
 ## Quick start
 
-Prerequisites: Node 24+ and pnpm (the repo pins `pnpm@10.28.1` —
-`corepack enable`). Install once at the root:
+Prerequisites: Node 24 (`engines.node` is `24.x`) and pnpm (the repo pins
+`pnpm@10.28.1` — `corepack enable`). Install once at the root:
 
 ```sh
 pnpm i
