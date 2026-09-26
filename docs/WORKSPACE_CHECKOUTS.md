@@ -68,3 +68,28 @@ rollback. The branch is not on GitHub.
 The local Devin session list is empty. Its CLI currently lists model families,
 but does not report account quota or establish that each model is usable. No
 Devin changes are included in this audit.
+
+## Follow-up audit — 2026-09-26 UTC, after PR #202
+
+Canonical GitHub `main` is `dcd29384c24582402a411949bf26e8ed3d86d2ca`. The
+remote lists only `main`; no PRs were open at the time checked. PR #202 merged
+the refreshed value-free secret inventory after CI, tests, typecheck, audit,
+and Snyk checks passed.
+
+The primary checkout is on canonical `main` with only the untracked `.vscode/`
+directory preserved. The PostgreSQL rehearsal worktree is clean at `e9f41e8`,
+zero commits ahead and 26 behind `main`; its tip is already an ancestor of
+`main`. The Auth0 migration worktree remains on
+`codex/auth0-rules-to-actions` at `0e072f5`, one unique commit ahead and 344
+behind `main`, with modified `pnpm-workspace.yaml` and untracked `auth0-deploy/`.
+The unique commit contains Rule-to-Action migration code, deployment scripts,
+and tests. Do not merge the stale branch or discard its local changes until the
+Auth0 owner verifies whether the remote Rule or Action remains bound and
+whether the export is needed for rollback.
+
+A redacted Gitleaks scan of the untracked `auth0-deploy/` export reported four
+generic matches in its configuration JSON files. Structural inspection found
+only populated `AUTH0_CLIENT_ID` fields among the credential-like JSON keys;
+no populated secret, token, or API-key field was identified. The export remains
+preserved and its values were not copied into this audit. This local scan does
+not verify the external Auth0 tenant's current Rule/Action binding.
