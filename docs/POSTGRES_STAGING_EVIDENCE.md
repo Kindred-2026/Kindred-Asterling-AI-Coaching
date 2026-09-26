@@ -94,3 +94,31 @@ and runtime settings, test-safe service credentials, full app staging acceptance
 AI Gateway and spending controls, and production cutover are not verified here.
 Coolify and MongoDB remain in place. Synthetic database evidence does not pass
 sign-in, payments, reminders, voice, or actual account-history acceptance.
+
+## First application deployment — 2026-09-26
+
+- Applied the reviewed schema to empty staging `fly-db`, inside a transaction
+  after `assertEmptyTarget` and a staging database identity guard. Runtime
+  schema catalog validation passed before commit; writer access covered all
+  21 app tables. No source snapshot or production data was imported.
+- Built clean reviewed source `29277d252f19daf489018fc0b14c1d74cab8d852`
+  using the existing Dockerfile and public Auth0 BuildKit inputs recovered
+  from the authorized existing production configuration. Runtime Auth0,
+  Resend, and owner settings were staged through standard input without
+  recording values. No production configuration was changed or email sent.
+- Deployed with `--env DATABASE_PROVIDER=postgres --ha=false --remote-only`.
+  Release v1 completed at 06:01:41 UTC. Machine `847635cee76978` is started in
+  `yyz`, shared CPU x1, 1024 MB, autostop off, minimum one machine.
+- Image: `registry.fly.io/kindred-asterling-ai-coaching:deployment-01M3E4SPJTZGHKRT1PXA15YA46`;
+  digest `sha256:0aee52c4f1e8c7028647a25ac9b2e12c76e6ff2dcaf28a7c8bf264f476b1864e`.
+- Public health and database health both returned 200. The Fly service check
+  passed after an initial boot failure. Runtime configuration inspection
+  confirmed the intended writer, `fly-db`, and staging cluster pooler without
+  emitting the URI. The homepage rendered; unauthenticated `/api/auth/user`
+  returned 401. Startup logs showed the server and reminder scheduler running.
+- **Blocked:** Auth0 rejected the Fly root callback URL. Dashboard and CLI
+  sessions had expired. Fresh sign-in, signed-in API access, separate histories,
+  and the remaining product acceptance checks have not passed.
+- AI is disabled; payments are not enabled. Resend configuration reuse does not
+  prove safe delivery or grant permission to send to uncontrolled addresses.
+  Production remains on the old server/MongoDB. No DNS cutover was performed.

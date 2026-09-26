@@ -4,7 +4,7 @@
 
 ## Current repository contract
 
-The API uses MongoDB by default (`DATABASE_PROVIDER=mongo`, `MONGODB_URI` / `MONGODB_DATABASE`) and has an opt-in PostgreSQL runtime path (`DATABASE_PROVIDER=postgres`, `POSTGRES_URL`). PostgreSQL has passed live adapter and synthetic migration/restore checks; it has not been selected in a deployed app. See [execution evidence](docs/POSTGRES_STAGING_EVIDENCE.md). Auth0 uses `AUTH0_DOMAIN` / `AUTH0_AUDIENCE`; the frontend builds with three public Auth0 `VITE_*` values. Helcim is conditional on `HELCIM_PAYMENTS_ENABLED=true`. AI supports Ollama and an OpenAI-compatible provider; Cloudflare AI Gateway is the target route, not a verified live integration. Bedrock runtime support has been removed. Resend is a production startup requirement. These are **code contracts**, not verified facts about a live provider account or deployment. The repository has historical Coolify, Clerk, PostgreSQL-migration and Calendar artifacts; their presence does not prove those services are currently in use. No current production secret store can be confirmed from this checkout.
+The API uses MongoDB by default (`DATABASE_PROVIDER=mongo`, `MONGODB_URI` / `MONGODB_DATABASE`) and has an opt-in PostgreSQL runtime path (`DATABASE_PROVIDER=postgres`, `POSTGRES_URL`). PostgreSQL has passed live adapter and synthetic migration/restore checks; it is selected in the Fly staging app; full application acceptance remains open. See [execution evidence](docs/POSTGRES_STAGING_EVIDENCE.md). Auth0 uses `AUTH0_DOMAIN` / `AUTH0_AUDIENCE`; the frontend builds with three public Auth0 `VITE_*` values. Helcim is conditional on `HELCIM_PAYMENTS_ENABLED=true`. AI supports Ollama and an OpenAI-compatible provider; Cloudflare AI Gateway is the target route, not a verified live integration. Bedrock runtime support has been removed. Resend is a production startup requirement. These are **code contracts**, not verified facts about a live provider account or deployment. The repository has historical Coolify, Clerk, PostgreSQL-migration and Calendar artifacts; their presence does not prove those services are currently in use. No current production secret store can be confirmed from this checkout.
 
 In the tables, **S** = secret (including sensitive identifiers such as access-key IDs/SIDs), **P** = public, browser-exposed configuration, **N** = non-secret server/build configuration. **Dev** `local secret` means developer-controlled secret injection (actual store unverified); `local config` means shell or local development configuration (including documented `.env.dev`; actual source unverified). **Current prod** `unverified` means the code requires/consumes the name but neither injection location nor population is established; `not runtime` means a job/legacy-only name. **Target** `Fly secret` / `Fly config` / `Fly build` means proposed Fly.io encrypted runtime secret / ordinary runtime setting / public build setting; `job secret` / `job config` means isolated operator migration/deployment job, not app runtime. These target locations are proposals, not deployed resources. **Status** `verify/rotate` means check use and rotate at cutover as appropriate, not already rotated; `verify/retain` means confirm configuration during cutover; `verify/remove` means confirm no remaining consumer or stored data before revocation/removal. Repository secret removal is recorded below; provider runtime rotations/removals are not claimed complete.
 
@@ -191,9 +191,15 @@ coordinate a history rewrite across affected refs. Do not claim history cleanup
 complete until owner confirmation, key revocation, all-branch rewrite, and
 collaborator clone instructions are complete.
 
-## Planned target state — partially implemented in the repository, NOT deployed or verified live
+## Target state — staging deployed; production cutover incomplete
 
-The selected destination is **Fly.io app + Fly Managed Postgres in Toronto (`yyz`) + Cloudflare AI Gateway**. Read-only Fly CLI checks on 2026-09-24 confirmed the then-current staging app `kindred-asterling-staging-20260924` existed in the `personal` organization but had no image or deployment, and Managed Postgres cluster `kindred-staging-db-20260924` was ready on the Basic plan in `yyz` with no app attached. Its empty rehearsal database `kindred_rehearsal_pg_adapter_20260925` has not passed a credentialed integration or restore rehearsal; Fly billing was not inspected. These resources are in the same Fly organization. A Fly dashboard check on 2026-09-25 found the repository-linked app `kindred-asterling-ai-coaching`, with no saved app configuration, deployment, machines, or configured app secrets; a subsequent Launch build at commit `ed5feeb` failed because the required public Auth0 build identifiers were absent, before an image or app deployment was created. The repository's `fly.toml` now targets this app and its `.fly.dev` URL. The repository includes an opt-in PostgreSQL runtime selector and `POSTGRES_URL` contract, but MongoDB remains the default and Cloudflare AI Gateway credentials/configuration have not been verified. Do not substitute `POSTGRES_SOURCE_URL` or `POSTGRES_RESTORE_URL` for the runtime `POSTGRES_URL`. Before enabling PostgreSQL, validate least-privilege access, migration, restore, and rollback. Choose the Gateway's authenticated request format and credential name only after implementation; no `CLOUDFLARE_*` runtime variable is claimed present. Keep any gateway token server-side; public build variables must remain public. External provider settings, runtime secrets, migrations, and runtime secret rotations/removals remain unverified; the repository-only `OPENCODE_API_KEY` removal is verified above.
+Fly app `kindred-asterling-ai-coaching` now runs PostgreSQL in Toronto (`yyz`)
+on the existing `kindred-staging-db-20260924` cluster. The app uses runtime
+`POSTGRES_URL` with a dedicated writer. Do not substitute rehearsal
+`POSTGRES_SOURCE_URL` or `POSTGRES_RESTORE_URL` for that runtime credential.
+Cloudflare AI Gateway is still a target, not verified live configuration.
+Production remains on the existing server/MongoDB. See the dated follow-up
+below and [deployment evidence](docs/POSTGRES_STAGING_EVIDENCE.md).
 
 ## Provider-console questions for Kindred owner
 
@@ -209,12 +215,22 @@ The selected destination is **Fly.io app + Fly Managed Postgres in Toronto (`yyz
 The owner confirmed rotation of the exposed staging password. Current-credential
 authentication and isolated live database checks succeeded; independent rejection
 of the former password was not tested. The app `kindred-asterling-ai-coaching`
-now has only `POSTGRES_URL` staged; unused `DATABASE_URL` was removed. No secret
+has `POSTGRES_URL` deployed; unused `DATABASE_URL` was removed. No secret
 value was recorded here. The connection now uses the dedicated `kindred-staging-app` writer role.
 Live synthetic checks verified CRUD/sequence access and denial of schema changes;
 superuser, role/database creation and RLS bypass are disabled. The writer role
 covers cluster data, so database-level isolation is not claimed. The app's
 schema-admin credential has been replaced in Fly; retain admin access only for
-operator migrations. Runtime schema rollout and app startup remain unverified.
-No app release or runtime process exists yet. [Execution evidence](docs/POSTGRES_STAGING_EVIDENCE.md)
+operator migrations. Runtime schema rollout and app startup passed on release v1. [Execution evidence](docs/POSTGRES_STAGING_EVIDENCE.md)
 records the synthetic database checks and remaining production gates.
+
+The owner authorized reuse of existing Coolify-hosted settings. Recovered
+`AUTH0_DOMAIN`, `AUTH0_AUDIENCE`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and
+`SUBSCRIPTION_OWNER_IDS` are now in the Fly runtime secret store alongside
+`POSTGRES_URL`. The three public `VITE_AUTH0_*` build identifiers are also
+stored there and were separately supplied to the Dockerfile's BuildKit mounts.
+All nine entries report Deployed. Runtime secrets do not implicitly become
+build inputs. Values were kept out of repository files, chat, and build logs.
+These entries retain their registry owners and rotation requirements above;
+reusing Resend's credential means staging and production do not have separate
+email credentials. Auth0 callback configuration still blocks staging sign-in.

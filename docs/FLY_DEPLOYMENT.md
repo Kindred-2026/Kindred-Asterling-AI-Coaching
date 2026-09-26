@@ -1,15 +1,20 @@
 # Fly.io deployment and migration runbook
 
-**Status (2026-09-26):** The staging app
-`kindred-asterling-ai-coaching` remains undeployed. `POSTGRES_URL` is staged
-with the dedicated staging writer role; unused `DATABASE_URL` has been removed.
-The owner confirmed password rotation and a real connection succeeded.
-The existing Toronto Managed Postgres cluster `kindred-staging-db-20260924`
-(`w76geop28dnrplk4`) passed live adapter checks and a synthetic 20-collection
-migration plus encrypted backup/restore. See [the execution evidence](POSTGRES_STAGING_EVIDENCE.md)
-for scope, commands, database disposition, and remaining gates. No production
-migration or full application staging acceptance has passed. Keep Coolify and
-MongoDB available through cutover and rollback gates.
+**Status (2026-09-26):** PostgreSQL staging is deployed and healthy at
+<https://kindred-asterling-ai-coaching.fly.dev/>. Release v1 uses reviewed source
+`29277d252f19daf489018fc0b14c1d74cab8d852`, with the explicit deployment override
+`DATABASE_PROVIDER=postgres`; `fly.toml` now persists that setting. One 1 GB
+shared-CPU machine runs in `yyz`. Both health endpoints return 200 and the
+homepage renders. **Sign-in is blocked by Auth0's missing Fly callback URL.**
+AI remains disabled and payments are not enabled. This is not full staging
+acceptance or a production cutover. Production remains on the existing
+server/MongoDB despite cancellation of the Coolify Cloud subscription.
+
+The empty `fly-db` database in `kindred-staging-db-20260924` was initialized
+atomically after the empty-target guard passed. Runtime catalog checks passed
+and the writer role has access to all 21 app tables. No production data was
+copied. [Execution evidence](POSTGRES_STAGING_EVIDENCE.md) records the synthetic
+migration/restore checks and this first deployment.
 
 On 2026-09-25 at 22:42 UTC, Fly Launch attempt `2083359` built commit
 `ed5feeb` and passed Fly config validation and dependency installation, but the
@@ -19,172 +24,71 @@ At that failed build, the app had no saved configuration, machine, or runtime
 secrets. Use the CLI build-secret procedure below; the Fly Launch UI attempt did
 not pass these required build values.
 
-## First-time staging runbook (resources provisioned; build failure diagnosed)
+## Staging deployment procedure
 
-In Bash, add the installed CLI directory to `PATH` for the current shell and
-verify that `flyctl` resolves:
+Use the existing app `kindred-asterling-ai-coaching` and Managed Postgres cluster
+`w76geop28dnrplk4`, both in Toronto (`yyz`). Do not create another app, cluster,
+or MongoDB smoke database. Production still runs on the existing server/MongoDB.
 
-```bash
-export PATH="$HOME/.fly/bin:$PATH"
-command -v flyctl
-```
-
-All steps marked **[DASHBOARD/PROVIDER ACCESS - NOT EXECUTED]** require the
-Kindred owner to use Fly, Auth0, and the configured database/provider consoles.
-No app, credential, deployment, or billing action has been performed as part of
-this documentation. Use a disposable non-production database and test identities
-only. Never point this staging app at production data.
-
-The first MongoDB-backed Fly smoke deployment below is only an initial
-production-mode smoke against a disposable, non-production MongoDB database. It
-is not migration readiness or the full target staging gate. Once a real isolated
-PostgreSQL endpoint exists, configure this same staging app for PostgreSQL and
-rerun the full acceptance matrix below against PostgreSQL, including a real
-non-production backup restore rehearsal.
-
-### 1. Review and prepare
-
-1. Immediately before deployment, record the reviewed commit SHA from the
-   clean, approved post-merge checkout using `git rev-parse HEAD`. Build and
-   deploy that exact SHA; do not deploy a moving branch name. No staging
-   deployment candidate has been selected.
-2. **[DASHBOARD/PROVIDER ACCESS - NOT EXECUTED]** Confirm access to the Fly
-   organization, Toronto (`yyz`) app region, billing controls, an isolated
-   non-production MongoDB endpoint, and the authorized Auth0 tenant/application.
-   Confirm the database is reachable from the Fly app and is not production.
-3. The staging app name is `kindred-asterling-ai-coaching`. It is registered
-   but has no saved Fly configuration or deployment. `fly.toml` targets `yyz`
-   and sets internal port `8080`, the
-   `/api/healthz/db` readiness check, `auto_stop_machines = 'off'`, and
-   `min_machines_running = 1`. `flyctl config validate` passed against the
-   current checked-in config on 2026-09-25. Recheck these settings before
-   deploying this app. For future staging apps, use a unique name in place of
-   the example below:
+1. Record the exact reviewed, post-merge source SHA from a clean checkout.
+2. Use `DATABASE_PROVIDER=postgres` and the writer-role `POSTGRES_URL` in Fly's
+   secret store. Never copy the production MongoDB URI into staging.
+3. For a new empty staging database only, apply
+   `lib/db/migrations-postgres/0001_rehearsal_core.sql` in a transaction after
+   `assertEmptyTarget` passes. Run `initializePostgresDatabase` before committing
+   and verify the app writer can access every runtime table. Use schema-admin
+   credentials only for this operator step. Do not rerun the schema on the
+   initialized database. This staging schema remains subject to full application
+   acceptance and is not authorization for a production migration.
+4. Required runtime names are `POSTGRES_URL`, `AUTH0_DOMAIN`, `AUTH0_AUDIENCE`,
+   `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `SUBSCRIPTION_OWNER_IDS`.
+   `NODE_ENV=production`, `PORT=8080`, and `APP_PUBLIC_URL` come from `fly.toml`.
+   Store credentials only in Fly secrets; use standard input for imports.
+5. Supply public `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, and
+   `VITE_AUTH0_AUDIENCE` separately to the existing Dockerfile's BuildKit mounts.
+   Runtime secrets do not automatically supply build values. Recover these
+   public identifiers from the authorized application configuration; never
+   supply a client secret to the browser build.
+6. Deploy with one machine explicitly. The default Fly deploy HA setting can
+   create a spare machine and exceed the approved one-machine staging scope:
 
    ```sh
-   flyctl launch --no-deploy --name YOUR_UNIQUE_STAGING_APP --region yyz --dockerfile Dockerfile
+   flyctl deploy --app kindred-asterling-ai-coaching --config fly.toml \
+     --ha=false --remote-only \
+     --build-secret "VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN" \
+     --build-secret "VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID" \
+     --build-secret "VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE"
    ```
 
-   Review the generated configuration. Set `internal_port = 8080` and the
-   readiness check path to `/api/healthz/db`; do not add or commit credentials.
-   The API starts an in-process reminder scheduler once per minute in
-   production (`artifacts/api-server/src/index.ts` and
-   `artifacts/api-server/src/lib/reminderScheduler.ts`). Fly Launch may configure
-   autostop; while reminders are in scope for staging and initial production,
-   explicitly set `auto_stop_machines = "off"` and operate at least one running
-   machine. A stopped app cannot execute reminder ticks; autostart only starts a
-   machine when a request arrives and does not restore missed scheduler ticks.
-   This requirement remains until reminders are moved to separately operated,
-   durable work. Record the effective autostop setting and machine count/state
-   from Fly configuration and status at each staging check, and include the
-   continuously running machine's actual compute cost in the cost record; it
-   trades scale-to-zero savings for scheduler availability.
-   Preserve the root `Dockerfile` as the only image/build path. **[DASHBOARD/
-   PROVIDER ACCESS - NOT EXECUTED]** Verify the resulting app's region is `yyz`
-   in Fly before deploying.
+   Read values interactively or from the authorized provider into process memory;
+   never paste literal values into shell history, source control, or evidence.
+7. Record image digest, release, machine count, region, and the effective
+   `DATABASE_PROVIDER`. Verify both health endpoints and browser rendering.
+8. Auth0 must allow callback and logout URL
+   `https://kindred-asterling-ai-coaching.fly.dev/` and web origin
+   `https://kindred-asterling-ai-coaching.fly.dev`. Keep existing production
+   entries. Current code returns to the origin root, not `/login/callback`.
+   Verify fresh sign-in and authenticated API behavior with test identities.
 
-### 2. Configure names (use real values from authorized provider accounts)
+Keep `auto_stop_machines='off'` and one 1 GB shared-CPU machine running while
+reminders use the in-process scheduler. Autostart does not replay missed ticks.
+AI is initially disabled and payments are not enabled. This health smoke does
+not pass AI, payment, or other feature acceptance. Reminder checks must use
+controlled test destinations even when an existing Resend credential is reused.
 
-The required runtime names for this initial MongoDB-backed production-mode
-image are `PORT`, `DATABASE_PROVIDER`, `MONGODB_URI`, `MONGODB_DATABASE`,
-`APP_PUBLIC_URL`, `SUBSCRIPTION_OWNER_IDS`, `RESEND_API_KEY`,
-`RESEND_FROM_EMAIL`, `AUTH0_DOMAIN`, and `AUTH0_AUDIENCE`. Set `PORT` to `8080`
-and `DATABASE_PROVIDER` to `mongo`. The `VITE_AUTH0_DOMAIN`,
-`VITE_AUTH0_CLIENT_ID`, and `VITE_AUTH0_AUDIENCE` names are required public
-build identifiers; they are not secret values. Use the same authorized Auth0
-tenant/audience as the server configuration. The first Fly Launch build failed
-because it received none of these values. Supply them to the existing Dockerfile
-as ephemeral BuildKit build secrets when running `flyctl deploy`; Fly documents
-the `--build-secret NAME=value` option at [Build Secrets](https://www.fly.io/docs/apps/build-secrets/).
-These public identifiers will still be embedded in the browser bundle. Do not
-put their literal values in this document, source control, or chat. Read them
-into shell variables so the literal values are not stored in shell history:
+### Separate AI acceptance phase
 
-```sh
-read -rp 'VITE_AUTH0_DOMAIN: ' VITE_AUTH0_DOMAIN
-read -rp 'VITE_AUTH0_CLIENT_ID: ' VITE_AUTH0_CLIENT_ID
-read -rp 'VITE_AUTH0_AUDIENCE: ' VITE_AUTH0_AUDIENCE
-flyctl deploy --app kindred-asterling-ai-coaching --config fly.toml \
-  --build-secret "VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN" \
-  --build-secret "VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID" \
-  --build-secret "VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE"
-unset VITE_AUTH0_DOMAIN VITE_AUTH0_CLIENT_ID VITE_AUTH0_AUDIENCE
-```
+Set `AI_PROVIDER=openai`, `OPENAI_BASE_URL` to the Cloudflare AI Gateway OpenAI
+provider endpoint, and a test-safe upstream key/model. Verify requests carry
+`cf-aig-collect-log-payload: false` and `cf-aig-skip-cache: true`; confirm Gateway
+payload logging is disabled. Metadata logs and upstream retention need separate
+review. Keep application quotas, upstream budgets, and Gateway spend limits
+active; do not submit real coaching histories during testing.
 
-The values are public, but Fly receives them as transient CLI arguments; run
-this from a trusted local shell after configuring the required non-production
-runtime secrets below. Do not use production credentials or real user data.
-
-`AI_PROVIDER` defaults to `ollama`, which requires `OLLAMA_BASE_URL` and
-`OLLAMA_MODEL`; for the initial smoke with no configured AI service, use
-`AI_PROVIDER=disabled`. Do not enable payments: leave `HELCIM_PAYMENTS_ENABLED`
-unset or false. For a separate AI-enabled test phase only, set
-`AI_PROVIDER=openai`, `OPENAI_BASE_URL` to the Cloudflare AI Gateway OpenAI
-provider endpoint (`https://gateway.ai.cloudflare.com/v1/<account_id>/<gateway_id>/openai`),
-`OPENAI_API_KEY` to a test-safe upstream key, and `OPENAI_MODEL` to the selected
-bare upstream model name. The API appends `/chat/completions` to the configured base URL.
-Never use real user prompts or production credentials. Verify the deployed
-configuration routes through the intended Gateway and that its payload logging
-setting is disabled. In the existing provider implementation,
-`cf-aig-collect-log-payload: false` and `cf-aig-skip-cache: true` are sent only
-when requests are routed through the gateway (that is, when `OPENAI_BASE_URL` is
-configured); verify both request behavior and Gateway settings before recording
-an AI pass. Payload collection and caching being disabled does not disable all
-Gateway metadata/usage logs. Confirm the account's first-Gateway date and
-resulting log retention/pricing before enabling real prompts. For cost controls,
-configure the Gateway spend-limit feature if it is available for the account;
-it can block requests with HTTP 429 at the selected budget, but enforcement is
-eventually consistent and uses estimated model pricing. Keep the existing
-application daily quota and upstream provider budgets active. Avoid sending
-Kindred account identifiers as Gateway custom metadata until its privacy and
-log-retention implications are reviewed. Configure other optional integrations
-only when explicitly included in test scope, with names and conditional
-requirements verified in `SECRET_INVENTORY.md` and
-`artifacts/api-server/src/lib/validateConfig.ts`.
-
-**[DASHBOARD/PROVIDER ACCESS - NOT EXECUTED]** Obtain values directly from the
-authorized provider consoles or existing approved secret manager. Enter runtime
-secrets interactively without placing values in shell history or process
-arguments. For example, in Bash, `read -rsp` suppresses terminal echo; the
-command line contains names/placeholders only, then `flyctl secrets import` reads
-the values from standard input:
-
-```sh
-read -rsp 'Non-production MONGODB_URI: ' MONGODB_URI; printf '\n'
-read -rp 'Non-production MONGODB_DATABASE: ' MONGODB_DATABASE
-read -rsp 'RESEND_API_KEY: ' RESEND_API_KEY; printf '\n'
-read -rp 'RESEND_FROM_EMAIL: ' RESEND_FROM_EMAIL
-read -rp 'SUBSCRIPTION_OWNER_IDS: ' SUBSCRIPTION_OWNER_IDS
-printf 'MONGODB_URI=%s\nMONGODB_DATABASE=%s\nRESEND_API_KEY=%s\nRESEND_FROM_EMAIL=%s\nSUBSCRIPTION_OWNER_IDS=%s\n' \
-  "$MONGODB_URI" "$MONGODB_DATABASE" "$RESEND_API_KEY" "$RESEND_FROM_EMAIL" "$SUBSCRIPTION_OWNER_IDS" \
-  | flyctl secrets import --app YOUR_UNIQUE_STAGING_APP
-unset MONGODB_URI MONGODB_DATABASE RESEND_API_KEY RESEND_FROM_EMAIL SUBSCRIPTION_OWNER_IDS
-```
-
-Set the non-secret runtime configuration (`NODE_ENV`, `PORT`,
-`DATABASE_PROVIDER`, `APP_PUBLIC_URL`, `AUTH0_DOMAIN`, `AUTH0_AUDIENCE`, and
-`AI_PROVIDER`) using Fly app configuration, with `NODE_ENV=production`,
-`PORT=8080`, `DATABASE_PROVIDER=mongo`, and `AI_PROVIDER=disabled`. Add the
-staging origin to the Auth0 application's allowed callback, logout, and web
-origin lists as required by the actual tenant configuration.
-
-### 3. Build and deploy reviewed image
-
-**[DASHBOARD/PROVIDER ACCESS - NOT EXECUTED]** Supply the three public Auth0
-build identifiers through the Fly build configuration or an approved
-interactive configuration workflow; do not put their values in command
-arguments or this runbook. Confirm Fly builds from the reviewed SHA and the
-existing root Dockerfile. Deploy the app and record the resulting image digest
-and release identifier from Fly. Inspect the built browser bundle in the
-authorized environment to confirm the intended Auth0 domain/audience without
-copying identifiers or other values into this document. If the deployed SHA,
-region, port, or image cannot be confirmed, stop and mark deployment FAIL.
-
-### 4. Staging pass/fail acceptance
+## Staging pass/fail acceptance
 
 Record each result as **PASS**, **FAIL**, or **BLOCKED**, with timestamp,
-operator, and a redacted evidence reference. **[DASHBOARD/PROVIDER ACCESS - NOT
-EXECUTED]** Run these checks against the staging origin only:
+operator, and a redacted evidence reference. Run these checks against the staging origin only:
 
 | Check | PASS criteria | FAIL / BLOCKED |
 | --- | --- | --- |
@@ -201,7 +105,7 @@ EXECUTED]** Run these checks against the staging origin only:
 | Reminders | **PASS** after scheduling a reminder for a synthetic account, verifying expected staging delivery only to controlled test addresses, and confirming retries/duplicate job creation do not cause duplicate reminders. Test delivery destinations must be controlled test addresses only, never real users or uncontrolled recipients. Keep at least one Fly machine running with `auto_stop_machines = "off"`; record configuration and running machine status. A stopped machine misses scheduler ticks and autostart does not replay them. | **FAIL** for missing/incorrect delivery, cross-account delivery, delivery to an uncontrolled destination, duplicate jobs/notifications, or failure to maintain the required running machine. **BLOCKED** if safe staging scheduling or controlled test destinations are unavailable. |
 | Voice (if retained) | If voice remains a product path, **PASS** after exercising its staging flow with synthetic input and verifying expected output and account/privacy isolation. If removed, **PASS** only with a documented sunset disposition and verification that the retired path is unavailable as intended. | **FAIL** for a retained flow that fails or exposes another account's data, or an undocumented/incomplete sunset. **BLOCKED** if retained but safe staging credentials/configuration are unavailable and no sunset disposition is documented. |
 | Account export, deletion, and restore | **PASS** after exporting and reviewing synthetic-account data, deleting a synthetic account and verifying its data is removed as specified, then restoring a non-production backup and verifying account identity and ownership separation. | **FAIL** for incomplete export/deletion, cross-account data, identity/ownership changes, or failed restore. **BLOCKED** until a real non-production restore rehearsal and any required safe staging configuration are available; do not use real user data. |
-| PostgreSQL and restore | The initial MongoDB smoke is not migration readiness. Once a real isolated non-production PostgreSQL endpoint exists, set this same staging app to `DATABASE_PROVIDER=postgres`, then rerun every applicable acceptance check in this matrix and complete a real non-production backup restore rehearsal before marking the full target staging gate PASS. | Until that endpoint exists, PostgreSQL integration, full target staging acceptance, and restore remain **BLOCKED**. `pg-mem` does not establish equivalence and cannot pass this gate. |
+| PostgreSQL and restore | Live adapter and synthetic migration/restore have passed. Rerun every applicable application acceptance check against staging PostgreSQL and rehearse a production-like snapshot before cutover. | Synthetic database evidence alone is not full staging or production migration acceptance. |
 | Cost and limits | Record observed Fly app/volume resources, current usage and bill/estimate source; compare all-in recurring and usage costs with the `$50/month` target. Record configured spend alerts and AI/provider quotas and thresholds. | Missing measured source, absent spend limits/alerts, or forecast over target = FAIL for spend readiness; do not claim target met from list prices. |
 
 Keep production traffic on Coolify/MongoDB. Do not proceed to migration or
@@ -209,21 +113,21 @@ cutover based on this staging runbook alone. Every required product path above
 must be **PASS** before production cutover; **BLOCKED** is not a pass and must
 be resolved or the path explicitly retired with a documented sunset disposition.
 
-### Evidence record (fill in only after the operator runs staging)
+### Evidence record — 2026-09-26
 
 | Evidence item | Record |
 | --- | --- |
-| Reviewed SHA and deploy timestamp | Fly Launch attempt `2083359` used `ed5feeb` at 2026-09-25 22:42 UTC and failed during build; this is not a deployment. Record a separately reviewed post-merge SHA for the next attempt |
-| Fly app name, configured region, internal port | `kindred-asterling-ai-coaching`, configured `yyz`, `8080`; dashboard reports no saved app config or app machines |
+| Reviewed SHA and deploy timestamp | `29277d252f19daf489018fc0b14c1d74cab8d852`; release v1 completed 2026-09-26 06:01:41 UTC; runtime PostgreSQL override applied |
+| Fly app name, configured region, internal port | `kindred-asterling-ai-coaching`; machine `847635cee76978`, started in `yyz`, shared CPU x1, 1024 MB, port 8080 |
 | Managed Postgres cluster | `kindred-staging-db-20260924`, `w76geop28dnrplk4`, v2 ready, Basic, 20 GB provisioned, 2.95 GB used, one replica; app attachment recorded with a dedicated writer role. Live adapter and synthetic migration/restore now passed in dedicated rehearsal databases; see [execution evidence](POSTGRES_STAGING_EVIDENCE.md) |
-| Image digest and Fly release ID | None; image build failed before deployment |
-| `/api/healthz` and `/api/healthz/db` results; DB endpoint identity (no URI) | Not run |
-| Auth0 fresh sign-in, sign-out, authenticated API result (tenant name/reference only) | Not run |
-| Redacted app-log review and reference | Not run |
+| Image digest and Fly release ID | v1; `deployment-01M3E4SPJTZGHKRT1PXA15YA46`; digest `sha256:0aee52c4f1e8c7028647a25ac9b2e12c76e6ff2dcaf28a7c8bf264f476b1864e` |
+| `/api/healthz` and `/api/healthz/db` results; DB endpoint identity (no URI) | Both 200; runtime binding confirms PostgreSQL, staging writer, `fly-db`, and the intended cluster pooler; Fly service check passing |
+| Auth0 fresh sign-in, sign-out, authenticated API result (tenant name/reference only) | **BLOCKED:** browser sign-in returns callback URL mismatch for the Fly root URL. Dashboard/CLI authentication expired. Unauthenticated `/api/auth/user` returns 401 as required |
+| Redacted app-log review and reference | Server listening on 8080; reminder scheduler started. One initial boot health-check failure recovered to passing. No application error observed in the inspected startup log window |
 | Two synthetic account IDs/labels and separate-history result (no personal data) | Database rehearsal passed for `kindred-owner-a` / `kindred-owner-b`; app sign-in/history checks still not run |
 | PostgreSQL integration / restore gate | **PASS, synthetic database scope only** (2026-09-26): live adapter, 20-collection migration, encrypted backup/restore, row/index/constraint comparison, ownership and sequences. [Evidence](POSTGRES_STAGING_EVIDENCE.md). Production-like snapshot and full app acceptance remain open |
-| Reminder scheduler | Not run; record `auto_stop_machines = "off"`, running machine count/status, and cost |
-| Cost measurement date, source, current estimate/actual and `$50/month` comparison | Published estimate: MPG Basic $38 + v2 storage at $0.28/GB-month; latest Fly status reported 2.95 GB used (~$0.83/month). App compute not started (no machines). Billing/invoice not verified. About $44.75/month after one 1 GB app machine runs, before network, AI, backups, and other services. |
+| Reminder scheduler | Startup confirmed; one started machine, autostop off. Controlled reminder delivery still untested |
+| Cost measurement date, source, current estimate/actual and `$50/month` comparison | Published estimate: MPG Basic $38 + v2 storage at $0.28/GB-month; latest Fly status reported 2.95 GB used (~$0.83/month). One 1 GB app machine now running; actual compute billing not inspected. Billing/invoice not verified. About $44.75/month after one 1 GB app machine runs, before network, AI, backups, and other services. |
 | Spend alert and provider/model quota thresholds | Not run |
 
 ## Application deployment shape
@@ -248,23 +152,10 @@ runtime credentials in Fly's secret store; do not put values in `fly.toml`,
 GitHub Actions, or chat. Build only a reviewed commit and inspect the resulting
 browser bundle for the expected Auth0 domain/audience before staging checks.
 
-The API now has an **opt-in PostgreSQL runtime adapter in the merged codebase**.
-MongoDB remains the default (`DATABASE_PROVIDER=mongo`), and no Fly
-staging app or real PostgreSQL integration has been verified. Do not select
-`DATABASE_PROVIDER=postgres` or provision production credentials until the
-adapter passes real PostgreSQL integration/restore checks and staging acceptance.
-When that gate is reached, set `DATABASE_PROVIDER=postgres` and store
-`POSTGRES_URL` as a server-only Fly secret. Keep MongoDB as the active runtime
-and rollback source until cutover is verified.
-
-The MongoDB-backed first smoke is not the target staging acceptance or migration
-readiness gate. When an isolated real PostgreSQL endpoint is available, update
-the same Fly staging app to `DATABASE_PROVIDER=postgres` and `POSTGRES_URL`, then
-rerun the full acceptance matrix and real restore rehearsal before considering
-the target gate complete. Keep at least one machine running with
-`auto_stop_machines = "off"` while the in-process once-per-minute reminder
-scheduler is in scope; include that always-on compute in observed cost. Fly
-autostart does not recover scheduler ticks missed while stopped.
+The PostgreSQL adapter passed live adapter checks and synthetic migration/restore
+in the staging cluster. The initial Fly deployment selects PostgreSQL directly;
+full application acceptance and production-like migration remain separate gates.
+Keep MongoDB as the production runtime and rollback source until cutover passes.
 
 ## Cost and data controls
 
@@ -295,20 +186,13 @@ make the upstream model provider Canadian-hosted.
 
 ## Migration and cutover gates
 
-1. The staging app and Managed Postgres cluster have been created in Toronto
-   (`yyz`). Billing controls and actual invoice have not been inspected. Keep
-   credentials in Fly's secret store; none have been configured.
-2. Deploy the existing app image to staging from the reviewed commit. Verify
-   build arguments, health check, Auth0 sign-in, database connectivity, logs,
-   and resource use. Keep production traffic on Coolify.
-3. The first MongoDB-backed production-mode smoke uses only a disposable
-   non-production MongoDB database and does not establish migration readiness.
-   Once a real isolated non-production PostgreSQL endpoint exists, configure
-   this same staging app to use PostgreSQL and rerun the full acceptance matrix,
-   including the real restore rehearsal. Validate the branch's opt-in runtime
-   adapter against real PostgreSQL, including every application query and write path, quotas, leases,
-   subscriptions, webhooks, ownership-scoped reads, exports, account deletion,
-   and reminders. The `pg-mem` tests are not a substitute for this gate.
+1. Keep the existing Fly app and Managed Postgres staging cluster in `yyz`.
+   Runtime credentials belong in Fly secrets. Verify billing controls separately.
+2. Deploy the reviewed image and verify health, Auth0 sign-in, resource use, and
+   logs. Keep production traffic on the existing server.
+3. Run the full acceptance matrix against PostgreSQL, including every retained
+   application path. Adapter tests and synthetic restore are necessary but do
+   not alone establish full application or production migration readiness.
 4. Rehearse a consistent MongoDB backup, data/ownership reconciliation,
    PostgreSQL migration, encrypted backup, and restore with non-production
    data. Preserve stable Kindred user IDs and separate histories; never merge

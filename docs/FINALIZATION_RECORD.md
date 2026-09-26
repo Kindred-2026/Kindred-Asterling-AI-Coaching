@@ -5,6 +5,19 @@
 feature work. This record distinguishes repository changes from provider and
 production gates; a checked-in plan is not proof of a live cutover.
 
+## Latest provider milestone — 2026-09-26
+
+Fly staging release v1 is deployed from reviewed source `29277d252f19daf489018fc0b14c1d74cab8d852`
+with PostgreSQL selected, one 1 GB machine in Toronto, and both health endpoints
+passing. The empty staging runtime schema is installed; no production records
+were migrated. The homepage renders. Auth0 callback registration blocks fresh
+sign-in, so full staging acceptance remains open. AI is disabled and payments
+are not enabled. [Exact release and checks](POSTGRES_STAGING_EVIDENCE.md#first-application-deployment--2026-09-26).
+
+The owner cancelled Coolify Cloud before cutover. Direct server inspection
+confirmed the existing app and database health still return 200. Keep that
+server and MongoDB active through migration, cutover, and rollback gates.
+
 ## Direction
 
 - **Application hosting:** Fly.io is the selected provider. The repository-linked
