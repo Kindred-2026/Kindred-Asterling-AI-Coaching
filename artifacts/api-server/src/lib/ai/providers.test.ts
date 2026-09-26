@@ -34,6 +34,7 @@ describe("normalized AI provider contract", () => {
     ).resolves.toEqual({ content: "Hi", toolCalls: [], finishReason: "stop" });
     const init = fetchMock.mock.calls[0][1] as RequestInit;
     expect(JSON.parse(init.body as string).store).toBe(false);
+    expect(init.redirect).toBe("error");
     expect((init.headers as Record<string, string>).authorization).toBe(
       "Bearer secret",
     );

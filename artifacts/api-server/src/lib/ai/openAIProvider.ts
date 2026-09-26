@@ -26,6 +26,7 @@ export class OpenAIProvider implements AIProvider {
       `${this.baseUrl.replace(/\/$/, "")}/chat/completions`,
       {
         method: "POST",
+        redirect: "error",
         headers,
         body: JSON.stringify({
           model: this.model,
