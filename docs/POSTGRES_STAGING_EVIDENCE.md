@@ -1,7 +1,8 @@
 # PostgreSQL staging evidence — 2026-09-26 UTC
 
-This is a synthetic rehearsal on the existing Fly staging cluster, not a
-production migration, app deployment, or proof of production data completeness.
+This record covers synthetic rehearsals and the first app deployment on the
+existing Fly staging cluster. It does not prove production migration or data
+completeness. The final section records the later application deployment.
 Base: `410cd7f92f493646eff6840d62138447bc7fa78e`, plus the reviewed changes
 in the PR introducing this record. Node 24.19.0; PostgreSQL and client 16.15.
 
@@ -11,10 +12,10 @@ The owner confirmed rotating the exposed staging password. A fresh credential
 lookup followed by a real connection succeeded. Values stayed out of tool
 output, repository files and agent prompts. This records owner confirmation
 and working current credentials, not an independent old-password revocation test.
-The Fly app now has `POSTGRES_URL` staged; the unused `DATABASE_URL` was removed.
-No machine, image or app release was created. `DATABASE_PROVIDER` remains
-`mongo` until the reviewed PostgreSQL deployment configuration is ready.
-The staged connection now uses the dedicated `kindred-staging-app` writer
+At the database-rehearsal milestone, `POSTGRES_URL` was staged and the unused
+`DATABASE_URL` removed. The later release v1 deployed that secret and selected
+`DATABASE_PROVIDER=postgres`; see the application deployment section below.
+The connection uses the dedicated `kindred-staging-app` writer
 role, and the app/cluster attachment is recorded. The schema-admin credential
 is no longer the app secret. Writer login, CRUD, sequence use, and transaction
 rollback passed against the synthetic restore database. `CREATE TABLE`,
@@ -22,7 +23,8 @@ rollback passed against the synthetic restore database. `CREATE TABLE`,
 no superuser, role-creation, database-creation, or RLS-bypass privileges.
 Fly's writer role covers data in the staging cluster; this is not per-database
 isolation. Keep unrelated applications/production data out of this cluster.
-The runtime `fly-db` schema is not yet rolled out and app startup is unverified.
+The later application deployment initialized runtime `fly-db` and passed
+startup/health checks; full product acceptance remains open.
 
 ## Failures found and fixed
 
