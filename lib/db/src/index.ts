@@ -29,6 +29,7 @@ import {
   gte as postgresGte,
   inArray as postgresInArray,
   initializePostgresDatabase,
+  validatePostgresSchema,
   isNull as postgresIsNull,
   lt as postgresLt,
   lte as postgresLte,
@@ -76,6 +77,8 @@ export async function initializeDatabase(): Promise<void> {
   if (usePostgres) return initializePostgresDatabase();
   return initializeMongoDatabase();
 }
+
+export { validatePostgresSchema };
 
 export async function closeDatabase(): Promise<void> {
   if (usePostgres) return closePostgresDatabase();

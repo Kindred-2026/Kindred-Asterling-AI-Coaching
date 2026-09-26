@@ -134,13 +134,12 @@ function getPool(options?: PostgresOptions): Pool {
   pool = new Pool({ connectionString: url, max: options?.maxPoolSize ?? 10, min: 0, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 5_000, maxUses: 0 });
   return pool;
 }
-export async function initializePostgresDatabase(options?: PostgresOptions): Promise<void> {
-  const current = getPool(options);
-  await current.query("SELECT 1");
+export async function validatePostgresSchema(client: Queryable): Promise<void> {
+  await client.query("SELECT 1");
   const [tables, columns, constraints] = await Promise.all([
-    current.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"),
-    current.query("SELECT table_name, column_name, data_type, udt_name FROM information_schema.columns WHERE table_schema = 'public'"),
-    current.query(`SELECT child.relname AS table_name, c.contype AS type,
+    client.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"),
+    client.query("SELECT table_name, column_name, data_type, udt_name FROM information_schema.columns WHERE table_schema = 'public'"),
+    client.query(`SELECT child.relname AS table_name, c.contype AS type,
       ARRAY(SELECT a.attname::text FROM unnest(c.conkey) WITH ORDINALITY AS key_column(attnum, ordinal_position)
         JOIN pg_attribute AS a ON a.attrelid = c.conrelid AND a.attnum = key_column.attnum
         ORDER BY key_column.ordinal_position) AS columns,
@@ -158,14 +157,11 @@ export async function initializePostgresDatabase(options?: PostgresOptions): Pro
       WHERE child_schema.nspname = 'public' AND (parent.oid IS NULL OR parent_schema.nspname = 'public')
         AND c.contype IN ('p', 'u', 'f')`),
   ]);
-  const missing = validatePostgresSchemaCatalog({
-    tables: tables.rows.map((row) => row.table_name),
-    columns: columns.rows,
-    constraints: constraints.rows,
-  });
-  if (missing.length) {
-    throw new Error(`PostgreSQL schema is incomplete; missing schema objects: ${missing.join(", ")}`);
-  }
+  const missing = validatePostgresSchemaCatalog({ tables: tables.rows.map((row) => row.table_name), columns: columns.rows, constraints: constraints.rows });
+  if (missing.length) throw new Error(`PostgreSQL schema is incomplete; missing schema objects: ${missing.join(", ")}`);
+}
+export async function initializePostgresDatabase(options?: PostgresOptions): Promise<void> {
+  await validatePostgresSchema(getPool(options));
 }
 export async function getPostgresPool(options?: PostgresOptions): Promise<Pool> { return getPool(options); }
 export async function pingPostgresDatabase(): Promise<void> { await getPool().query("SELECT 1"); }

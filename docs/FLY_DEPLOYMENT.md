@@ -35,11 +35,14 @@ or MongoDB smoke database. Production still runs on the existing server/MongoDB.
    secret store. Never copy the production MongoDB URI into staging.
 3. For a new empty staging database only, apply
    `lib/db/migrations-postgres/0001_rehearsal_core.sql` in a transaction after
-   `assertEmptyTarget` passes. Run `initializePostgresDatabase` before committing
-   and verify the app writer can access every runtime table. Use schema-admin
-   credentials only for this operator step. Do not rerun the schema on the
-   initialized database. This staging schema remains subject to full application
-   acceptance and is not authorization for a production migration.
+   `assertEmptyTarget` passes. While that transaction is still open, call the
+   exported `validatePostgresSchema(tx)` helper with the same transaction-bound
+   client (not `initializePostgresDatabase`, which uses the pool). Verify the app
+   writer can access every runtime table, then commit; roll back on any failure.
+   Use schema-admin credentials only for this operator step. Do not rerun the
+   schema on the initialized database. This staging schema remains subject to
+   full application acceptance and is not authorization for a production
+   migration.
 4. Required runtime names are `POSTGRES_URL`, `AUTH0_DOMAIN`, `AUTH0_AUDIENCE`,
    `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `SUBSCRIPTION_OWNER_IDS`.
    `NODE_ENV=production`, `PORT=8080`, and `APP_PUBLIC_URL` come from `fly.toml`.
