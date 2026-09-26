@@ -96,9 +96,7 @@ export function signalGroup(child, signal) {
   } catch (err) {
     if (err?.code !== "ESRCH") {
       // eslint-disable-next-line no-console
-      console.error(
-        `[dev] failed to signal ${child?.job?.name ?? "child"}: ${err.message}`,
-      );
+      console.error(`[dev] failed to signal ${child?.job?.name ?? "child"}: ${err.message}`);
     }
   }
 }
@@ -136,9 +134,7 @@ export function spawnOwned(job, coordinator, logger) {
       resolve({ code: 1, reason: `spawn error: ${job.name}`, error: err });
     });
     child.once("exit", (code, signal) => {
-      debugLog(
-        `exit name=${job.name} pid=${child.pid} code=${code} signal=${signal}`,
-      );
+      debugLog(`exit name=${job.name} pid=${child.pid} code=${code} signal=${signal}`);
       resolve({
         code: typeof code === "number" ? code : 1,
         signal: signal ?? null,

@@ -20,9 +20,7 @@ export function parseEnvFile(text) {
   for (const rawLine of String(text).split(/\r?\n/)) {
     const line = rawLine.trim();
     if (!line || line.startsWith("#")) continue;
-    const stripped = line.startsWith("export ")
-      ? line.slice("export ".length).trimStart()
-      : line;
+    const stripped = line.startsWith("export ") ? line.slice("export ".length).trimStart() : line;
     const eq = stripped.indexOf("=");
     if (eq <= 0) continue;
     const key = stripped.slice(0, eq).trim();
@@ -57,9 +55,7 @@ export function parsePort(value, name) {
   }
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) {
-    throw new Error(
-      `${name} must be an integer between 1 and 65535 (received "${value}").`,
-    );
+    throw new Error(`${name} must be an integer between 1 and 65535 (received "${value}").`);
   }
   return parsed;
 }
@@ -83,18 +79,10 @@ function isBlank(value) {
 export function parseDevConfig({ processEnv, fileEnv }) {
   const env = mergeDevEnv({ processEnv, fileEnv });
 
-  const webPort = parsePort(
-    env.KINDRED_WEB_PORT ?? String(DEFAULT_WEB_PORT),
-    "KINDRED_WEB_PORT",
-  );
-  const apiPort = parsePort(
-    env.KINDRED_API_PORT ?? String(DEFAULT_API_PORT),
-    "KINDRED_API_PORT",
-  );
+  const webPort = parsePort(env.KINDRED_WEB_PORT ?? String(DEFAULT_WEB_PORT), "KINDRED_WEB_PORT");
+  const apiPort = parsePort(env.KINDRED_API_PORT ?? String(DEFAULT_API_PORT), "KINDRED_API_PORT");
   if (webPort === apiPort) {
-    throw new Error(
-      "KINDRED_WEB_PORT and KINDRED_API_PORT must use different ports.",
-    );
+    throw new Error("KINDRED_WEB_PORT and KINDRED_API_PORT must use different ports.");
   }
 
   let basePath = (env.BASE_PATH ?? "").trim();

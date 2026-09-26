@@ -15,12 +15,7 @@ import {
 // Signal handlers are installed by the coordinator, so interruption covers the
 // full startup lifecycle: database provisioning, builds, spawns and runtime.
 export function createShutdownCoordinator(options = {}) {
-  const {
-    logger = console,
-    graceMs = 8000,
-    forceGraceMs = 4000,
-    gracefulPollMs = 100,
-  } = options;
+  const { logger = console, graceMs = 8000, forceGraceMs = 4000, gracefulPollMs = 100 } = options;
 
   const groups = new Map();
   const services = new Map();
@@ -45,8 +40,7 @@ export function createShutdownCoordinator(options = {}) {
   const groupFullyStopped = (group) => {
     if (group.spawnError) return true;
     const { child } = group;
-    const directAlive =
-      child.exitCode === null && child.signalCode === null && !child.killed;
+    const directAlive = child.exitCode === null && child.signalCode === null && !child.killed;
     if (directAlive) return false;
     if (group.postExitGoneObserved) return true;
     if (!groupExists(child.pid)) {
@@ -56,8 +50,7 @@ export function createShutdownCoordinator(options = {}) {
     return false;
   };
 
-  const aliveGroups = () =>
-    [...groups.values()].filter((group) => !groupFullyStopped(group));
+  const aliveGroups = () => [...groups.values()].filter((group) => !groupFullyStopped(group));
 
   const stopEverything = () => {
     if (stopping) return stopping.promise;
@@ -81,9 +74,7 @@ export function createShutdownCoordinator(options = {}) {
                 forced.catch(() => {});
               }
             } catch (err) {
-              logger.error(
-                `[dev] force stop for service ${name} failed: ${err?.message ?? err}`,
-              );
+              logger.error(`[dev] force stop for service ${name} failed: ${err?.message ?? err}`);
             }
           }
         });
@@ -105,9 +96,7 @@ export function createShutdownCoordinator(options = {}) {
       } catch (err) {
         // Service itself threw outside the wrapped promise (e.g. force stop).
         cleanupIncompleteFlag = true;
-        logger.error(
-          `[dev] failed to stop service ${name}: ${err?.message ?? err}`,
-        );
+        logger.error(`[dev] failed to stop service ${name}: ${err?.message ?? err}`);
       }
     });
     const allServiceStops = Promise.all(serviceStops);
@@ -134,9 +123,7 @@ export function createShutdownCoordinator(options = {}) {
       }
       if (Date.now() >= deadline) {
         const names = alive.map((group) => group.job.name).join(", ");
-        logger.error(
-          `[dev] graceful shutdown timed out; force-stopping: ${names}`,
-        );
+        logger.error(`[dev] graceful shutdown timed out; force-stopping: ${names}`);
         const forceTick = () => {
           const stillAlive = aliveGroups();
           const forceDeadlineHit = Date.now() >= deadline + forceGraceMs;
@@ -147,9 +134,7 @@ export function createShutdownCoordinator(options = {}) {
           for (const group of stillAlive) {
             if (!group.spawnError) signalGroup(group.child, "SIGKILL");
           }
-          debugLog(
-            `force-stopping names=${stillAlive.map((g) => g.job.name).join(",")}`,
-          );
+          debugLog(`force-stopping names=${stillAlive.map((g) => g.job.name).join(",")}`);
           setTimeout(forceTick, gracefulPollMs);
         };
         forceTick();

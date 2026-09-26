@@ -4,11 +4,7 @@
 import { spawn } from "node:child_process";
 
 import { waitForReadiness } from "./dev-supervisor-probes.mjs";
-import {
-  debugLog,
-  signalGroup,
-  spawnOwned,
-} from "./dev-supervisor-process.mjs";
+import { debugLog, signalGroup, spawnOwned } from "./dev-supervisor-process.mjs";
 import { createShutdownCoordinator } from "./dev-supervisor-shutdown.mjs";
 
 // Run a set of jobs ({ build } jobs run to completion first) and resolve with
@@ -35,9 +31,7 @@ export async function runDevelopment(jobs, options = {}) {
       await coordinator.stopEverything();
       coordinator.dispose();
     }
-    debugLog(
-      `runDevelopment resolved code=${result.code} reason=${result.reason ?? "none"}`,
-    );
+    debugLog(`runDevelopment resolved code=${result.code} reason=${result.reason ?? "none"}`);
     return result;
   };
 
@@ -112,8 +106,7 @@ export async function runDevelopment(jobs, options = {}) {
       }
     };
 
-    const running = () =>
-      settled || interruptible();
+    const running = () => settled || interruptible();
 
     // 2. Spawn runtime children as owned process groups.
     for (const job of runtimeJobs) {
@@ -142,9 +135,7 @@ export async function runDevelopment(jobs, options = {}) {
         void settle({ code: 1, reason: `spawn error: ${job.name}` });
       });
       child.once("exit", (code, signal) => {
-        debugLog(
-          `exit name=${job.name} pid=${child.pid} code=${code} signal=${signal}`,
-        );
+        debugLog(`exit name=${job.name} pid=${child.pid} code=${code} signal=${signal}`);
         if (settled || interruptible()) return;
         const exitCode = typeof code === "number" ? code : 1;
         void settle({

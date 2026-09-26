@@ -28,8 +28,7 @@ export function createDatabaseWorker({
   extraEnv = {},
   spawnFn = spawn,
 } = {}) {
-  const resolvedWorkerPath =
-    workerPath ?? path.join(repoRoot, "scripts", "dev-db-worker.mjs");
+  const resolvedWorkerPath = workerPath ?? path.join(repoRoot, "scripts", "dev-db-worker.mjs");
   const env = { ...minimalProcessEnv(), ...extraEnv };
   const child = spawnFn(process.execPath, [resolvedWorkerPath], {
     cwd: repoRoot,
@@ -44,9 +43,7 @@ export function createDatabaseWorker({
     postExitGoneObserved: false,
   };
   coordinator.groups.set("database", group);
-  debugLog(
-    `db-worker spawn pid=${child.pid} worker=${resolvedWorkerPath} detached=true`,
-  );
+  debugLog(`db-worker spawn pid=${child.pid} worker=${resolvedWorkerPath} detached=true`);
 
   let settled = false;
   let resolveReady;
@@ -86,9 +83,7 @@ export function createDatabaseWorker({
     debugLog(`db-worker spawn error pid=${child.pid} message=${err.message}`);
     if (!settled) {
       settled = true;
-      rejectReady(
-        new Error(`could not start database worker: ${err.message}`),
-      );
+      rejectReady(new Error(`could not start database worker: ${err.message}`));
     }
   });
   child.once("exit", (code, signal) => {
