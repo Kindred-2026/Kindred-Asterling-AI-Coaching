@@ -87,6 +87,146 @@ describe("normalized AI provider contract", () => {
     expect(headers["cf-aig-skip-cache"]).toBeUndefined();
   });
 
+  describe("Cloudflare AI Gateway ID header", () => {
+    const cloudflareEndpoints = [
+      "https://gateway.ai.cloudflare.com/v1/account/gateway/openai",
+      "https://api.cloudflare.com/client/v4/accounts/abc123/ai/v1",
+      "https://api.cloudflare.com/client/v4/accounts/abc123/ai/v1/",
+    ];
+
+    it.each(cloudflareEndpoints)(
+      "includes cf-aig-gateway-id for recognized endpoint %s when provided",
+      async (baseUrl) => {
+        const fetchMock = vi.fn().mockResolvedValue(
+          new Response(
+            JSON.stringify({ choices: [{ message: { content: "Hi" } }] }),
+            { status: 200 },
+          ),
+        );
+        vi.stubGlobal("fetch", fetchMock);
+        await new OpenAIProvider("secret", "model", baseUrl, "my-gateway-id").chat(request);
+        const init = fetchMock.mock.calls[0][1] as RequestInit;
+        const headers = init.headers as Record<string, string>;
+        expect(headers["cf-aig-gateway-id"]).toBe("my-gateway-id");
+        expect(headers["cf-aig-collect-log-payload"]).toBe("false");
+        expect(headers["cf-aig-skip-cache"]).toBe("true");
+      },
+    );
+
+    it.each(cloudflareEndpoints)(
+      "trims whitespace from cf-aig-gateway-id for %s",
+      async (baseUrl) => {
+        const fetchMock = vi.fn().mockResolvedValue(
+          new Response(
+            JSON.stringify({ choices: [{ message: { content: "Hi" } }] }),
+            { status: 200 },
+          ),
+        );
+        vi.stubGlobal("fetch", fetchMock);
+        await new OpenAIProvider("secret", "model", baseUrl, "  my-gateway-id  ").chat(request);
+        const init = fetchMock.mock.calls[0][1] as RequestInit;
+        const headers = init.headers as Record<string, string>;
+        expect(headers["cf-aig-gateway-id"]).toBe("my-gateway-id");
+      },
+    );
+
+    it.each(cloudflareEndpoints)(
+      "omits cf-aig-gateway-id for %s when ID is empty string",
+      async (baseUrl) => {
+        const fetchMock = vi.fn().mockResolvedValue(
+          new Response(
+            JSON.stringify({ choices: [{ message: { content: "Hi" } }] }),
+            { status: 200 },
+          ),
+        );
+        vi.stubGlobal("fetch", fetchMock);
+        await new OpenAIProvider("secret", "model", baseUrl, "").chat(request);
+        const init = fetchMock.mock.calls[0][1] as RequestInit;
+        const headers = init.headers as Record<string, string>;
+        expect(headers["cf-aig-gateway-id"]).toBeUndefined();
+      },
+    );
+
+    it.each(cloudflareEndpoints)(
+      "omits cf-aig-gateway-id for %s when ID is whitespace only",
+      async (baseUrl) => {
+        const fetchMock = vi.fn().mockResolvedValue(
+          new Response(
+            JSON.stringify({ choices: [{ message: { content: "Hi" } }] }),
+            { status: 200 },
+          ),
+        );
+        vi.stubGlobal("fetch", fetchMock);
+        await new OpenAIProvider("secret", "model", baseUrl, "   ").chat(request);
+        const init = fetchMock.mock.calls[0][1] as RequestInit;
+        const headers = init.headers as Record<string, string>;
+        expect(headers["cf-aig-gateway-id"]).toBeUndefined();
+      },
+    );
+
+    it.each(cloudflareEndpoints)(
+      "omits cf-aig-gateway-id for %s when ID is undefined",
+      async (baseUrl) => {
+        const fetchMock = vi.fn().mockResolvedValue(
+          new Response(
+            JSON.stringify({ choices: [{ message: { content: "Hi" } }] }),
+            { status: 200 },
+          ),
+        );
+        vi.stubGlobal("fetch", fetchMock);
+        await new OpenAIProvider("secret", "model", baseUrl, undefined).chat(request);
+        const init = fetchMock.mock.calls[0][1] as RequestInit;
+        const headers = init.headers as Record<string, string>;
+        expect(headers["cf-aig-gateway-id"]).toBeUndefined();
+      },
+    );
+
+    it.each(cloudflareEndpoints)(
+      "omits cf-aig-gateway-id for %s when ID is omitted (3-arg constructor)",
+      async (baseUrl) => {
+        const fetchMock = vi.fn().mockResolvedValue(
+          new Response(
+            JSON.stringify({ choices: [{ message: { content: "Hi" } }] }),
+            { status: 200 },
+          ),
+        );
+        vi.stubGlobal("fetch", fetchMock);
+        await new OpenAIProvider("secret", "model", baseUrl).chat(request);
+        const init = fetchMock.mock.calls[0][1] as RequestInit;
+        const headers = init.headers as Record<string, string>;
+        expect(headers["cf-aig-gateway-id"]).toBeUndefined();
+      },
+    );
+
+    const unrelatedEndpoints = [
+      "https://api.openai.com/v1",
+      "https://api.cloudflare.com/client/v4/accounts/abc123/ai/v2",
+      "https://api.cloudflare.com/client/v4/accounts//ai/v1",
+      "https://api.cloudflare.com/client/v4/accounts/abc123/ai/v1/extra",
+      "https://gateway.ai.cloudflare.com.example.com/v1/account/gateway/openai",
+      "https://api.cloudflare.com.example.com/client/v4/accounts/abc123/ai/v1",
+    ];
+
+    it.each(unrelatedEndpoints)(
+      "never sends cf-aig-gateway-id for unrelated endpoint %s even when provided",
+      async (baseUrl) => {
+        const fetchMock = vi.fn().mockResolvedValue(
+          new Response(
+            JSON.stringify({ choices: [{ message: { content: "Hi" } }] }),
+            { status: 200 },
+          ),
+        );
+        vi.stubGlobal("fetch", fetchMock);
+        await new OpenAIProvider("secret", "model", baseUrl, "my-gateway-id").chat(request);
+        const init = fetchMock.mock.calls[0][1] as RequestInit;
+        const headers = init.headers as Record<string, string>;
+        expect(headers["cf-aig-gateway-id"]).toBeUndefined();
+        expect(headers["cf-aig-collect-log-payload"]).toBeUndefined();
+        expect(headers["cf-aig-skip-cache"]).toBeUndefined();
+      },
+    );
+  });
+
   it("normalizes Ollama tool calls", async () => {
     vi.stubGlobal(
       "fetch",

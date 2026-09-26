@@ -17,6 +17,7 @@ export function getAIProvider(): AIProvider | null {
       process.env.OPENAI_API_KEY || "",
       process.env.OPENAI_MODEL || "",
       process.env.OPENAI_BASE_URL,
+      process.env.CLOUDFLARE_AI_GATEWAY_ID,
     );
   if (selection === "ollama")
     return new OllamaProvider(
