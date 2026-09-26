@@ -3,13 +3,21 @@
 > The branch table below records historical unique work preserved at the
 > earlier cleanup. For the current branch state, see `FINALIZATION_RECORD.md`.
 
-**Follow-up audit (2026-09-25):** PRs #184 and #185 merged into `main` at
-`8352f14`. Their topic branches were removed after verifying their commits are
-contained in `main`. PR #186 was closed without merge; its only `APP_PUBLIC_URL`
-change was already present in `main`, so its duplicate branch was removed.
-After pruning tracking refs, `git ls-remote --heads origin` listed only
-`main`. The local `auth0-deploy-integration` worktree was repaired, verified
-clean, and removed after confirming PR #142 and its commit were in `main`.
+**Follow-up audit (2026-09-26):** PRs #184, #185, #187, #189, #190, and #191
+are merged; their work is in canonical `main` at `f1cca54`. PRs #186 and #188
+closed without merge. The earlier record said PR #186's `APP_PUBLIC_URL`
+correction was already in `main`, but this audit found the old staging hostname
+still in `fly.toml`. PR #190 corrected it to the registered app's expected
+hostname; Fly reports no assigned hostname while the app is undeployed, so the
+URL remains unverified live. The closed PR #188 branch's only code change was
+that same URL correction; commit `90a6344` was verified as incorporated, while
+its older finalization wording was superseded by PR #190. Its remote branch was
+deleted after checking the closed PR and current `main`. PR #187's follow-up
+documentation commit was patch-equivalent to the update in PR #189, so its
+temporary branch was removed after verification. After pruning tracking refs,
+`git ls-remote --heads origin` listed only `main`. The local
+`auth0-deploy-integration` worktree was repaired, verified clean, and removed
+after confirming PR #142 and its commit were in `main`.
 
 **Audit date:** 2026-09-24. **Canonical repository:**
 `Kindred-2026/Kindred-Asterling-AI-Coaching`.
