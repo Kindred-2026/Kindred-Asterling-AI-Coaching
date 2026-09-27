@@ -4,8 +4,8 @@ Claude Code plugin that bundles the MCP servers used for Kindred-Asterling infra
 
 | Server       | Command                          | Auth                                                   |
 | ------------ | -------------------------------- | ------------------------------------------------------ |
-| `kubernetes` | `npx -y mcp-server-kubernetes`   | Your default kubeconfig (`~/.kube/config` or `$KUBECONFIG`) |
-| `postgres`   | `uvx postgres-mcp`               | `database_uri` plugin option (stored in secure storage) |
+| `kubernetes` | `npx -y mcp-server-kubernetes@1.0.0` | Your default kubeconfig (`~/.kube/config` or `$KUBECONFIG`) |
+| `postgres`   | `uvx --with mcp==1.26.0 postgres-mcp==0.3.0` | `database_uri` plugin option (stored in secure storage) |
 | `fly`        | `fly mcp server` (via `scripts/fly-mcp.mjs`) | Your existing `fly auth login` session                 |
 | `hello-coop` | HTTP: `https://admin-mcp.hello.coop/` | Hellō account OAuth via `/mcp` (1-hour tokens)    |
 
@@ -14,6 +14,10 @@ Claude Code plugin that bundles the MCP servers used for Kindred-Asterling infra
 - Node.js (for `npx`)
 - [uv](https://docs.astral.sh/uv/) (for `uvx`)
 - [flyctl](https://fly.io/docs/flyctl/install/), logged in with `fly auth login`
+
+## Pinned infrastructure dependencies
+
+The Kubernetes server is pinned to `mcp-server-kubernetes@1.0.0`, and the PostgreSQL server is pinned to `postgres-mcp==0.3.0` with the reviewed Python MCP SDK `mcp==1.26.0`. These pins are intentional: do not remove or widen them. Review dependency updates as a pull request, including release notes and a validation of the server's Kubernetes/database access, before changing `.mcp.json`.
 
 ## Fly wrapper
 
