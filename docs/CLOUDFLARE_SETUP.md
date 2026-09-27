@@ -7,7 +7,7 @@ Kindred runs on Fly.io. Cloudflare sits in front of it for three things:
 3. **AI Gateway** in front of the Anthropic API (logging, rate and spend limits).
    Anthropic still bills the AI usage. Cloudflare doesn't need any credits for this.
 
-The examples use `kindred.example.com`. Replace it with your real domain everywhere.
+Kindred's domain is `kindred-asterling-ai-coaching.com`, with `www.` as an alias.
 
 ## 1. Custom domain
 
@@ -17,8 +17,8 @@ The examples use `kindred.example.com`. Replace it with your real domain everywh
 2. Ask Fly for a certificate for each hostname you will use:
 
    ```sh
-   fly certs add kindred.example.com --app kindred-asterling-ai-coaching
-   fly certs add www.kindred.example.com --app kindred-asterling-ai-coaching
+   fly certs add kindred-asterling-ai-coaching.com --app kindred-asterling-ai-coaching
+   fly certs add www.kindred-asterling-ai-coaching.com --app kindred-asterling-ai-coaching
    ```
 
    Fly prints the DNS records it needs: an `A` and an `AAAA` address, plus an
@@ -27,21 +27,21 @@ The examples use `kindred.example.com`. Replace it with your real domain everywh
 3. In Cloudflare **DNS → Records**, add:
    - `A` `@` → the Fly IPv4 address, **Proxied** (orange cloud)
    - `AAAA` `@` → the Fly IPv6 address, **Proxied**
-   - `CNAME` `www` → `kindred.example.com`, **Proxied**
+   - `CNAME` `www` → `kindred-asterling-ai-coaching.com`, **Proxied**
    - `CNAME` `_acme-challenge` (and `_acme-challenge.www`) → the target Fly
      printed, **DNS only** (grey cloud). This lets Fly issue the certificate
      even though traffic is proxied.
-4. Wait for `fly certs show kindred.example.com --app kindred-asterling-ai-coaching`
+4. Wait for `fly certs show kindred-asterling-ai-coaching.com --app kindred-asterling-ai-coaching`
    to report the certificate as issued.
 5. In Cloudflare **SSL/TLS → Overview**, set the mode to **Full (strict)**.
    Never use **Flexible**: it causes redirect loops because the app forces HTTPS.
-6. Point the app at the new domain. In `fly.toml`, change
-   `APP_PUBLIC_URL = 'https://kindred.example.com'` and add
-   `TRUST_PROXY_HOPS = '2'` (see below), then deploy. The app only accepts
-   browser API calls from `APP_PUBLIC_URL` and its `www.` variant, so use the
-   custom domain after this. The `fly.dev` address stops working for signed-in use.
+6. Point the app at the new domain. `fly.toml` already sets
+   `APP_PUBLIC_URL = 'https://kindred-asterling-ai-coaching.com'` and
+   `TRUST_PROXY_HOPS = '2'` (see below), so deploy only after steps 1 to 5
+   are done. The app only accepts browser API calls from `APP_PUBLIC_URL` and
+   its `www.` variant, so use the custom domain after this. The `fly.dev` address stops working for signed-in use.
 7. In **Auth0 → Applications → Kindred (SPA) → Settings**, add
-   `https://kindred.example.com/` (and the `www.` form if you use it) to
+   `https://kindred-asterling-ai-coaching.com/` (and the `www.` form if you use it) to
    **Allowed Callback URLs** and **Allowed Logout URLs**, and add the same
    addresses without the trailing slash to **Allowed Web Origins**.
 

@@ -28,7 +28,12 @@ primary_region = 'yyz'
   # the CLOUDFLARE_AI_GATEWAY_TOKEN Fly secret when the gateway is authenticated.
   # ANTHROPIC_BASE_URL = 'https://gateway.ai.cloudflare.com/v1/ACCOUNT_ID/kindred/anthropic'
   AI_REQUEST_TIMEOUT_MS = '60000'
-  APP_PUBLIC_URL = 'https://kindred-asterling-ai-coaching.fly.dev'
+  # Custom domain behind Cloudflare (see docs/CLOUDFLARE_SETUP.md). Deploy this
+  # only after the domain is live in Cloudflare and `fly certs show` reports
+  # the certificate as issued: the fly.dev address stops working for sign-in.
+  APP_PUBLIC_URL = 'https://kindred-asterling-ai-coaching.com'
+  # Cloudflare -> Fly is two proxy hops, so rate limits see the real visitor IP.
+  TRUST_PROXY_HOPS = '2'
   DATABASE_PROVIDER = 'postgres'
   NODE_ENV = 'production'
   PORT = '8080'
