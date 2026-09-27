@@ -13,6 +13,23 @@ const MAX_TOKENS = 8000;
 // recommended model for that refusal category inside the same call.
 const FALLBACK_BETA = "server-side-fallback-2026-07-01";
 
+export interface AnthropicProviderOptions {
+  /** e.g. https://gateway.ai.cloudflare.com/v1/{account}/{gateway}/anthropic */
+  baseURL?: string;
+  /** Cloudflare AI Gateway token, for gateways with authentication on. */
+  gatewayToken?: string;
+  client?: Anthropic;
+}
+
+export function isCloudflareGatewayURL(baseURL: string | undefined): boolean {
+  if (!baseURL) return false;
+  try {
+    return new URL(baseURL).hostname === "gateway.ai.cloudflare.com";
+  } catch {
+    return false;
+  }
+}
+
 export class AnthropicProvider implements AIProvider {
   readonly name = "anthropic" as const;
   private readonly client: Anthropic;
@@ -21,11 +38,23 @@ export class AnthropicProvider implements AIProvider {
     apiKey: string,
     private readonly model: string = DEFAULT_ANTHROPIC_MODEL,
     private readonly effort: AnthropicEffort = "low",
-    client?: Anthropic,
+    options: AnthropicProviderOptions = {},
   ) {
+    const baseURL = options.baseURL?.trim() || undefined;
+    const defaultHeaders: Record<string, string> = {};
+    if (isCloudflareGatewayURL(baseURL)) {
+      // Keep conversation bodies out of Gateway logs and never serve a cached
+      // reply for personalized coaching prompts.
+      defaultHeaders["cf-aig-collect-log-payload"] = "false";
+      defaultHeaders["cf-aig-skip-cache"] = "true";
+      const token = options.gatewayToken?.trim();
+      if (token) defaultHeaders["cf-aig-authorization"] = `Bearer ${token}`;
+    }
     // chat.ts owns retries and the per-attempt deadline, so the SDK must not
     // add its own retry loop on top.
-    this.client = client ?? new Anthropic({ apiKey, maxRetries: 0 });
+    this.client =
+      options.client ??
+      new Anthropic({ apiKey, baseURL, defaultHeaders, maxRetries: 0 });
   }
 
   async chat(request: AIRequest): Promise<AIResponse> {

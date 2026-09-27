@@ -34,7 +34,7 @@ function providerWith(fetchMock: ReturnType<typeof vi.fn>) {
     maxRetries: 0,
     fetch: fetchMock as unknown as typeof fetch,
   });
-  return new AnthropicProvider("secret", "claude-opus-5", "low", client);
+  return new AnthropicProvider("secret", "claude-opus-5", "low", { client });
 }
 
 describe("AnthropicProvider", () => {
@@ -161,6 +161,51 @@ describe("AnthropicProvider", () => {
     await expect(promise).rejects.toMatchObject({
       category: "aborted",
       retryable: false,
+    });
+  });
+
+  describe("Cloudflare AI Gateway", () => {
+    const gateway = "https://gateway.ai.cloudflare.com/v1/acct/kindred/anthropic";
+
+    async function headersFor(baseURL: string, gatewayToken?: string) {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(reply(message([{ type: "text", text: "Hi" }])));
+      vi.stubGlobal("fetch", fetchMock);
+      try {
+        await new AnthropicProvider("secret", "claude-opus-5", "low", {
+          baseURL,
+          gatewayToken,
+        }).chat(request);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      return { url: String(url), headers: new Headers(init.headers) };
+    }
+
+    it("routes through the gateway with privacy headers and auth token", async () => {
+      const { url, headers } = await headersFor(gateway, " cf-token ");
+      expect(url.split("?")[0]).toBe(`${gateway}/v1/messages`);
+      expect(headers.get("cf-aig-collect-log-payload")).toBe("false");
+      expect(headers.get("cf-aig-skip-cache")).toBe("true");
+      expect(headers.get("cf-aig-authorization")).toBe("Bearer cf-token");
+      expect(headers.get("x-api-key")).toBe("secret");
+    });
+
+    it("omits the gateway token header when none is configured", async () => {
+      const { headers } = await headersFor(gateway);
+      expect(headers.get("cf-aig-authorization")).toBeNull();
+      expect(headers.get("cf-aig-skip-cache")).toBe("true");
+    });
+
+    it("never sends Cloudflare headers to other endpoints", async () => {
+      const { headers } = await headersFor(
+        "https://gateway.ai.cloudflare.com.example.com/anthropic",
+        "cf-token",
+      );
+      expect(headers.get("cf-aig-authorization")).toBeNull();
+      expect(headers.get("cf-aig-collect-log-payload")).toBeNull();
     });
   });
 });

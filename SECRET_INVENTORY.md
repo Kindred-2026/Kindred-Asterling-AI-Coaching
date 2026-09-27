@@ -23,7 +23,7 @@ The tracked files are `.env.example`, `.env.dev.example`, `auth0-deploy/.env.exa
 | `APP_PUBLIC_URL` | P; server public origin, CORS, redirects/reminders; required in production | local config | unverified | Fly config | verify/retain |
 | `BASE_PATH` | P; Vite base / server path; required for Vite serve, build defaults to `/` | local config | unverified | Fly build/config | verify/retain |
 | `LOG_LEVEL` | N; API logger; optional | local config | unverified | Fly config | verify/retain |
-| `TRUST_PROXY_HOPS` | N; Express proxy trust; optional | local config | unverified | Fly config | verify/retain |
+| `TRUST_PROXY_HOPS` | N; Express proxy trust; optional, default 1; set 2 behind the proxied Cloudflare domain | local config | unverified | Fly config | verify/retain |
 | `AUTH0_DOMAIN` | P; API JWT issuer / CORS; required in production | local config | existing container runtime; presence verified 2026-09-26 | Fly secret; deployed staging 2026-09-26 | verify/retain |
 | `AUTH0_AUDIENCE` | P; API JWT audience; required in production | local config | existing container runtime; presence verified 2026-09-26 | Fly secret; deployed staging 2026-09-26 | verify/retain |
 | `VITE_AUTH0_DOMAIN` | P; browser Auth0 tenant; required by frontend build validator | local config | existing public build/runtime configuration verified | Fly secret store plus explicit public BuildKit input; staging build passed | verify/retain |
@@ -33,6 +33,8 @@ The tracked files are `.env.example`, `.env.dev.example`, `auth0-deploy/.env.exa
 | `ANTHROPIC_API_KEY` | S; Anthropic API key for Claude; required when `AI_PROVIDER=anthropic` | local secret | not configured | Fly secret (`fly secrets set`); no GitHub copy | create a workspace-scoped key; revoke/reissue on exposure |
 | `ANTHROPIC_MODEL` | N; Claude model ID; optional, defaults to `claude-opus-5` | local config | not configured | Fly config | retain |
 | `ANTHROPIC_EFFORT` | N; Claude effort level (`low`…`max`); optional, defaults to `low` | local config | not configured | Fly config | retain |
+| `ANTHROPIC_BASE_URL` | N; optional Cloudflare AI Gateway endpoint for Claude; HTTPS required in production | local config | not configured | Fly config | retain |
+| `CLOUDFLARE_AI_GATEWAY_TOKEN` | S; Cloudflare AI Gateway auth token, sent only to `gateway.ai.cloudflare.com`; optional | local secret | not configured | Fly secret | revoke/reissue in the gateway on exposure |
 | `AI_REQUEST_TIMEOUT_MS` | N; chat request timeout; optional | local config | unverified | Fly config | verify/retain |
 | `OLLAMA_BASE_URL` | N; Ollama endpoint; required when provider is Ollama | local config | unverified | Fly config only if retained | verify/remove if replaced |
 | `OLLAMA_MODEL` | N; Ollama model; required when provider is Ollama | local config | unverified | Fly config only if retained | verify/remove if replaced |

@@ -24,6 +24,7 @@ function baseEnv(): void {
   delete process.env.ANTHROPIC_API_KEY;
   delete process.env.ANTHROPIC_MODEL;
   delete process.env.ANTHROPIC_EFFORT;
+  delete process.env.ANTHROPIC_BASE_URL;
 }
 
 describe("AI provider configuration", () => {
@@ -54,6 +55,17 @@ describe("AI provider configuration", () => {
     process.env.ANTHROPIC_API_KEY = "server-only-secret";
     process.env.ANTHROPIC_EFFORT = "turbo";
     expect(validateRuntimeConfig).toThrow(/ANTHROPIC_EFFORT/);
+  });
+
+  it("validates ANTHROPIC_BASE_URL like other provider endpoints", () => {
+    baseEnv();
+    process.env.AI_PROVIDER = "anthropic";
+    process.env.ANTHROPIC_API_KEY = "server-only-secret";
+    process.env.ANTHROPIC_BASE_URL = "not-a-url";
+    expect(validateRuntimeConfig).toThrow(/ANTHROPIC_BASE_URL must be a valid URL/);
+    process.env.ANTHROPIC_BASE_URL =
+      "https://gateway.ai.cloudflare.com/v1/acct/kindred/anthropic";
+    expect(validateRuntimeConfig).not.toThrow();
   });
 
   it("rejects retired Bedrock configuration", () => {
