@@ -42,26 +42,11 @@ export function validateRuntimeConfig(): void {
         `ANTHROPIC_EFFORT must be one of: ${ANTHROPIC_EFFORTS.join(", ")}`,
       );
     }
+    validateBaseUrl("ANTHROPIC_BASE_URL", "ANTHROPIC_API_KEY");
   } else if (aiProvider === "openai") {
     requireValue("OPENAI_API_KEY");
     requireValue("OPENAI_MODEL");
-    const openaiBaseUrl = process.env.OPENAI_BASE_URL?.trim();
-    if (openaiBaseUrl) {
-      let url: URL;
-      try {
-        url = new URL(openaiBaseUrl);
-      } catch {
-        throw new Error("OPENAI_BASE_URL must be a valid URL");
-      }
-      if (url.protocol !== "http:" && url.protocol !== "https:") {
-        throw new Error("OPENAI_BASE_URL must use HTTP or HTTPS");
-      }
-      if (process.env.NODE_ENV === "production" && url.protocol !== "https:") {
-        throw new Error(
-          "OPENAI_BASE_URL must use HTTPS in production (OPENAI_API_KEY would be sent over plaintext)",
-        );
-      }
-    }
+    validateBaseUrl("OPENAI_BASE_URL", "OPENAI_API_KEY");
   } else if (!["disabled", "none", "off"].includes(aiProvider)) {
     throw new Error(
       "AI_PROVIDER must be one of: anthropic, ollama, openai, disabled",
@@ -98,6 +83,25 @@ export function validateRuntimeConfig(): void {
   if (missing.length > 0) {
     throw new Error(
       `Missing required runtime configuration: ${[...new Set(missing)].join(", ")}`,
+    );
+  }
+}
+
+function validateBaseUrl(name: string, credentialName: string): void {
+  const value = process.env[name]?.trim();
+  if (!value) return;
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(`${name} must be a valid URL`);
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error(`${name} must use HTTP or HTTPS`);
+  }
+  if (process.env.NODE_ENV === "production" && url.protocol !== "https:") {
+    throw new Error(
+      `${name} must use HTTPS in production (${credentialName} would be sent over plaintext)`,
     );
   }
 }

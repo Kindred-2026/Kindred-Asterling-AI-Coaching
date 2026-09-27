@@ -23,6 +23,10 @@ export function getAIProvider(): AIProvider | null {
       process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_ANTHROPIC_MODEL,
       (process.env.ANTHROPIC_EFFORT?.trim().toLowerCase() ||
         "low") as AnthropicEffort,
+      {
+        baseURL: process.env.ANTHROPIC_BASE_URL,
+        gatewayToken: process.env.CLOUDFLARE_AI_GATEWAY_TOKEN,
+      },
     );
   if (selection === "openai")
     return new OpenAIProvider(

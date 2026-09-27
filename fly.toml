@@ -24,6 +24,9 @@ primary_region = 'yyz'
   AI_PROVIDER = 'anthropic'
   ANTHROPIC_MODEL = 'claude-opus-5'
   ANTHROPIC_EFFORT = 'low'
+  # Optional Cloudflare AI Gateway (see docs/CLOUDFLARE_SETUP.md). Pair it with
+  # the CLOUDFLARE_AI_GATEWAY_TOKEN Fly secret when the gateway is authenticated.
+  # ANTHROPIC_BASE_URL = 'https://gateway.ai.cloudflare.com/v1/ACCOUNT_ID/kindred/anthropic'
   AI_REQUEST_TIMEOUT_MS = '60000'
   APP_PUBLIC_URL = 'https://kindred-asterling-ai-coaching.fly.dev'
   DATABASE_PROVIDER = 'postgres'
