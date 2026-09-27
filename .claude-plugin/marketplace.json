@@ -1,0 +1,13 @@
+{
+  "name": "kindred",
+  "owner": {
+    "name": "Landon"
+  },
+  "plugins": [
+    {
+      "name": "kindred-mcp",
+      "source": "./plugins/kindred-mcp",
+      "description": "MCP servers for Kindred-Asterling infrastructure: Kubernetes, PostgreSQL, Fly.io, and Hello.coop app admin."
+    }
+  ]
+}

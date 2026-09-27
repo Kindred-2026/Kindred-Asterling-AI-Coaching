@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "kubernetes": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-kubernetes"]
+    },
+    "postgres": {
+      "command": "uvx",
+      "args": [
+        "--with",
+        "mcp<2",
+        "postgres-mcp",
+        "--access-mode=${user_config.postgres_access_mode}"
+      ],
+      "env": {
+        "DATABASE_URI": "${user_config.database_uri}"
+      }
+    },
+    "fly": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/fly-mcp.mjs"]
+    },
+    "hello-coop": {
+      "type": "http",
+      "url": "https://admin-mcp.hello.coop/"
+    }
+  }
+}
