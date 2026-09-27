@@ -23,10 +23,12 @@ function auth0AuthorizationExtension(user, context, callback) {
       return callback(new UnauthorizedError('Authorization Extension: ' + err.message));
     }
 
-    if (res.statusCode !== 200) {
-      console.log('Error from Authorization Extension:', res.body || res.statusCode);
+    data = data || {};
+
+    if (!res || res.statusCode !== 200) {
+      console.log('Error from Authorization Extension:', (res && res.body) || res || 'No response');
       return callback(
-        new UnauthorizedError('Authorization Extension: ' + ((res.body && (res.body.message || res.body) || res.statusCode)))
+        new UnauthorizedError('Authorization Extension: ' + ((res && res.body && (res.body.message || res.body)) || (res && res.statusCode) || 'Unknown error'))
       );
     }
 
@@ -47,18 +49,20 @@ function auth0AuthorizationExtension(user, context, callback) {
       // split groups represented as string by spaces and/or comma
       return data.replace(/,/g, ' ').replace(/\s+/g, ' ').split(' ');
     }
-    return data;
+    return data || [];
   }
 
   // Get the policy for the user.
   function getPolicy(user, context, cb) {
+    var connectionName = context.connection || (user.identities && user.identities[0] && user.identities[0].connection);
+
     request.post({
       url: EXTENSION_URL + "/api/users/" + user.user_id + "/policy/" + context.clientID,
       headers: {
         "x-api-key": configuration.AUTHZ_EXT_API_KEY
       },
       json: {
-        connectionName: context.connection || user.identities[0].connection,
+        connectionName: connectionName,
         groups: parseGroups(user.groups)
       },
       timeout: 5000
@@ -85,11 +89,15 @@ function auth0AuthorizationExtension(user, context, callback) {
 
   // Merge the IdP records with the records of the extension.
   function mergeRecords(idpRecords, extensionRecords) {
-    idpRecords = idpRecords || [ ];
-    extensionRecords = extensionRecords || [ ];
+    idpRecords = idpRecords || [];
+    extensionRecords = extensionRecords || [];
 
     if (!Array.isArray(idpRecords)) {
-      idpRecords = idpRecords.replace(/,/g, ' ').replace(/\s+/g, ' ').split(' ');
+      if (typeof idpRecords === 'string') {
+        idpRecords = idpRecords.replace(/,/g, ' ').replace(/\s+/g, ' ').split(' ');
+      } else {
+        idpRecords = [];
+      }
     }
 
     return _.uniq(_.union(idpRecords, extensionRecords));
