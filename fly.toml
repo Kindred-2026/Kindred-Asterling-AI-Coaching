@@ -9,8 +9,22 @@ primary_region = 'yyz'
 [build]
   dockerfile = 'Dockerfile'
 
+  # The frontend build refuses to run without the public Auth0 SPA settings.
+  # These are public browser identifiers (never a client secret). Either keep
+  # passing them with `--build-secret` (see docs/FLY_DEPLOYMENT.md) or fill in
+  # and uncomment these so a plain `fly deploy` / Fly dashboard build works.
+  # [build.args]
+  #   VITE_AUTH0_DOMAIN = 'YOUR-TENANT.ca.auth0.com'
+  #   VITE_AUTH0_CLIENT_ID = 'YOUR-SPA-CLIENT-ID'
+  #   VITE_AUTH0_AUDIENCE = 'https://kindred-asterling-ai-coaching.com/api'
+
 [env]
-  AI_PROVIDER = 'disabled'
+  # Claude via the Anthropic API. Requires the ANTHROPIC_API_KEY Fly secret;
+  # the app refuses to start without it while this is 'anthropic'.
+  AI_PROVIDER = 'anthropic'
+  ANTHROPIC_MODEL = 'claude-opus-5'
+  ANTHROPIC_EFFORT = 'low'
+  AI_REQUEST_TIMEOUT_MS = '60000'
   APP_PUBLIC_URL = 'https://kindred-asterling-ai-coaching.fly.dev'
   DATABASE_PROVIDER = 'postgres'
   NODE_ENV = 'production'

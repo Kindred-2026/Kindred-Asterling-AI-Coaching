@@ -1,0 +1,37 @@
+name: Deploy to Fly.io
+
+# Manual only: a deploy is an outward-facing action, so it never runs on push.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: fly-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: fly-staging
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # v1.6
+
+      # FLY_API_TOKEN is a deploy token (`fly tokens create deploy`). The
+      # VITE_AUTH0_* values are public browser identifiers stored as GitHub
+      # variables; the frontend build fails without them.
+      - name: Deploy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          VITE_AUTH0_DOMAIN: ${{ vars.VITE_AUTH0_DOMAIN }}
+          VITE_AUTH0_CLIENT_ID: ${{ vars.VITE_AUTH0_CLIENT_ID }}
+          VITE_AUTH0_AUDIENCE: ${{ vars.VITE_AUTH0_AUDIENCE }}
+        run: |
+          for name in FLY_API_TOKEN VITE_AUTH0_DOMAIN VITE_AUTH0_CLIENT_ID VITE_AUTH0_AUDIENCE; do
+            if [ -z "${!name}" ]; then echo "::error::$name is not configured"; exit 1; fi
+          done
+          flyctl deploy --app kindred-asterling-ai-coaching --config fly.toml \
+            --ha=false --remote-only \
+            --build-secret "VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN" \
+            --build-secret "VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID" \
+            --build-secret "VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE"

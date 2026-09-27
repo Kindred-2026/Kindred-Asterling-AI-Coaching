@@ -29,7 +29,10 @@ The tracked files are `.env.example`, `.env.dev.example`, `auth0-deploy/.env.exa
 | `VITE_AUTH0_DOMAIN` | P; browser Auth0 tenant; required by frontend build validator | local config | existing public build/runtime configuration verified | Fly secret store plus explicit public BuildKit input; staging build passed | verify/retain |
 | `VITE_AUTH0_CLIENT_ID` | P; browser Auth0 public client ID; required by frontend build validator | local config | existing public build/runtime configuration verified | Fly secret store plus explicit public BuildKit input; staging build passed | verify/retain |
 | `VITE_AUTH0_AUDIENCE` | P; browser API audience; required by frontend build validator | local config | existing public build/runtime configuration verified | Fly secret store plus explicit public BuildKit input; staging build passed | verify/retain |
-| `AI_PROVIDER` | N; provider switch (Ollama default, OpenAI-compatible or disabled); optional | local config | unverified | Fly config; `openai` for Gateway route after approval | verify/retain or replace |
+| `AI_PROVIDER` | N; provider switch (Ollama default, Anthropic, OpenAI-compatible or disabled); optional | local config | unverified | Fly config; `anthropic` for Claude | verify/retain or replace |
+| `ANTHROPIC_API_KEY` | S; Anthropic API key for Claude; required when `AI_PROVIDER=anthropic` | local secret | not configured | Fly secret (`fly secrets set`); no GitHub copy | create a workspace-scoped key; revoke/reissue on exposure |
+| `ANTHROPIC_MODEL` | N; Claude model ID; optional, defaults to `claude-opus-5` | local config | not configured | Fly config | retain |
+| `ANTHROPIC_EFFORT` | N; Claude effort level (`low`…`max`); optional, defaults to `low` | local config | not configured | Fly config | retain |
 | `AI_REQUEST_TIMEOUT_MS` | N; chat request timeout; optional | local config | unverified | Fly config | verify/retain |
 | `OLLAMA_BASE_URL` | N; Ollama endpoint; required when provider is Ollama | local config | unverified | Fly config only if retained | verify/remove if replaced |
 | `OLLAMA_MODEL` | N; Ollama model; required when provider is Ollama | local config | unverified | Fly config only if retained | verify/remove if replaced |
