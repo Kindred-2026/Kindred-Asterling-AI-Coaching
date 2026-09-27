@@ -62,6 +62,23 @@ or MongoDB smoke database. Production still runs on the existing server/MongoDB.
 
    Read values interactively or from the authorized provider into process memory;
    never paste literal values into shell history, source control, or evidence.
+   Alternatively, run the manual **Deploy to Fly.io** GitHub Action
+   (`.github/workflows/fly-deploy.yml`). It needs a `FLY_API_TOKEN` secret
+   (`fly tokens create deploy`) and `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`,
+   `VITE_AUTH0_AUDIENCE` variables in the `fly-staging` GitHub environment.
+   Deploys started from the Fly dashboard without these build values fail at
+   the frontend build step; `fly.toml` has a commented `[build.args]` block for
+   that case.
+6a. AI uses Claude through the Anthropic API (`AI_PROVIDER=anthropic` in
+   `fly.toml`). Set the key **before** deploying, or the app refuses to start:
+
+   ```sh
+   fly secrets import --app kindred-asterling-ai-coaching --stage
+   # then type ANTHROPIC_API_KEY=<your key>, press Enter, then Ctrl-D
+   ```
+
+   `ANTHROPIC_MODEL` and `ANTHROPIC_EFFORT` in `fly.toml` choose the model and
+   effort. To turn AI off again, set `AI_PROVIDER = 'disabled'`.
 7. Record image digest, release, machine count, region, and the effective
    `DATABASE_PROVIDER`. Verify both health endpoints and browser rendering.
 8. Auth0 must allow callback and logout URL

@@ -1,3 +1,5 @@
+import { ANTHROPIC_EFFORTS } from "./ai/anthropicProvider";
+
 export function validateRuntimeConfig(): void {
   const missing: string[] = [];
   const requireValue = (name: string) => {
@@ -32,6 +34,14 @@ export function validateRuntimeConfig(): void {
   if (aiProvider === "ollama") {
     requireValue("OLLAMA_BASE_URL");
     requireValue("OLLAMA_MODEL");
+  } else if (aiProvider === "anthropic") {
+    requireValue("ANTHROPIC_API_KEY");
+    const effort = process.env.ANTHROPIC_EFFORT?.trim().toLowerCase();
+    if (effort && !ANTHROPIC_EFFORTS.includes(effort as never)) {
+      throw new Error(
+        `ANTHROPIC_EFFORT must be one of: ${ANTHROPIC_EFFORTS.join(", ")}`,
+      );
+    }
   } else if (aiProvider === "openai") {
     requireValue("OPENAI_API_KEY");
     requireValue("OPENAI_MODEL");
@@ -54,7 +64,7 @@ export function validateRuntimeConfig(): void {
     }
   } else if (!["disabled", "none", "off"].includes(aiProvider)) {
     throw new Error(
-      "AI_PROVIDER must be one of: ollama, openai, disabled",
+      "AI_PROVIDER must be one of: anthropic, ollama, openai, disabled",
     );
   }
 

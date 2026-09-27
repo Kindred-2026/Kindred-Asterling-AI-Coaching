@@ -18,6 +18,19 @@ feature tier. The selected upstream model provider bills inference separately.
 Do not describe Cloudflare as the model processor until the actual Gateway and
 upstream provider are configured and verified.
 
+## Anthropic (Claude) provider
+
+`AI_PROVIDER=anthropic` sends coaching requests directly to the Anthropic
+Messages API with the official `@anthropic-ai/sdk`. `ANTHROPIC_API_KEY` is a
+server-only Fly secret; `ANTHROPIC_MODEL` (default `claude-opus-5`) and
+`ANTHROPIC_EFFORT` (default `low`) are plain config. Requests opt into
+Anthropic's server-side refusal fallback (`fallbacks: "default"`), so a declined
+request is retried on Anthropic's recommended fallback model; a request that is
+still declined returns the normal "try again" error to the user. This path does
+not use Cloudflare AI Gateway, so the `cf-aig-*` headers and `store: false` do not
+apply; Anthropic's API data-retention terms govern instead. The production
+approval gate below still applies before real user health data is sent.
+
 ## Data that may be sent
 
 Only data needed for the current coaching turn may be submitted:
