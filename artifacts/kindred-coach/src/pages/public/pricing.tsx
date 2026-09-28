@@ -98,7 +98,7 @@ export default function Pricing() {
 
           {/* Lifetime */}
           <Card className="relative flex h-full flex-col overflow-hidden rounded-2xl border-primary/30 bg-card shadow-md ring-1 ring-primary/20">
-            <div className="absolute right-5 top-5 rounded-full bg-secondary/35 px-3 py-1 text-xs font-semibold text-primary">
+            <div className="absolute right-5 top-5 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
               Best value
             </div>
             <CardHeader className="p-7 pb-5">
@@ -139,7 +139,7 @@ export default function Pricing() {
                 key={t.label}
                 className="flex items-start gap-3 rounded-2xl border border-border bg-card p-5"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/25 text-primary">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/15 text-secondary">
                   <t.icon className="h-4 w-4" />
                 </span>
                 <span className="text-sm leading-snug text-muted-foreground">

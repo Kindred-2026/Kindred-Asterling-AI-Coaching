@@ -211,7 +211,7 @@ export default function Landing() {
                   key={title}
                   className="flex gap-4 rounded-2xl border border-border bg-card p-5"
                 >
-                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary/25 text-primary">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary/15 text-secondary">
                     <Icon className="h-5 w-5" />
                   </span>
                   <div>
