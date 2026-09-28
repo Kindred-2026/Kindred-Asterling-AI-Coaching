@@ -44,7 +44,7 @@ overrides:
   minimatch@3.1.5>brace-expansion: 1.1.18
   esbuild: ">=0.28.1"
   fast-xml-parser: ^5.5.6
-  fast-uri: ">=3.1.4"
+  fast-uri: "^3.1.7"
   js-cookie: ">=3.0.7"
   js-yaml: ">=5.2.2"
   "orval>js-yaml": "4.3.2"
