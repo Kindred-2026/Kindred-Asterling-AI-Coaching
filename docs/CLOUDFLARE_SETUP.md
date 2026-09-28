@@ -57,6 +57,14 @@ proxied domain is live and in use.
 
 - **SSL/TLS → Edge Certificates**: turn on **Always Use HTTPS**, and set
   **Minimum TLS Version** to 1.2.
+- **SSL/TLS → Edge Certificates → HTTP Strict Transport Security (HSTS)**:
+  enable it with **Max Age** set to **12 months** and **Apply HSTS policy to
+  subdomains** on. Leave **Preload** off unless you mean to submit the domain
+  to the preload list. The app sends the same header itself, but Cloudflare's
+  setting replaces it. A Max Age of **0 (Disable)** sends `max-age=0`, which
+  switches HSTS off for every visitor. Check it with
+  `curl -sI https://kindred-asterling-ai-coaching.com | grep -i strict`, which
+  should print `max-age=31536000; includeSubDomains`.
 - **Security → Bots**: turn on **Bot Fight Mode**.
 - **Security → WAF → Managed rules**: turn on the **Cloudflare Free Managed
   Ruleset**.
