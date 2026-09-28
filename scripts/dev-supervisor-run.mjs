@@ -1,10 +1,8 @@
 // Job-wiring and runtime supervision for the dev supervisor: the build phase,
 // runtime children, readiness, and the final exit result.
 
-import { spawn } from "node:child_process";
-
 import { waitForReadiness } from "./dev-supervisor-probes.mjs";
-import { debugLog, signalGroup, spawnOwned } from "./dev-supervisor-process.mjs";
+import { debugLog, signalGroup, spawnOwned, spawnOwnedGroup } from "./dev-supervisor-process.mjs";
 import { createShutdownCoordinator } from "./dev-supervisor-shutdown.mjs";
 
 // Run a set of jobs ({ build } jobs run to completion first) and resolve with
@@ -111,37 +109,18 @@ export async function runDevelopment(jobs, options = {}) {
     // 2. Spawn runtime children as owned process groups.
     for (const job of runtimeJobs) {
       if (running()) return { code: 0, reason: coordinator.stopReason };
-      const child = spawn(job.command, job.args, {
-        cwd: job.cwd,
-        env: job.env,
-        stdio: job.stdio ?? "inherit",
-        detached: true,
-      });
-      const group = {
-        job,
-        child,
-        spawnError: null,
-        postExitGoneObserved: false,
-      };
-      coordinator.groups.set(job.name, group);
-      debugLog(
-        `spawn name=${job.name} pid=${child.pid} detached=${true} ` +
-          `cmd=${job.command} args=${JSON.stringify(job.args)}`,
-      );
-      child.once("error", (err) => {
-        group.spawnError = err;
-        coordinator.groups.delete(job.name);
-        logger.error(`[dev] failed to start ${job.name}: ${err.message}`);
-        void settle({ code: 1, reason: `spawn error: ${job.name}` });
-      });
-      child.once("exit", (code, signal) => {
-        debugLog(`exit name=${job.name} pid=${child.pid} code=${code} signal=${signal}`);
-        if (settled || interruptible()) return;
-        const exitCode = typeof code === "number" ? code : 1;
-        void settle({
-          code: exitCode,
-          reason: `${job.name} exited (code=${code ?? "null"}, signal=${signal ?? "none"})`,
-        });
+      spawnOwnedGroup(job, coordinator, logger, {
+        onError: () => {
+          void settle({ code: 1, reason: `spawn error: ${job.name}` });
+        },
+        onExit: (code, signal) => {
+          if (settled || interruptible()) return;
+          const exitCode = typeof code === "number" ? code : 1;
+          void settle({
+            code: exitCode,
+            reason: `${job.name} exited (code=${code ?? "null"}, signal=${signal ?? "none"})`,
+          });
+        },
       });
     }
 

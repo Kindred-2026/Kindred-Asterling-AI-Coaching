@@ -101,44 +101,60 @@ export function signalGroup(child, signal) {
   }
 }
 
+// Spawn a job as a detached, owned process group and register it with the
+// coordinator. On a spawn error the group is unregistered and reported before
+// `onError(err)` runs; every exit of the direct child is logged before
+// `onExit(code, signal)` runs.
+export function spawnOwnedGroup(job, coordinator, logger, { onError, onExit }) {
+  const child = spawn(job.command, job.args, {
+    cwd: job.cwd,
+    env: job.env,
+    stdio: job.stdio ?? "inherit",
+    detached: true,
+  });
+  const group = {
+    job,
+    child,
+    spawnError: null,
+    // Once the direct child exits we must still confirm the *group* is gone
+    // before considering this group stopped. If we ever observe the group as
+    // absent we treat it as permanently stopped (a later "exists" can only be
+    // an unrelated reuse of the pgid, which we must never signal).
+    postExitGoneObserved: false,
+  };
+  coordinator.groups.set(job.name, group);
+  debugLog(
+    `spawn name=${job.name} pid=${child.pid} detached=${true} ` +
+      `cmd=${job.command} args=${JSON.stringify(job.args)}`,
+  );
+  child.once("error", (err) => {
+    group.spawnError = err;
+    coordinator.groups.delete(job.name);
+    logger.error(`[dev] failed to start ${job.name}: ${err.message}`);
+    onError(err);
+  });
+  child.once("exit", (code, signal) => {
+    debugLog(`exit name=${job.name} pid=${child.pid} code=${code} signal=${signal}`);
+    onExit(code, signal);
+  });
+  return { child, group };
+}
+
 // Run a child as an owned process group and resolve when its *direct* child
 // exits. Group-completion (descendants) is handled by the shutdown coordinator.
 export function spawnOwned(job, coordinator, logger) {
   return new Promise((resolve) => {
-    const child = spawn(job.command, job.args, {
-      cwd: job.cwd,
-      env: job.env,
-      stdio: job.stdio ?? "inherit",
-      detached: true,
-    });
-    const group = {
-      job,
-      child,
-      spawnError: null,
-      // Once the direct child exits we must still confirm the *group* is gone
-      // before considering this group stopped. If we ever observe the group as
-      // absent we treat it as permanently stopped (a later "exists" can only be
-      // an unrelated reuse of the pgid, which we must never signal).
-      postExitGoneObserved: false,
-    };
-    coordinator.groups.set(job.name, group);
-    debugLog(
-      `spawn name=${job.name} pid=${child.pid} detached=${true} ` +
-        `cmd=${job.command} args=${JSON.stringify(job.args)}`,
-    );
-    child.once("error", (err) => {
-      group.spawnError = err;
-      coordinator.groups.delete(job.name);
-      logger.error(`[dev] failed to start ${job.name}: ${err.message}`);
-      debugLog(`error name=${job.name} pid=${child.pid} message=${err.message}`);
-      resolve({ code: 1, reason: `spawn error: ${job.name}`, error: err });
-    });
-    child.once("exit", (code, signal) => {
-      debugLog(`exit name=${job.name} pid=${child.pid} code=${code} signal=${signal}`);
-      resolve({
-        code: typeof code === "number" ? code : 1,
-        signal: signal ?? null,
-      });
+    const { child } = spawnOwnedGroup(job, coordinator, logger, {
+      onError: (err) => {
+        debugLog(`error name=${job.name} pid=${child.pid} message=${err.message}`);
+        resolve({ code: 1, reason: `spawn error: ${job.name}`, error: err });
+      },
+      onExit: (code, signal) => {
+        resolve({
+          code: typeof code === "number" ? code : 1,
+          signal: signal ?? null,
+        });
+      },
     });
   });
 }
