@@ -12,6 +12,7 @@ import healthRouter from "./routes/health";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
+app.disable("x-powered-by");
 
 const isTest = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
 const auth0Origins = process.env.AUTH0_DOMAIN
