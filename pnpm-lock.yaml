@@ -52,8 +52,8 @@ catalogs:
       specifier: ^4.23.5
       version: 4.23.5
     zod:
-      specifier: ^3.25.76
-      version: 3.25.76
+      specifier: https://npm.aikido.io/25af29339970a6a1676d6/zod@3.25.76-aikido.1
+      version: 3.25.76-aikido.1
 
 overrides:
   '@babel/core': '>=7.29.6'
@@ -375,7 +375,7 @@ importers:
         version: 3.10.0(react@19.1.4)
       zod:
         specifier: 'catalog:'
-        version: 3.25.76
+        version: https://npm.aikido.io/25af29339970a6a1676d6/zod@3.25.76-aikido.1
 
   lib/api-client-react:
     devDependencies:
@@ -396,7 +396,7 @@ importers:
     dependencies:
       zod:
         specifier: 'catalog:'
-        version: 3.25.76
+        version: https://npm.aikido.io/25af29339970a6a1676d6/zod@3.25.76-aikido.1
 
   lib/db:
     dependencies:
@@ -4138,11 +4138,12 @@ packages:
     resolution: {integrity: sha512-xYqdZFUK/VYazNl/oCDYN+3WloWQwMfZxBoiNt6qNyk+xfOdi598muWE42rNZFp1kNOiqW936q5RhUdnpqElSg==}
     engines: {node: '>=18'}
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
-
   zod@4.6.5:
     resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
+
+  zod@https://npm.aikido.io/25af29339970a6a1676d6/zod@3.25.76-aikido.1:
+    resolution: {integrity: sha512-pLEgZq/PwkCTC8mvVvWP6rR9hpCILc4a1se/QXcUj3cGXf/vR89NvTz9MokoG5XGnK+vEzohjTm6KvAobOMOrg==, tarball: https://npm.aikido.io/25af29339970a6a1676d6/zod@3.25.76-aikido.1}
+    version: 3.25.76-aikido.1
 
 snapshots:
 
@@ -7671,6 +7672,6 @@ snapshots:
 
   yoctocolors@2.2.0: {}
 
-  zod@3.25.76: {}
-
   zod@4.6.5: {}
+
+  zod@https://npm.aikido.io/25af29339970a6a1676d6/zod@3.25.76-aikido.1: {}
