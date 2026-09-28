@@ -17,8 +17,8 @@ remain on the current providers until their migration gates are verified.
 
 ## Quick start
 
-Prerequisites: Node 24+ and pnpm (the repo pins `pnpm@10.28.1` —
-`corepack enable`). Install once at the root:
+Prerequisites: Node 24 (`engines.node` is `24.x`) and pnpm (the repo pins
+`pnpm@10.28.1` — `corepack enable`). Install once at the root:
 
 ```sh
 pnpm i
@@ -84,6 +84,8 @@ release. See [docs/release-rollback.md](docs/release-rollback.md).
 
 - [docs/local-development.md](docs/local-development.md) — first-run setup, env
   precedence, database modes, troubleshooting
+- [docs/CLOUDFLARE_SETUP.md](docs/CLOUDFLARE_SETUP.md) — custom domain, firewall,
+  and AI Gateway in front of Claude
 - [docs/FLY_DEPLOYMENT.md](docs/FLY_DEPLOYMENT.md) — selected Fly.io staging,
   migration, and cutover runbook; provider steps remain unverified until run
 - [docs/release-rollback.md](docs/release-rollback.md) — release evidence and

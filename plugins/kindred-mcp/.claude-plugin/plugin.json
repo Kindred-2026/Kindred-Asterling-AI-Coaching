@@ -1,0 +1,25 @@
+{
+  "name": "kindred-mcp",
+  "version": "0.2.3",
+  "description": "MCP servers for Kindred-Asterling infrastructure: Kubernetes, PostgreSQL, Fly.io, and Hello.coop app admin.",
+  "author": {
+    "name": "Landon"
+  },
+  "keywords": ["mcp", "kubernetes", "postgres", "fly", "hello-coop"],
+  "userConfig": {
+    "database_uri": {
+      "type": "string",
+      "title": "PostgreSQL connection URI",
+      "description": "postgresql:// URI for the database the Postgres MCP server connects to (e.g. Fly staging). Stored in secure storage, never in settings.json.",
+      "required": true,
+      "sensitive": true
+    },
+    "postgres_access_mode": {
+      "type": "string",
+      "title": "PostgreSQL access mode",
+      "description": "restricted = read-only queries; unrestricted = full read/write. Keep restricted for staging and production.",
+      "options": ["restricted", "unrestricted"],
+      "default": "restricted"
+    }
+  }
+}
