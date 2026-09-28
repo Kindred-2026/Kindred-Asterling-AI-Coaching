@@ -1,5 +1,6 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import helmet from "helmet";
 import pinoHttp from "pino-http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,6 +13,7 @@ import healthRouter from "./routes/health";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
+app.use(helmet());
 app.disable("x-powered-by");
 
 const isTest = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
