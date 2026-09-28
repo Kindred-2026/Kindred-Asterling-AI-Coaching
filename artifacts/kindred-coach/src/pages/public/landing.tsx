@@ -53,7 +53,7 @@ const BENEFITS = [
 export default function Landing() {
   return (
     <div>
-      <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
+      <section className="relative isolate overflow-hidden brand-night text-foreground">
         <div className="pointer-events-none absolute -right-32 -top-40 h-[30rem] w-[30rem] rounded-full bg-secondary/25 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-48 left-1/3 h-80 w-80 rounded-full bg-background/10 blur-3xl" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 py-20 md:px-8 md:py-28 lg:grid-cols-[1.15fr_0.75fr] lg:py-32">
@@ -65,7 +65,7 @@ export default function Landing() {
             <h1 className="mt-5 max-w-3xl font-serif text-5xl font-medium leading-[1.02] tracking-[-0.04em] text-balance md:text-6xl lg:text-7xl">
               A steadier way to understand your patterns.
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-8 text-primary-foreground/75 md:text-lg">
+            <p className="mt-6 max-w-2xl text-base leading-8 text-foreground/75 md:text-lg">
               Kindred Asterling is a private AI companion for daily reflection,
               habit tracking, and honest dialogue—supporting you in the spaces
               between human care.
@@ -84,12 +84,12 @@ export default function Landing() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                className="border-foreground/30 bg-transparent text-foreground hover:bg-foreground/10 hover:text-foreground"
               >
                 <Link href="/about">See how Kindred works</Link>
               </Button>
             </div>
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-xs text-primary-foreground/65">
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-xs text-foreground/65">
               <span className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-secondary" /> Private by
                 design
@@ -101,12 +101,12 @@ export default function Landing() {
             </div>
           </div>
 
-          <aside className="rounded-[1.5rem] border border-primary-foreground/15 bg-primary-foreground/[0.07] p-6 shadow-2xl backdrop-blur md:p-8">
-            <div className="flex items-center gap-2 border-b border-primary-foreground/15 pb-5 text-xs font-semibold uppercase tracking-[0.14em] text-secondary">
+          <aside className="rounded-[1.5rem] border border-foreground/15 bg-foreground/[0.07] p-6 shadow-2xl backdrop-blur md:p-8">
+            <div className="flex items-center gap-2 border-b border-foreground/15 pb-5 text-xs font-semibold uppercase tracking-[0.14em] text-secondary">
               <span className="h-2 w-2 rounded-full bg-secondary ring-4 ring-secondary/15" />
               A moment with Kindred
             </div>
-            <blockquote className="my-7 font-serif text-2xl leading-relaxed text-primary-foreground">
+            <blockquote className="my-7 font-serif text-2xl leading-relaxed text-foreground">
               “You do not have to solve the whole week tonight. What would make
               the next hour feel more manageable?”
             </blockquote>
@@ -321,7 +321,7 @@ export default function Landing() {
         </section>
       )}
 
-      <section className="bg-primary px-5 py-20 text-center text-primary-foreground md:px-8 md:py-24">
+      <section className="brand-night px-5 py-20 text-center text-foreground md:px-8 md:py-24">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">
           Ready when you are
         </p>

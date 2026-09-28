@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
-@custom-variant dark (&:is(.dark *, .theme-deep-tide *, .theme-midnight-bloom *));
+@custom-variant dark (&:is(.dark *, .theme-nightfall *, .theme-deep-tide *, .theme-midnight-bloom *, .public-site *));
 
 @theme inline {
   --color-background: hsl(var(--background));
@@ -114,10 +114,49 @@
   );
 }
 
-/* Five calm, accessible product themes. Public pages use the separate Quiet
-   Sage system below, while signed-in members can choose the mood that suits
-   their space and time of day. */
+/* Six calm, accessible product themes. Nightfall is the Kindred brand theme
+   and the default; public pages use it too (scoped below), while signed-in
+   members can choose the mood that suits their space and time of day. */
 :root,
+.theme-nightfall {
+  --background: 250 33% 7%;
+  --foreground: 250 40% 96%;
+  --border: 252 22% 22%;
+  --card: 250 30% 11%;
+  --card-foreground: 250 40% 96%;
+  --card-border: 252 22% 22%;
+  --sidebar: 250 38% 5%;
+  --sidebar-foreground: 250 30% 90%;
+  --sidebar-border: 252 22% 18%;
+  --sidebar-primary: 228 96% 70%;
+  --sidebar-primary-foreground: 250 40% 8%;
+  --sidebar-accent: 262 42% 20%;
+  --sidebar-accent-foreground: 250 40% 96%;
+  --sidebar-ring: 24 100% 62%;
+  --popover: 250 30% 11%;
+  --popover-foreground: 250 40% 96%;
+  --popover-border: 252 22% 22%;
+  --primary: 228 96% 70%;
+  --primary-foreground: 250 40% 8%;
+  --secondary: 24 100% 62%;
+  --secondary-foreground: 250 40% 8%;
+  --muted: 250 26% 15%;
+  --muted-foreground: 248 18% 72%;
+  --accent: 262 42% 24%;
+  --accent-foreground: 250 40% 96%;
+  --destructive: 0 72% 62%;
+  --destructive-foreground: 250 40% 8%;
+  --input: 252 22% 24%;
+  --ring: 24 100% 62%;
+  --chart-1: 228 96% 70%;
+  --chart-2: 24 100% 62%;
+  --chart-3: 266 70% 72%;
+  --chart-4: 190 60% 58%;
+  --chart-5: 330 65% 72%;
+}
+.theme-nightfall {
+  color-scheme: dark;
+}
 .theme-quiet-sage {
   --background: 40 33% 94%;
   --foreground: 169 43% 16%;
@@ -321,35 +360,46 @@
 
 /* Quiet Sage public design system. Scoped so the signed-in product can retain
    user-selectable themes while every public page shares one stable identity. */
+/* Nightfall public design system: night violet ground, cobalt primary and an
+   orange accent that echoes the gold star in the Kindred mark. Scoped so the
+   signed-in product can retain user-selectable themes while every public page
+   shares one stable identity. */
 .public-site {
-  color-scheme: light;
-  --background: 40 33% 94%;
-  --foreground: 169 43% 16%;
-  --card: 42 43% 97%;
-  --card-foreground: 169 43% 16%;
-  --popover: 42 43% 97%;
-  --popover-foreground: 169 43% 16%;
-  --primary: 169 43% 16%;
-  --primary-foreground: 40 33% 96%;
-  --secondary: 35 57% 63%;
-  --secondary-foreground: 169 43% 14%;
-  --muted: 120 16% 88%;
-  --muted-foreground: 166 18% 38%;
-  --accent: 35 45% 86%;
-  --accent-foreground: 169 43% 16%;
-  --destructive: 0 64% 43%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 144 17% 79%;
-  --input: 144 17% 79%;
-  --ring: 35 57% 63%;
-  --sidebar: 120 16% 90%;
-  --sidebar-foreground: 169 43% 16%;
-  --sidebar-primary: 169 43% 16%;
-  --sidebar-primary-foreground: 40 33% 96%;
-  --sidebar-accent: 35 45% 86%;
-  --sidebar-accent-foreground: 169 43% 16%;
-  --sidebar-border: 144 17% 79%;
-  --sidebar-ring: 35 57% 63%;
+  color-scheme: dark;
+  --background: 250 33% 7%;
+  --foreground: 250 40% 96%;
+  --border: 252 22% 22%;
+  --card: 250 30% 11%;
+  --card-foreground: 250 40% 96%;
+  --card-border: 252 22% 22%;
+  --sidebar: 250 38% 5%;
+  --sidebar-foreground: 250 30% 90%;
+  --sidebar-border: 252 22% 18%;
+  --sidebar-primary: 228 96% 70%;
+  --sidebar-primary-foreground: 250 40% 8%;
+  --sidebar-accent: 262 42% 20%;
+  --sidebar-accent-foreground: 250 40% 96%;
+  --sidebar-ring: 24 100% 62%;
+  --popover: 250 30% 11%;
+  --popover-foreground: 250 40% 96%;
+  --popover-border: 252 22% 22%;
+  --primary: 228 96% 70%;
+  --primary-foreground: 250 40% 8%;
+  --secondary: 24 100% 62%;
+  --secondary-foreground: 250 40% 8%;
+  --muted: 250 26% 15%;
+  --muted-foreground: 248 18% 72%;
+  --accent: 262 42% 24%;
+  --accent-foreground: 250 40% 96%;
+  --destructive: 0 72% 62%;
+  --destructive-foreground: 250 40% 8%;
+  --input: 252 22% 24%;
+  --ring: 24 100% 62%;
+  --chart-1: 228 96% 70%;
+  --chart-2: 24 100% 62%;
+  --chart-3: 266 70% 72%;
+  --chart-4: 190 60% 58%;
+  --chart-5: 330 65% 72%;
   --app-font-serif: Georgia, "Times New Roman", serif;
 }
 
@@ -357,11 +407,28 @@
   background:
     radial-gradient(
       circle at 5% 15%,
-      hsl(var(--secondary) / 0.08),
-      transparent 28rem
+      hsl(266 70% 55% / 0.12),
+      transparent 30rem
+    ),
+    radial-gradient(
+      circle at 95% 60%,
+      hsl(228 90% 60% / 0.08),
+      transparent 32rem
     ),
     hsl(var(--background));
 }
+
+/* Deep violet-to-cobalt band for public heroes and closing calls to action. */
+.public-site .brand-night {
+  background:
+    radial-gradient(
+      circle at 85% 0%,
+      hsl(24 100% 62% / 0.14),
+      transparent 26rem
+    ),
+    linear-gradient(135deg, hsl(262 55% 16%), hsl(236 60% 14%) 55%, hsl(250 40% 8%));
+}
+
 
 .public-site header,
 .public-site footer {
