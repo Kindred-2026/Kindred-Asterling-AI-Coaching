@@ -39,7 +39,7 @@ function PublicHeader() {
           <img
             src={logoMark}
             alt="Kindred Asterling"
-            className="h-9 w-9 rounded-lg object-cover ring-1 ring-border/50"
+            className="h-9 w-9 rounded-full object-cover"
           />
           <span className="font-serif text-lg font-medium tracking-tight text-foreground">
             Kindred Asterling
@@ -120,7 +120,7 @@ function PublicFooter() {
               <img
                 src={logoMark}
                 alt="Kindred Asterling"
-                className="h-8 w-8 rounded-lg object-cover ring-1 ring-border/50"
+                className="h-8 w-8 rounded-full object-cover"
               />
               <span className="font-serif text-base font-medium text-foreground">
                 Kindred Asterling
