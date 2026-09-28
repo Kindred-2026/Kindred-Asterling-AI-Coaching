@@ -26,4 +26,11 @@ describe("security headers", () => {
     expect(csp).toContain("frame-src https://tenant.auth0.test");
     expect(csp).toContain("frame-ancestors 'none'");
   });
+
+  it("blocks inline scripts", async () => {
+    const csp = (await request(createTestApp()).get("/")).headers["content-security-policy"];
+    const scriptSrc = csp.split(";").find((d: string) => d.startsWith("script-src "));
+    expect(scriptSrc).toBe("script-src 'self'");
+    expect(csp).toContain("script-src-attr 'none'");
+  });
 });

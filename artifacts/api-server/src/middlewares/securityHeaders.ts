@@ -9,7 +9,9 @@ export function securityHeaders(auth0Origins: string[] = []) {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
+        // No 'unsafe-inline': inline scripts are blocked to stop XSS. Put any
+        // script in its own file (see kindred-coach/public/theme-init.js).
+        scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         imgSrc: ["'self'", "data:", "https:"],
         connectSrc: ["'self'", ...auth0Origins],
