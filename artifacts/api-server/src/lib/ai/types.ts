@@ -11,6 +11,8 @@ export interface AIMessage {
   content: string;
   toolCalls?: AIToolCall[];
   toolCallId?: string;
+  /** Provider-native assistant content to replay verbatim (e.g. thinking blocks). */
+  providerContent?: unknown;
 }
 
 export interface AIToolDefinition {
@@ -32,9 +34,10 @@ export interface AIResponse {
   content: string;
   toolCalls: AIToolCall[];
   finishReason?: string;
+  providerContent?: unknown;
 }
 
 export interface AIProvider {
-  readonly name: "ollama" | "openai";
+  readonly name: "ollama" | "openai" | "anthropic";
   chat(request: AIRequest): Promise<AIResponse>;
 }
