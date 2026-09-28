@@ -124,7 +124,7 @@ importers:
         specifier: ^8.5.2
         version: 8.6.1(express@5.2.1)
       helmet:
-        specifier: ^8.1.0
+        specifier: ^8.3.0
         version: 8.3.0
       node-cron:
         specifier: ^4.5.0
