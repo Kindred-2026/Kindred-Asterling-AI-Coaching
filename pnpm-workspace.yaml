@@ -56,6 +56,4 @@ overrides:
   qs: ">=6.16.0"
   sharp: "^0.35.4"
   vite: ">=7.3.5"
-  "@noble/hashes@1": "2.4.0"
   "jose@4": "6.2.5"
-  "raw-body@3": "4.0.0"
