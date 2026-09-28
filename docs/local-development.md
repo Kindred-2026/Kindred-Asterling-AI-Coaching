@@ -188,6 +188,11 @@ after SIGINT/SIGTERM is still stopped (late/absent rejections are handled, no
 runtime phase follows), and a hanging database `stop()` is force-released in
 bounded time with the failure reported and a non-zero exit.
 
+The launcher lives in `scripts/dev.mjs`, backed by `scripts/dev-supervisor.mjs`.
+That file is only the public entry point; the implementation is split across
+`scripts/dev-supervisor-{config,probes,process,shutdown,database,run}.mjs`, and
+its header comment maps each module to its responsibility.
+
 ## Troubleshooting
 
 - **Port already in use** — the launcher halts before starting anything and names
