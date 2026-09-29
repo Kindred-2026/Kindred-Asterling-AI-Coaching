@@ -83,7 +83,7 @@ export const THEME_OPTIONS: {
   {
     value: "lavender-dusk",
     label: "Lavender Dusk",
-    swatches: ["#f4f0fa", "#51436f", "#b88fc5"],
+    swatches: ["#f4f0fa", "#51436f", "#885298"],
   },
   {
     value: "midnight-bloom",
