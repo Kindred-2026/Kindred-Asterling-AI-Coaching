@@ -60,6 +60,32 @@ The live test is skipped when `POSTGRES_INTEGRATION_URL` is absent; the
 database-free guard tests still run. Do not treat that skip as real-server
 integration evidence.
 
+For Fly Managed Postgres, use the loopback-only Fly MPG proxy and the guarded
+runner. First create a **new empty** database in the existing staging cluster
+with a name beginning `kindred_rehearsal_`; the suite leaves its schema in
+place, so do not reuse a database after a successful run. In the Fly dashboard
+Connect view, select a `schema_admin` user and copy its connection URL. The
+schema-admin role is cluster-wide; use it only for this short rehearsal and
+never for application runtime. Run from the repository root:
+
+```sh
+export POSTGRES_INTEGRATION_DATABASE=kindred_rehearsal_pg_adapter_20260926_run1
+export POSTGRES_INTEGRATION_CONFIRM=I_UNDERSTAND_THIS_IS_A_DISPOSABLE_REHEARSAL_DATABASE
+corepack pnpm --filter @workspace/db run test:postgres-integration:fly
+```
+
+The runner prompts for the schema-admin MPG URL without echoing it; alternatively,
+provide it through `POSTGRES_INTEGRATION_SOURCE_URL` from a local secret manager.
+It accepts only a Fly MPG hostname, rewrites the URL to `127.0.0.1`, starts
+`fly mpg proxy` bound to loopback for the existing staging cluster, and verifies
+the exact requested database plus DDL permissions before starting the suite.
+It pins the cluster ID to `w76geop28dnrplk4`, clears inherited runtime
+`POSTGRES_URL`, and does not print or persist the credential. The integration
+suite's empty-target guard still rejects any unreviewed database objects. The
+proxy shuts down on exit; test rows are UUID-scoped and removed, while the
+rehearsal schema remains. This changes only the named rehearsal database, not
+the app's runtime database or production.
+
 For a separately authorized, local, non-production rehearsal, the CLI expects
 server-side `MONGODB_REHEARSAL_URI`, `MONGODB_REHEARSAL_DATABASE` (named
 test/dev/fixture/rehearsal, different from the configured runtime source),
