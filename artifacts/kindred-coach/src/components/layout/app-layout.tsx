@@ -397,7 +397,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <img
                 src={logoMark}
                 alt="Kindred Asterling"
-                className="w-10 h-10 rounded-lg object-cover shrink-0 ring-1 ring-border/50"
+                className="w-10 h-10 rounded-full object-cover shrink-0"
               />
               <div className="min-w-0">
                 <p className="text-lg font-serif text-primary tracking-tight font-medium leading-tight truncate">
@@ -412,7 +412,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <img
               src={logoMark}
               alt="Kindred Asterling"
-              className="w-9 h-9 rounded-lg object-cover ring-1 ring-border/50"
+              className="w-9 h-9 rounded-full object-cover"
             />
           )}
           <Tooltip>

@@ -38,7 +38,7 @@ const TRUST = [
 export default function Pricing() {
   return (
     <div>
-      <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
+      <section className="relative isolate overflow-hidden brand-night text-foreground">
         <div className="pointer-events-none absolute -right-32 -top-40 h-[30rem] w-[30rem] rounded-full bg-secondary/25 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-48 left-1/4 h-80 w-80 rounded-full bg-background/10 blur-3xl" />
         <div className="relative mx-auto max-w-4xl px-5 py-20 text-center md:px-8 md:py-28">
@@ -48,7 +48,7 @@ export default function Pricing() {
           <h1 className="mt-5 font-serif text-5xl font-medium leading-[1.04] tracking-[-0.04em] text-balance md:text-6xl">
             Simple, honest pricing.
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-primary-foreground/75 md:text-lg">
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-foreground/75 md:text-lg">
             Choose the plan that fits. You'll sign in first, then complete a
             secure checkout — access unlocks automatically once payment clears.
           </p>
@@ -98,7 +98,7 @@ export default function Pricing() {
 
           {/* Lifetime */}
           <Card className="relative flex h-full flex-col overflow-hidden rounded-2xl border-primary/30 bg-card shadow-md ring-1 ring-primary/20">
-            <div className="absolute right-5 top-5 rounded-full bg-secondary/35 px-3 py-1 text-xs font-semibold text-primary">
+            <div className="absolute right-5 top-5 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
               Best value
             </div>
             <CardHeader className="p-7 pb-5">
@@ -139,7 +139,7 @@ export default function Pricing() {
                 key={t.label}
                 className="flex items-start gap-3 rounded-2xl border border-border bg-card p-5"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/25 text-primary">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/15 text-secondary">
                   <t.icon className="h-4 w-4" />
                 </span>
                 <span className="text-sm leading-snug text-muted-foreground">

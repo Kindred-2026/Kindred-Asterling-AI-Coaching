@@ -7,20 +7,27 @@ import { fileURLToPath } from "node:url";
 import { authMiddleware } from "./middlewares/authMiddleware";
 import { testClerkIdentityAdapter } from "./middlewares/testClerkIdentityAdapter";
 import { generalLimiter, writeLimiter } from "./middlewares/rateLimiter";
+import { securityHeaders } from "./middlewares/securityHeaders";
 import router from "./routes";
 import healthRouter from "./routes/health";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
-
-// Health routes must respond without Auth0 credentials (used in CI/verification
-// environments where Auth0 values may not be configured).
-app.use("/api", healthRouter);
+app.use(helmet());
+app.disable("x-powered-by");
 
 const isTest = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
 const auth0Origins = process.env.AUTH0_DOMAIN
   ? [`https://${process.env.AUTH0_DOMAIN.trim()}`]
   : [];
+
+// Security headers go first so every response, health checks included,
+// carries HSTS and the rest.
+app.use(securityHeaders(auth0Origins));
+
+// Health routes must respond without Auth0 credentials (used in CI/verification
+// environments where Auth0 values may not be configured).
+app.use("/api", healthRouter);
 
 const allowedOrigins = new Set(
   [
@@ -42,27 +49,6 @@ const trustedProxyHops = Number.parseInt(
 app.set(
   "trust proxy",
   Number.isFinite(trustedProxyHops) ? trustedProxyHops : 1,
-);
-
-// Security headers — Helmet sets CSP, X-Frame-Options, HSTS, etc.
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", ...auth0Origins],
-        fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        objectSrc: ["'none'"],
-        frameAncestors: ["'none'"],
-        frameSrc: [...auth0Origins],
-        workerSrc: ["'self'", "blob:"],
-      },
-    },
-    crossOriginEmbedderPolicy: false, // Allow audio/TTS resources
-  }),
 );
 
 app.use(

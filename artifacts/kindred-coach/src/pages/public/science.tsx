@@ -76,7 +76,7 @@ const BIBLIOGRAPHY = [
 export default function Science() {
   return (
     <div>
-      <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
+      <section className="relative isolate overflow-hidden brand-night text-foreground">
         <div className="pointer-events-none absolute -right-32 -top-40 h-[30rem] w-[30rem] rounded-full bg-secondary/25 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-48 left-1/4 h-80 w-80 rounded-full bg-background/10 blur-3xl" />
         <div className="relative mx-auto max-w-4xl px-5 py-20 text-center md:px-8 md:py-28">
@@ -86,7 +86,7 @@ export default function Science() {
           <h1 className="mt-5 font-serif text-5xl font-medium leading-[1.04] tracking-[-0.04em] text-balance md:text-6xl">
             Kindred is anchored in peer-reviewed science.
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-primary-foreground/75 md:text-lg">
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-foreground/75 md:text-lg">
             We approach the mind with intellectual respect, drawing from
             cognitive neuroscience, addiction science, and behavioral health.
           </p>

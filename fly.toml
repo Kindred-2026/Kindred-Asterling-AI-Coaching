@@ -9,9 +9,31 @@ primary_region = 'yyz'
 [build]
   dockerfile = 'Dockerfile'
 
+  # The frontend build refuses to run without the public Auth0 SPA settings.
+  # These are public browser identifiers (never a client secret). Either keep
+  # passing them with `--build-secret` (see docs/FLY_DEPLOYMENT.md) or fill in
+  # and uncomment these so a plain `fly deploy` / Fly dashboard build works.
+  # [build.args]
+  #   VITE_AUTH0_DOMAIN = 'YOUR-TENANT.ca.auth0.com'
+  #   VITE_AUTH0_CLIENT_ID = 'YOUR-SPA-CLIENT-ID'
+  #   VITE_AUTH0_AUDIENCE = 'https://kindred-asterling-ai-coaching.com/api'
+
 [env]
-  AI_PROVIDER = 'disabled'
-  APP_PUBLIC_URL = 'https://kindred-asterling-ai-coaching.fly.dev'
+  # Claude via the Anthropic API. Requires the ANTHROPIC_API_KEY Fly secret;
+  # the app refuses to start without it while this is 'anthropic'.
+  AI_PROVIDER = 'anthropic'
+  ANTHROPIC_MODEL = 'claude-opus-5'
+  ANTHROPIC_EFFORT = 'low'
+  # Optional Cloudflare AI Gateway (see docs/CLOUDFLARE_SETUP.md). Pair it with
+  # the CLOUDFLARE_AI_GATEWAY_TOKEN Fly secret when the gateway is authenticated.
+  # ANTHROPIC_BASE_URL = 'https://gateway.ai.cloudflare.com/v1/ACCOUNT_ID/kindred/anthropic'
+  AI_REQUEST_TIMEOUT_MS = '60000'
+  # Custom domain behind Cloudflare (see docs/CLOUDFLARE_SETUP.md). Deploy this
+  # only after the domain is live in Cloudflare and `fly certs show` reports
+  # the certificate as issued: the fly.dev address stops working for sign-in.
+  APP_PUBLIC_URL = 'https://kindred-asterling-ai-coaching.com'
+  # Cloudflare -> Fly is two proxy hops, so rate limits see the real visitor IP.
+  TRUST_PROXY_HOPS = '2'
   DATABASE_PROVIDER = 'postgres'
   NODE_ENV = 'production'
   PORT = '8080'
