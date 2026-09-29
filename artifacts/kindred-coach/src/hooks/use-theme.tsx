@@ -75,7 +75,7 @@ export const THEME_OPTIONS: {
   {
     value: "quiet-sage",
     label: "Quiet Sage",
-    swatches: ["#f4f0e6", "#173a34", "#dcae78"],
+    swatches: ["#f4f0e6", "#173a34", "#885f25"],
   },
   {
     value: "deep-tide",
@@ -85,7 +85,7 @@ export const THEME_OPTIONS: {
   {
     value: "warm-ember",
     label: "Warm Ember",
-    swatches: ["#fff4e8", "#863b2c", "#e29a52"],
+    swatches: ["#fff4e8", "#863b2c", "#9b5c1c"],
   },
   {
     value: "lavender-dusk",
