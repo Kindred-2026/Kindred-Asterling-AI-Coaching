@@ -446,6 +446,7 @@ router.post(
             role: "assistant",
             content: result.content,
             toolCalls: result.toolCalls,
+            providerContent: result.providerContent,
           });
           for (const block of result.toolCalls) {
             let output: string;

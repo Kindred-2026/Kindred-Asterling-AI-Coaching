@@ -7,6 +7,7 @@ import {
 } from "react";
 
 export type ThemeName =
+  | "nightfall"
   | "quiet-sage"
   | "deep-tide"
   | "warm-ember"
@@ -15,6 +16,7 @@ export type ThemeName =
 
 const STORAGE_KEY = "kindred-theme";
 const THEME_CLASSES: Record<ThemeName, string> = {
+  nightfall: "theme-nightfall",
   "quiet-sage": "theme-quiet-sage",
   "deep-tide": "theme-deep-tide",
   "warm-ember": "theme-warm-ember",
@@ -30,11 +32,11 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function readStoredTheme(): ThemeName {
-  if (typeof window === "undefined") return "quiet-sage";
+  if (typeof window === "undefined") return "nightfall";
   const stored = window.localStorage.getItem(STORAGE_KEY);
   if (stored && Object.hasOwn(THEME_CLASSES, stored))
     return stored as ThemeName;
-  return "quiet-sage";
+  return "nightfall";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -65,6 +67,11 @@ export const THEME_OPTIONS: {
   label: string;
   swatches: string[];
 }[] = [
+  {
+    value: "nightfall",
+    label: "Nightfall",
+    swatches: ["#0e0c18", "#6986fc", "#ff8b3d"],
+  },
   {
     value: "quiet-sage",
     label: "Quiet Sage",
