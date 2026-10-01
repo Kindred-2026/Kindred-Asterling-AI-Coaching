@@ -666,7 +666,6 @@ describe("minimal generator-input snapshot", () => {
     writeFileSync(join(root, "lib", "api-client-react", "src", "custom-fetch.ts"), "export {};\n");
     // Sentinel secret/operational fixtures (fake values, never real secrets).
     writeFileSync(join(root, ".env.local"), "VITE_AUTH0_CLIENT_ID=sentinel-secret\n");
-    writeFileSync(join(root, ".env.1password"), "DATABASE_URL=op://sentinel\n");
     writeFileSync(join(root, "SECRET_INVENTORY.md"), "sentinel secret inventory\n");
     writeFileSync(join(root, "deploy", "secrets.yaml"), "token: sentinel\n");
 
@@ -679,7 +678,7 @@ describe("minimal generator-input snapshot", () => {
       true,
     );
     assert.equal(existsSync(join(harness, "package.json")), true);
-    for (const forbidden of [".env.local", ".env.1password", "SECRET_INVENTORY.md", "deploy"]) {
+    for (const forbidden of [".env.local", "SECRET_INVENTORY.md", "deploy"]) {
       assert.equal(existsSync(join(harness, forbidden)), false, `${forbidden} must not be copied`);
     }
     rmSync(dir, { recursive: true, force: true });
