@@ -15,7 +15,6 @@ import {
   dailyUsageTable,
   reminderSettingsTable,
   reminderDeliveriesTable,
-  calendarConnectionsTable,
   subscriptionsTable,
   entitlementAuditTable,
   betaGrantsTable,
@@ -43,7 +42,6 @@ export async function exportAccount(userId: string) {
     dailyUsage,
     reminderSettings,
     reminderDeliveries,
-    calendarConnections,
     subscriptions,
     entitlementAudit,
     betaGrants,
@@ -112,12 +110,6 @@ export async function exportAccount(userId: string) {
     owned(
       db
         .select()
-        .from(calendarConnectionsTable)
-        .where(eq(calendarConnectionsTable.userId, userId)),
-    ),
-    owned(
-      db
-        .select()
         .from(subscriptionsTable)
         .where(eq(subscriptionsTable.userId, userId)),
     ),
@@ -156,7 +148,6 @@ export async function exportAccount(userId: string) {
       dailyUsage,
       reminderSettings,
       reminderDeliveries,
-      calendarConnections,
       subscriptions,
       entitlementAudit,
       betaGrants,

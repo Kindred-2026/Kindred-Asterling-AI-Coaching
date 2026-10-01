@@ -1,8 +1,8 @@
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { MongoClient, type ClientSession, type Db } from "mongodb";
 import pg from "pg";
+import { readPostgresMigrations } from "../src/postgresMigrations";
 import { assertEmptyTarget } from "../src/postgresTargetGuard";
 import { rehearsalTables, replayRehearsal, type RehearsalSnapshot } from "../src/postgresRehearsal";
 
@@ -112,10 +112,7 @@ export async function runRehearsal(args: readonly string[] = process.argv.slice(
       } finally {
         await session.endSession();
       }
-      const sql = await readFile(
-        new URL("../migrations-postgres/0001_rehearsal_core.sql", import.meta.url),
-        "utf8",
-      );
+      const sql = await readPostgresMigrations();
       const counts = await replayRehearsal(target, snapshot, {
         write,
         environment: environment as "test" | "development",

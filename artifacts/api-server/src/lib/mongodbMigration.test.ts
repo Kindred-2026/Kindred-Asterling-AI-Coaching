@@ -73,9 +73,9 @@ describe("PostgreSQL to MongoDB migration", () => {
     }
   });
 
-  it("uses an explicit 20-collection product-data allowlist", () => {
+  it("uses an explicit 19-collection product-data allowlist", () => {
     const names = authoritativeMigrationTables.map(({ name }) => name);
-    expect(names).toHaveLength(20);
+    expect(names).toHaveLength(19);
     expect(names).not.toEqual(
       expect.arrayContaining([
         "sessions",
@@ -84,7 +84,7 @@ describe("PostgreSQL to MongoDB migration", () => {
         "mongodb_mirror_outbox",
       ]),
     );
-    expect(expectedMigrationCollections).toHaveLength(21);
+    expect(expectedMigrationCollections).toHaveLength(20);
     expect(() =>
       validateMigrationCollectionNames(expectedMigrationCollections),
     ).not.toThrow();

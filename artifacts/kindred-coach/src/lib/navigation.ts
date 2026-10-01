@@ -75,7 +75,6 @@ export const ROUTE_TO_PRIMARY_AREA: Record<string, PrimaryArea> = {
   "/app/evening": "today",
   "/app/habits": "today",
   "/app/medications": "today",
-  "/app/calendar": "today",
   "/app/reminders": "today",
   "/talk": "talk",
   "/app/archive": "talk",

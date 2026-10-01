@@ -100,7 +100,6 @@ for (const table of [
   "medication_schedule_entries",
   "beta_grants",
   "body_scans",
-  "calendar_connections",
   "daily_usage",
   "entitlement_audit",
   "evening_reports",

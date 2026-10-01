@@ -263,28 +263,6 @@ export const bodyScansTable = table<BodyScan>(
 );
 export type InsertBodyScan = Omit<BodyScan, "id" | "createdAt">;
 
-export interface CalendarConnection extends Record<string, unknown> {
-  userId: string;
-  provider: string;
-  encryptedRefreshToken: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export const calendarConnectionsTable = table<CalendarConnection>(
-  "calendar_connections",
-  ["userId", "provider", "encryptedRefreshToken", "createdAt", "updatedAt"],
-  {
-    primaryKey: ["userId"],
-    updatedAtField: "updatedAt",
-    defaults: {
-      provider: "google",
-      createdAt: () => new Date(),
-      updatedAt: () => new Date(),
-    },
-  },
-);
-
 export interface Conversation extends Record<string, unknown> {
   id: number;
   userId: string;
@@ -693,7 +671,6 @@ export const allTables = [
   affirmationsTable,
   betaGrantsTable,
   bodyScansTable,
-  calendarConnectionsTable,
   conversations,
   dailyUsageTable,
   entitlementAuditTable,

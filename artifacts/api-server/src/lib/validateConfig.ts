@@ -77,9 +77,6 @@ export function validateRuntimeConfig(): void {
     }
   }
 
-  // Calendar OAuth is retired. Retain CALENDAR_TOKEN_ENCRYPTION_KEY only
-  // for best-effort revocation of existing connections; it is not a startup gate.
-
   if (missing.length > 0) {
     throw new Error(
       `Missing required runtime configuration: ${[...new Set(missing)].join(", ")}`,

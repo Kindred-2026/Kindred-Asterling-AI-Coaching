@@ -1,7 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import { test } from "node:test";
-import { fileURLToPath } from "node:url";
 import { newDb } from "pg-mem";
 import type { Db } from "mongodb";
 import { authorizeTarget, readMongoSnapshot } from "./rehearse-mongo-to-postgres";
@@ -14,10 +12,8 @@ import {
   type RehearsalSnapshot,
 } from "../src/postgresRehearsal";
 import { snakeCase } from "../src/migrationSupport";
+import { readPostgresMigrations } from "../src/postgresMigrations";
 
-const sqlPath = fileURLToPath(
-  new URL("../migrations-postgres/0001_rehearsal_core.sql", import.meta.url),
-);
 const fixture = (): RehearsalSnapshot =>
   ({
     ...Object.fromEntries(rehearsalTables.map((table) => [table, []])),
@@ -41,9 +37,6 @@ const fixture = (): RehearsalSnapshot =>
     affirmations: [{ id: 1, text: "Keep going" }],
     beta_grants: [{ id: "beta-1", userId: "kindred-owner-a", grantedBy: "kindred-owner-b" }],
     body_scans: [{ id: 31, userId: "kindred-owner-a", energyLevel: 4, feelings: ["calm"] }],
-    calendar_connections: [
-      { userId: "kindred-owner-a", encryptedRefreshToken: "synthetic-ciphertext" },
-    ],
     entitlement_audit: [
       {
         id: "audit-1",
@@ -105,7 +98,7 @@ const fixture = (): RehearsalSnapshot =>
 async function database() {
   const memory = newDb();
   // pg-mem uses PostgreSQL syntax and enforces PK/FK/unique/index constraints.
-  memory.public.none(await readFile(sqlPath, "utf8"));
+  memory.public.none(await readPostgresMigrations());
   const adapter = memory.adapters.createPg();
   const client = new adapter.Client();
   await client.connect();
@@ -122,7 +115,7 @@ test("rehearses all tables with stable Kindred IDs, owner isolation and cascade"
       environment: "test",
       confirmNonProduction: true,
     });
-    assert.equal(Object.keys(counts).length, 20);
+    assert.equal(Object.keys(counts).length, 19);
     assert.equal(counts.users, 2);
     assert.equal(counts.messages, 1);
     const owner = await client.query("SELECT id, auth0_user_id FROM users WHERE id = $1", [
@@ -263,7 +256,7 @@ test("replays deterministically into a clean embedded schema", async () => {
 
 test("checks every current Mongo table and rejects unsafe values before a transaction", async () => {
   const snapshot = fixture();
-  assert.equal(rehearsalTables.length, 20);
+  assert.equal(rehearsalTables.length, 19);
   for (const [table, field, value] of [
     ["users", "id", { $gt: "" }],
     ["users", "createdAt", "yesterday"],

@@ -33,7 +33,6 @@ import Habits from "@/pages/habits";
 import Medications from "@/pages/medications";
 import Reports from "@/pages/reports";
 import Profile from "@/pages/profile";
-import CalendarPage from "@/pages/calendar";
 import Chat from "@/pages/chat";
 import Archive from "@/pages/archive";
 import Reminders from "@/pages/reminders";
@@ -211,7 +210,6 @@ function PrivateRoutes() {
         <Route path="/app/medications" component={Medications} />
         <Route path="/app/account" component={Account} />
         <Route path="/app/admin/beta" component={AdminBeta} />
-        <Route path="/app/calendar" component={CalendarPage} />
         <Route path="/app/archive" component={Archive} />
         <Route path="/app/reminders" component={Reminders} />
         <Route component={NotFound} />

@@ -8,7 +8,7 @@ This draft must be reconciled with the deployed infrastructure, contracts, busin
 
 ## Where AI is used
 
-AI generates coaching-chat replies and may help form summaries or contextual guidance. The server can provide recent morning and evening assessments, body scans, habit information, medication status, profile details, and a title-free calendar-load signal when those sources are relevant to the current message.
+AI generates coaching-chat replies and may help form summaries or contextual guidance. The server can provide recent morning and evening assessments, body scans, habit information, medication status, and profile details when those sources are relevant to the current message.
 
 ## Context minimization
 
@@ -17,7 +17,6 @@ Kindred's context assembler selects source categories using the current interact
 ## Limitations
 
 - AI output is probabilistic and may be inaccurate, incomplete, inconsistent, or inappropriate.
-- Calendar-load categories describe scheduling density only. They are not diagnoses or psychological conclusions.
 - Kindred does not have human feelings, professional credentials, or independent knowledge of facts outside the information and tools supplied to it.
 - Important health, legal, financial, safety, or other consequential information requires a qualified human source.
 

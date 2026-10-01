@@ -19,7 +19,6 @@ export const SECONDARY_PAGES: Record<string, string> = {
   "/app/evening": "Evening",
   "/app/habits": "Habits",
   "/app/medications": "Medications",
-  "/app/calendar": "Calendar retired",
   "/app/reminders": "Reminders",
   "/app/account": "Account security",
   "/app/archive": "Archive",

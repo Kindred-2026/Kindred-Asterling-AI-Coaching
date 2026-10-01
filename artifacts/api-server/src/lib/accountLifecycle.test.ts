@@ -2,7 +2,6 @@ import { afterAll, describe, expect, it } from "vitest";
 import {
   betaGrantsTable,
   bodyScansTable,
-  calendarConnectionsTable,
   closeDatabase,
   conversations,
   dailyUsageTable,
@@ -160,11 +159,6 @@ describe("MongoDB account lifecycle", () => {
         type: "morning",
         localDate: "2026-09-01",
         channel: "email",
-      }),
-      db.insert(calendarConnectionsTable).values({
-        userId,
-        provider: "google",
-        encryptedRefreshToken: "encrypted",
       }),
       db.insert(subscriptionsTable).values({ userId, status: "active" }),
       db.insert(entitlementAuditTable).values({ userId, action: "created" }),

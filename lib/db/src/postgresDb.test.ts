@@ -1,7 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import { test } from "node:test";
-import { fileURLToPath } from "node:url";
 import { DataType, newDb } from "pg-mem";
 import {
   PostgresDataApi,
@@ -17,9 +15,8 @@ import {
   withDatabaseLease,
 } from "./postgresDb";
 import { affirmationsTable, conversations, messages, usersTable } from "./mongoSchema";
+import { readPostgresMigrations } from "./postgresMigrations";
 import { requiredPostgresSchemaCatalog } from "./postgresSchema";
-
-const schemaPath = fileURLToPath(new URL("../migrations-postgres/0001_rehearsal_core.sql", import.meta.url));
 
 async function fixture(): Promise<{ api: PostgresDataApi; pool: any }> {
   const memory = newDb();
@@ -29,7 +26,7 @@ async function fixture(): Promise<{ api: PostgresDataApi; pool: any }> {
     implementation: () => new Date(),
     impure: true,
   });
-  memory.public.none(await readFile(schemaPath, "utf8"));
+  memory.public.none(await readPostgresMigrations());
   const Pg = memory.adapters.createPg();
   const pool = new Pg.Pool();
   return { api: new PostgresDataApi(pool), pool };

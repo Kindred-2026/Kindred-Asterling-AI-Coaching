@@ -322,12 +322,6 @@ export interface ChatAppendInput {
   content: string;
 }
 
-export interface CalendarEvent {
-  date: string;
-  time: string;
-  title: string;
-}
-
 export interface Affirmation {
   id: number;
   text: string;
@@ -495,17 +489,6 @@ export type GetMedicationWeeklyReportParams = {
  * @maximum 840
  */
 tzOffset?: number;
-};
-
-export type GetUpcomingCalendarEvents410Error = typeof GetUpcomingCalendarEvents410Error[keyof typeof GetUpcomingCalendarEvents410Error];
-
-
-export const GetUpcomingCalendarEvents410Error = {
-  calendar_retired: 'calendar_retired',
-} as const;
-
-export type GetUpcomingCalendarEvents410 = {
-  error: GetUpcomingCalendarEvents410Error;
 };
 
 export type GetTodaySummaryParams = {

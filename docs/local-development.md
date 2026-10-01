@@ -35,7 +35,7 @@ tears it down when you stop `pnpm dev`.
 - **`AI_PROVIDER=disabled`** keeps the API runnable without AI infrastructure;
   switch to `openai`/`ollama` when you need live AI. Hosted endpoints should be
   used only with synthetic data unless the provider review is complete.
-- Secret values (`RESEND_API_KEY`, `OPENAI_API_KEY`, calendar keys, …) belong in
+- Secret values (`RESEND_API_KEY`, `OPENAI_API_KEY`, …) belong in
   your environment or a secrets manager, **never** in `.env.dev`. The launcher
   sends only public nonblank `VITE_*` values to the browser child; anything else
   in `.env.dev` goes only to the API child, but keeping secrets out keeps them

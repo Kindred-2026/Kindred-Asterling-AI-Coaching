@@ -860,19 +860,6 @@ export const UnlogMedicationTakenResponse = zod.void()
 
 
 /**
- * Calendar event retrieval is retired. Authenticated callers receive 410 calendar_retired. No Google API calls are made. The historical success schema remains documented for older generated clients only.
- * @deprecated
- * @summary Retired Google Calendar endpoint
- */
-export const GetUpcomingCalendarEventsResponseItem = zod.object({
-  "date": zod.string(),
-  "time": zod.string(),
-  "title": zod.string()
-})
-export const GetUpcomingCalendarEventsResponse = zod.array(GetUpcomingCalendarEventsResponseItem)
-
-
-/**
  * @summary Get today's progress summary
  */
 export const getTodaySummaryQueryTzOffsetMin = -840;

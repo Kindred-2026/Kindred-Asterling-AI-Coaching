@@ -4,7 +4,7 @@
 
 ## Current repository contract
 
-The API uses MongoDB by default (`DATABASE_PROVIDER=mongo`, `MONGODB_URI` / `MONGODB_DATABASE`) and has an opt-in PostgreSQL runtime path (`DATABASE_PROVIDER=postgres`, `POSTGRES_URL`). PostgreSQL has passed live adapter and synthetic migration/restore checks; it is selected in the Fly staging app; full application acceptance remains open. See [execution evidence](docs/POSTGRES_STAGING_EVIDENCE.md). Auth0 uses `AUTH0_DOMAIN` / `AUTH0_AUDIENCE`; the frontend builds with three public Auth0 `VITE_*` values. Helcim is conditional on `HELCIM_PAYMENTS_ENABLED=true`. AI supports Ollama and an OpenAI-compatible provider; Cloudflare AI Gateway is the target route, not a verified live integration. Bedrock runtime support has been removed. Resend is a production startup requirement. These are **code contracts**, not verified facts about a live provider account or deployment. The repository has historical Coolify, Clerk, PostgreSQL-migration and Calendar artifacts; their presence does not prove those services are currently in use. The dated provider follow-up below records authorized live runtime inspection separately from these code contracts.
+The API uses MongoDB by default (`DATABASE_PROVIDER=mongo`, `MONGODB_URI` / `MONGODB_DATABASE`) and has an opt-in PostgreSQL runtime path (`DATABASE_PROVIDER=postgres`, `POSTGRES_URL`). PostgreSQL has passed live adapter and synthetic migration/restore checks; it is selected in the Fly staging app; full application acceptance remains open. See [execution evidence](docs/POSTGRES_STAGING_EVIDENCE.md). Auth0 uses `AUTH0_DOMAIN` / `AUTH0_AUDIENCE`; the frontend builds with three public Auth0 `VITE_*` values. Helcim is conditional on `HELCIM_PAYMENTS_ENABLED=true`. AI supports Ollama and an OpenAI-compatible provider; Cloudflare AI Gateway is the target route, not a verified live integration. Bedrock runtime support has been removed. Resend is a production startup requirement. These are **code contracts**, not verified facts about a live provider account or deployment. The repository has historical Coolify, Clerk and PostgreSQL-migration artifacts; their presence does not prove those services are currently in use. The dated provider follow-up below records authorized live runtime inspection separately from these code contracts.
 
 In the tables, **S** = secret (including sensitive identifiers such as access-key IDs/SIDs), **P** = public, browser-exposed configuration, **N** = non-secret server/build configuration. **Dev** `local secret` means developer-controlled secret injection (actual store unverified); `local config` means shell or local development configuration (including documented `.env.dev`; actual source unverified). **Current prod** `unverified` means the code requires/consumes the name but neither injection location nor population is established; `not runtime` means a job/legacy-only name. **Target** `Fly secret` / `Fly config` / `Fly build` means proposed Fly.io encrypted runtime secret / ordinary runtime setting / public build setting; `job secret` / `job config` means isolated operator migration/deployment job, not app runtime. Target locations are proposals except where a dated staging verification is explicitly recorded. **Status** `verify/rotate` means check use and rotate at cutover as appropriate, not already rotated; `verify/retain` means confirm configuration during cutover; `verify/remove` means confirm no remaining consumer or stored data before revocation/removal. Repository secret removal is recorded below; provider runtime rotations/removals are not claimed complete.
 
@@ -97,16 +97,13 @@ cutover.
 | `AUTH0_CLIENT_SECRET` | Auth0 Deploy CLI machine-to-machine scopes limited to the explicitly managed tenant resources; no user impersonation or runtime API access. | Exact Deploy CLI scopes require tenant review |
 | `CLERK_SECRET_KEY` | Read-only Clerk user/identity inspection only while legacy account reconciliation is authorized. | Legacy-only; exact grant and continued need unverified |
 | `CLERK_WEBHOOK_SECRET` | Verify signatures for a legacy Clerk webhook only if that endpoint is still intentionally operated. | Unmounted code; remove after migration/rollback review |
-| `GOOGLE_CLIENT_SECRET` | No new scope: retired Calendar integration. Retain only for an approved token-disconnect or rollback procedure. | Retired; revoke after stored-token disposition |
-| `CALENDAR_OAUTH_STATE_SECRET` | Local OAuth state signing only while the retired Calendar flow remains available. | Retired; remove after disconnect audit |
-| `CALENDAR_TOKEN_ENCRYPTION_KEY` | Local decrypt/re-encrypt of stored Calendar refresh tokens for disconnect or recovery; never share with the browser. | Temporary; remove after stored-token disposition |
 | `SNYK_TOKEN` | Read-only project dependency/code scanning sufficient for the CI scans; no organization administration. | Verify token type and org scope in Snyk |
 | `OPENCODE_API_KEY` | Model/API access for the GitHub comment bot; its sole workflow consumer was removed by PR #164 | Removed from repository settings on 2026-09-24 after merge; no value was accessed |
 | `GITHUB_TOKEN` | GitHub-managed per-job API token; permissions are bounded by each workflow's `permissions:` declaration. It is not a repository secret and needs no manual rotation. | Automatic; retain least-privilege workflow permissions |
 
 ### One-off jobs, retired integration references and development switches
 
-The names below are present in examples or tracked consumers, but are **not evidence of active production integrations**. The standalone Clerk webhook module references its secret but is not mounted in `routes/index.ts`. Calendar API endpoints return retired/410 responses; the encryption key remains for disconnect/revocation of previously stored tokens. Migration credentials must remain isolated from the running app.
+The names below are present in examples or tracked consumers, but are **not evidence of active production integrations**. The standalone Clerk webhook module references its secret but is not mounted in `routes/index.ts`. Migration credentials must remain isolated from the running app.
 
 | Name | Kind; consumer / purpose; requirement | Dev | Current prod | Proposed target | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -125,11 +122,6 @@ The names below are present in examples or tracked consumers, but are **not evid
 | `CLERK_WEBHOOK_SECRET` | S; unmounted standalone Clerk webhook module requires it outside tests if imported | local secret | not runtime; unverified | no app runtime target | verify/remove after migration check |
 | `CLERK_PUBLISHABLE_KEY` | P; root example only, no active consumer found | local config | not runtime | none | verify/remove |
 | `VITE_CLERK_PUBLISHABLE_KEY` | P; root example only, no active browser consumer found | local config | not runtime | none | verify/remove |
-| `GOOGLE_CLIENT_ID` | P; retired Calendar OAuth helper; no active connect route | local config | not runtime; unverified | none | verify/remove after disconnect audit |
-| `GOOGLE_CLIENT_SECRET` | S; retired Calendar OAuth helper; no active connect route | local secret | not runtime; unverified | none | verify/remove after disconnect audit |
-| `GOOGLE_CALENDAR_REDIRECT_URI` | P; retired Calendar OAuth callback configuration | local config | not runtime; unverified | none | verify/remove |
-| `CALENDAR_OAUTH_STATE_SECRET` | S; retired Calendar OAuth helper state signing | local secret | not runtime; unverified | none | verify/remove after disconnect audit |
-| `CALENDAR_TOKEN_ENCRYPTION_KEY` | S; decrypts saved Calendar tokens for best-effort disconnect/revocation; optional, not startup gate | local secret | unverified | Fly secret temporarily if saved tokens remain | verify/retain until reconnect/deletion plan, then remove |
 | `REPLIT_DOMAINS` | P; legacy fallback for reminder link origin | platform/local config | unverified | none; use `APP_PUBLIC_URL` | verify/remove |
 | `REMINDER_SCHEDULER_DISABLED` | N; disables reminder scheduler when `true`, optional | local config | unverified | Fly config if operationally needed | verify/retain |
 | `KINDRED_API_ORIGIN` | P; local Vite proxy target, optional | local config | not runtime | none (dev only) | verify/retain locally |
@@ -197,6 +189,10 @@ coordinate a history rewrite across affected refs. Do not claim history cleanup
 complete until owner confirmation, key revocation, all-branch rewrite, and
 collaborator clone instructions are complete.
 
+### Google Calendar removal — 2026-10-01
+
+The owner permanently removed the Google Calendar integration. The 1Password vault that held `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `CALENDAR_OAUTH_STATE_SECRET` and `CALENDAR_TOKEN_ENCRYPTION_KEY` no longer exists, and none of them are set as Fly secrets on `kindred-asterling-ai-coaching`. Their entries, and `GOOGLE_CALENDAR_REDIRECT_URI`, were removed from `.env.example` (`.env.1password` was removed separately the same day), and no code reads them. Previously stored encrypted refresh tokens can no longer be decrypted or revoked; after this code is deployed, drop them with `pnpm --filter @workspace/db run drop:calendar-connections` (see `lib/db/migrations-postgres/README.md`). Owners should also delete the Calendar OAuth client in Google Cloud so any outstanding grants stop working. Historical context: [Calendar sunset](docs/releases/calendar-sunset.md).
+
 ## Target state — staging deployed; production cutover incomplete
 
 Fly app `kindred-asterling-ai-coaching` now runs PostgreSQL in Toronto (`yyz`)
@@ -211,7 +207,7 @@ below and [deployment evidence](docs/POSTGRES_STAGING_EVIDENCE.md).
 
 1. Which production and development accounts/projects actually supply MongoDB, Auth0, Helcim, Resend, AI, Twilio and ElevenLabs, and where are their runtime values injected today? The existing server still serves production after Coolify Cloud cancellation.
 2. Are Helcim payments and any OpenAI-compatible AI/Ollama, SMS or voice features enabled in production, and which credentials/endpoints are live?
-3. Are Clerk webhook/admin access or Google Calendar stored tokens still needed for cleanup or revocation before removing credentials (especially `CALENDAR_TOKEN_ENCRYPTION_KEY`)?
+3. Is Clerk webhook/admin access still needed for cleanup before removing its credentials?
 4. Fly staging app and cluster are recorded below in `yyz`; the production migration/rollback and remaining secret-rotation schedule is still open.
 5. Which Cloudflare AI Gateway account, authentication mode, upstream provider and server-side credential contract are intended?
 6. Verify `SNYK_TOKEN` remains correctly scoped for the active Snyk workflow. `OPENCODE_API_KEY` was deleted after PR #164 removed its sole workflow consumer; GitHub listed only `SNYK_TOKEN` immediately after deletion.
