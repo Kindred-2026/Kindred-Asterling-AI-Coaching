@@ -21,6 +21,7 @@ export const COMPONENTS = [
   { name: "test:dev-supervisor", cmd: "pnpm", args: ["run", "test:dev-supervisor"] },
   { name: "test:verify", cmd: "pnpm", args: ["run", "test:verify"] },
   { name: "test:release-check", cmd: "pnpm", args: ["run", "test:release-check"] },
+  { name: "test:auth0-local", cmd: "pnpm", args: ["run", "test:auth0-local"] },
   {
     name: "test:frontend",
     cmd: "pnpm",

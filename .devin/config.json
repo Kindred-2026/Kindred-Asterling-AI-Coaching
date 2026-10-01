@@ -6,6 +6,7 @@
       "Exec(pnpm dev)",
       "Exec(pnpm verify)",
       "Exec(pnpm workspace:check)",
+      "Exec(pnpm auth0:local)",
       "Exec(pnpm run)",
       "Exec(pnpm --filter)",
       "Exec(git status)",

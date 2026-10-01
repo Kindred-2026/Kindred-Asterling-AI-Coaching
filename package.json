@@ -18,12 +18,14 @@
     "test:dev-supervisor": "node --check scripts/dev.mjs && node --check scripts/dev-supervisor.mjs && node --check scripts/dev-supervisor-config.mjs && node --check scripts/dev-supervisor-probes.mjs && node --check scripts/dev-supervisor-process.mjs && node --check scripts/dev-supervisor-shutdown.mjs && node --check scripts/dev-supervisor-database.mjs && node --check scripts/dev-supervisor-run.mjs && node --check scripts/dev-db-worker.mjs && node --test scripts/dev-supervisor.test.mjs",
     "test:verify": "node --test scripts/verify.test.mjs",
     "test:release-check": "node --test scripts/release-check.test.mjs",
+    "test:auth0-local": "node --test scripts/auth0-local.test.mjs",
     "format": "node scripts/format-check.mjs --write",
     "format:check": "node scripts/format-check.mjs",
     "verify": "node scripts/verify.mjs",
     "generate:check": "node scripts/verify-generated.mjs",
     "release:check": "node scripts/release-check.mjs",
-    "workspace:check": "node scripts/workspace-check.mjs"
+    "workspace:check": "node scripts/workspace-check.mjs",
+    "auth0:local": "node scripts/auth0-local.mjs"
   },
   "devDependencies": {
     "mongodb-memory-server": "^10.4.3",
