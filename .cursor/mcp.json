@@ -1,8 +1,5 @@
 {
   "mcpServers": {
-    "1password": {
-      "command": "1password-mcp"
-    },
     "kubernetes": {
       "command": "npx",
       "args": ["-y", "mcp-server-kubernetes"],
