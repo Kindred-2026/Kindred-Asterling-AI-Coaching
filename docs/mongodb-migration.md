@@ -57,7 +57,7 @@ The command succeeds only after all of these checks pass:
 - source and target row counts match for every table;
 - an order-independent SHA-256 digest matches for every table;
 - all date-only fields retain exact calendar strings and the final collection
-  set is exactly 21 collections;
+  set is exactly 20 collections;
 - user, conversation, habit, medication, and administrative references have no
   orphans;
 - every runtime unique/index constraint can be created; and
@@ -106,7 +106,7 @@ pnpm --filter @workspace/db run validate:restore
 ```
 
 The restore target must be a new empty database. The validator is read-only and
-requires the same exact 21-collection set, row count, and digest on both sides.
+requires the same exact 20-collection set, row count, and digest on both sides.
 Retain command logs and validation output with the migration report.
 
 ## Final cutover
@@ -128,7 +128,7 @@ Retain command logs and validation output with the migration report.
    `MONGODB_DATABASE`. Remove PostgreSQL variables from the application runtime.
 7. Deploy the MongoDB application build, then verify `/api/healthz`,
    `/api/healthz/db`, sign-in, coaching chat, journaling, medications, reminders,
-   calendar connection, subscription status/checkout, webhook processing,
+   subscription status/checkout, webhook processing,
    account export, and account deletion using synthetic accounts.
 8. Monitor errors and reminder/webhook delivery through the agreed observation
    window before reopening normal traffic.

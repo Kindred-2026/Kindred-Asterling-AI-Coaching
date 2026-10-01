@@ -208,7 +208,7 @@ const privacySections: LegalSection[] = [
         [
           "Account & Authentication Data: Email address, user identification tokens, account verification status, and name provided through our authentication partner, Auth0.",
           "Wellness, Reflection & Coaching Data: Self-submitted morning check-ins, evening reflections, mood scores, body scan notes, habit records, medication logs, personal goals, and chat interactions with the coaching AI.",
-          "Retired Calendar Integration: Kindred no longer connects to Google Calendar or retrieves event information. Previously saved encrypted connection tokens remain available for user-initiated disconnection pending a connection audit.",
+          "Former Calendar Integration: Kindred no longer connects to Google Calendar or retrieves event information. Encrypted connection tokens saved before the integration was removed can no longer be decrypted or used, are deleted with your account, and will be deleted from all accounts.",
           "Subscription & Transaction Data: Payment references, plan tiers (Yearly or Lifetime Access), and transaction IDs processed securely through Helcim. We do not store or process raw credit card numbers.",
           "Operational & Security Telemetry: Server access logs, security events, quota tracking, and application error logs.",
         ],
@@ -255,10 +255,9 @@ const privacySections: LegalSection[] = [
         "Kindred's use and transfer to any other app of information received from Google APIs adheres strictly to the Google API Services User Data Policy, including the Limited Use requirements:",
       ),
       list([
-        "Integration Retirement: New Google Calendar connections and event retrieval are disabled.",
-        "Coaching Context: Google Calendar events and schedule-density signals are no longer supplied to coaching.",
+        "Integration Removed: Kindred no longer connects to Google Calendar, retrieves events, or supplies calendar information to coaching.",
         "No Secondary Marketing or AI Training: Google user data is never sold, transferred to data brokers, used for advertising, or used to train general-purpose AI models.",
-        "Disconnection: The You page links to cleanup of previously saved Calendar access. Disconnection deletes the saved token from Kindred and attempts Google token revocation; access can also be removed in your Google Account.",
+        "Removing Access: You can remove Kindred from the third-party connections in your Google Account at any time.",
       ]),
     ],
   },
@@ -280,7 +279,7 @@ const privacySections: LegalSection[] = [
         "Access and inspect the personal information we hold about you.",
         "Request corrections to inaccurate or incomplete personal records.",
         "Request account deletion and complete erasure of your coaching history.",
-        "Withdraw consent for optional processing (e.g., calendar integration, marketing emails).",
+        "Withdraw consent for optional processing (e.g., SMS reminders, marketing emails).",
       ]),
       paragraph(
         "To exercise any of these rights, submit a written request to our Privacy Officer at kindredaicoach@gmail.com. We respond to verified requests within thirty (30) days in compliance with statutory timelines.",
@@ -506,7 +505,6 @@ const transparencySections: LegalSection[] = [
       list([
         "Conversational Coaching Dialogue: Generating interactive coaching prompts, reflective inquiries, and conversational responses based on user-initiated messages.",
         "Self-Assessment Summaries: Synthesizing user-submitted morning check-ins, evening reflections, body scans, and goal tracking into periodic progress overviews.",
-        "Calendar Retirement: Calendar events and schedule-density signals are no longer used in AI coaching.",
       ]),
     ],
   },

@@ -125,26 +125,6 @@ describe("PostgreSQL runtime configuration", () => {
   });
 });
 
-describe("retired Google Calendar configuration", () => {
-  it("does not require OAuth credentials when only the cleanup key remains", () => {
-    baseEnv();
-    delete process.env.GOOGLE_CLIENT_ID;
-    delete process.env.GOOGLE_CLIENT_SECRET;
-    delete process.env.GOOGLE_CALENDAR_REDIRECT_URI;
-    delete process.env.CALENDAR_OAUTH_STATE_SECRET;
-    process.env.CALENDAR_TOKEN_ENCRYPTION_KEY = "cleanup-test-key";
-    expect(validateRuntimeConfig).not.toThrow();
-  });
-
-  it("ignores obsolete OAuth settings during startup", () => {
-    baseEnv();
-    process.env.GOOGLE_CALENDAR_REDIRECT_URI = "/obsolete-callback";
-    delete process.env.CALENDAR_TOKEN_ENCRYPTION_KEY;
-    expect(validateRuntimeConfig).not.toThrow();
-  });
-});
-
-
 describe("Auth0 production configuration", () => {
   it("requires Auth0 issuer and API audience instead of Clerk credentials", () => {
     baseEnv();

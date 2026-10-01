@@ -25,7 +25,6 @@ import type {
   AuthUserEnvelope,
   BodyScan,
   BodyScanInput,
-  CalendarEvent,
   ChatAppendInput,
   ChatConversation,
   ChatConversationWithMessages,
@@ -36,7 +35,6 @@ import type {
   EveningReportInput,
   GetMedicationWeeklyReportParams,
   GetTodaySummaryParams,
-  GetUpcomingCalendarEvents410,
   Habit,
   HabitEntry,
   HabitEntryInput,
@@ -2771,86 +2769,6 @@ export const useUnlogMedicationTaken = <TError = ErrorType<void>,
       > => {
       return useMutation(getUnlogMedicationTakenMutationOptions(options));
     }
-
-export const getGetUpcomingCalendarEventsUrl = () => {
-
-
-
-
-  return `/api/calendar/upcoming`
-}
-
-/**
- * Calendar event retrieval is retired. Authenticated callers receive 410 calendar_retired. No Google API calls are made. The historical success schema remains documented for older generated clients only.
- * @deprecated
- * @summary Retired Google Calendar endpoint
- */
-export const getUpcomingCalendarEvents = async ( options?: Parameters<typeof customFetch>[1]): Promise<CalendarEvent[]> => {
-
-  return customFetch<CalendarEvent[]>(getGetUpcomingCalendarEventsUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetUpcomingCalendarEventsQueryKey = () => {
-    return [
-    `/api/calendar/upcoming`
-    ] as const;
-    }
-
-
-export const getGetUpcomingCalendarEventsQueryOptions = <TData = Awaited<ReturnType<typeof getUpcomingCalendarEvents>>, TError = ErrorType<void | GetUpcomingCalendarEvents410>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUpcomingCalendarEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetUpcomingCalendarEventsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUpcomingCalendarEvents>>> = ({ signal }) => getUpcomingCalendarEvents({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUpcomingCalendarEvents>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type GetUpcomingCalendarEventsQueryResult = NonNullable<Awaited<ReturnType<typeof getUpcomingCalendarEvents>>>
-export type GetUpcomingCalendarEventsQueryError = ErrorType<void | GetUpcomingCalendarEvents410>
-
-
-/**
- * @deprecated
- * @summary Retired Google Calendar endpoint
- */
-
-export function useGetUpcomingCalendarEvents<TData = Awaited<ReturnType<typeof getUpcomingCalendarEvents>>, TError = ErrorType<void | GetUpcomingCalendarEvents410>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUpcomingCalendarEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getGetUpcomingCalendarEventsQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
 
 export const getGetTodaySummaryUrl = (params?: GetTodaySummaryParams,) => {
   const normalizedParams = new URLSearchParams();

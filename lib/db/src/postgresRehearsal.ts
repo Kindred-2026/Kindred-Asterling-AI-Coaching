@@ -43,7 +43,6 @@ export const rehearsalColumns = {
     "notes",
     "createdAt",
   ],
-  calendar_connections: ["userId", "provider", "encryptedRefreshToken", "createdAt", "updatedAt"],
   daily_usage: ["userId", "date", "count"],
   entitlement_audit: ["id", "userId", "action", "actorId", "metadata", "createdAt"],
   evening_reports: [
@@ -175,7 +174,6 @@ const required: Partial<Record<RehearsalTable, readonly string[]>> = {
   medications: ["id", "userId", "name", "dosage", "times"],
   beta_grants: ["id", "userId"],
   body_scans: ["id", "userId", "energyLevel"],
-  calendar_connections: ["userId", "encryptedRefreshToken"],
   daily_usage: ["userId", "date"],
   entitlement_audit: ["id", "userId", "action"],
   evening_reports: ["id", "userId", "date", "medicationEffectiveness"],
@@ -197,7 +195,6 @@ const nonNullable: Partial<Record<RehearsalTable, readonly string[]>> = {
   medications: ["createdAt"],
   beta_grants: ["grantedAt"],
   body_scans: ["scannedAt", "feelings", "createdAt"],
-  calendar_connections: ["provider", "createdAt", "updatedAt"],
   daily_usage: ["count"],
   entitlement_audit: ["createdAt"],
   evening_reports: ["createdAt"],

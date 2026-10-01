@@ -20,7 +20,8 @@ Kindred may handle:
 
 - Account and identity information, including identity-provider identifiers, email, verification state, name, and profile details a user chooses to provide.
 - Wellness and coaching information, including morning and evening reflections, body scans, habits, medication schedules and logs, goals, chat messages, and generated coaching replies.
-- Optional integration data, including an encrypted Google Calendar refresh token and read-only upcoming-event information, plus reminder preferences, phone number, and time zone when those features are enabled.
+- Optional feature data, including reminder preferences, phone number, and time zone when those features are enabled.
+- Encrypted Google Calendar refresh tokens saved before the Calendar integration was removed (see below).
 - Subscription and transaction references needed to confirm access. Kindred delegates checkout and billing management to Helcim rather than storing complete payment-card details.
 - Operational information such as request logs, quota usage, security events, and delivery records. The current safety-event code is designed to emit a non-identifying control event rather than message content.
 
@@ -28,7 +29,7 @@ Kindred may handle:
 
 Kindred uses information to:
 
-- Provide authentication, coaching conversations, assessments, habit and medication tracking, reports, reminders, calendar context, and account support.
+- Provide authentication, coaching conversations, assessments, habit and medication tracking, reports, reminders, and account support.
 - Personalize responses using context selected as relevant to the current interaction.
 - Operate subscriptions, prevent abuse, protect accounts, troubleshoot failures, and meet legal obligations.
 - Send marketing only under separate, recorded consent where required. Service messages and marketing preferences must not be bundled.
@@ -37,21 +38,21 @@ Kindred uses information to:
 
 The hosting provider, database provider, and AI processor must be reconciled with the live deployment before publication. A staging app and Managed Postgres cluster were provisioned with Fly.io in Toronto (`yyz`) on 2026-09-24. The app has no deployed machines and the database is unattached; production has not been cut over. Billing and payment details have not been inspected. The planned hosted AI route is Cloudflare AI Gateway to a selected upstream model provider. These are planning choices and are not confirmation of a completed cutover.
 
-The service uses Auth0 for identity, Helcim for payments, Google Calendar for optional read-only calendar access, Sentry for error and performance monitoring when enabled, Twilio for SMS, Resend for email, and ElevenLabs for voice features. Legacy Clerk identity mappings are retained only for account-history reconciliation and rollback. Information should be sent to a provider only when its feature is enabled and needed.
+The service uses Auth0 for identity, Helcim for payments, Sentry for error and performance monitoring when enabled, Twilio for SMS, Resend for email, and ElevenLabs for voice features. Legacy Clerk identity mappings are retained only for account-history reconciliation and rollback. Information should be sent to a provider only when its feature is enabled and needed.
 
 > **Founder/legal confirmation required:** Before publication, confirm actual hosting and database locations, live AI model/provider and processing region, enabled optional providers, retention and training terms, subprocessors, cross-border transfers, and contractual safeguards. Remove providers not used in production.
 
-## Google Calendar data
+## Former Google Calendar integration
 
-If a user connects Google Calendar, Kindred requests read-only access to upcoming events. Kindred stores an encrypted refresh token so the connection can continue, displays upcoming event information to the user, and may supply only a title-free schedule-density signal to the coaching AI.
+Kindred no longer connects to Google Calendar and does not request, display, or use calendar events. Accounts that connected Google Calendar before the integration was removed may still have an encrypted refresh token stored. Kindred no longer holds the key needed to decrypt these tokens, so they cannot be used to access Google data. They are deleted with the account, and the remaining tokens will be deleted from all accounts. Users can also remove Kindred's access from their Google Account's third-party connections at any time.
 
-Kindred's use and transfer of information received from Google APIs will comply with the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including its Limited Use requirements. Google Calendar data is not sold, used for advertising, or used to train a general-purpose AI model.
+Kindred's use and transfer of information received from Google APIs complies with the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including its Limited Use requirements. Google user data is not sold, used for advertising, or used to train a general-purpose AI model.
 
-> **Founder/legal confirmation required:** Match the app's requested OAuth scope to the least-privilege scope configured in Google Cloud. Implement and verify a calendar disconnect and token-revocation flow before promising users that they can revoke access inside Kindred.
+> **Founder/legal confirmation required:** Record the date the remaining stored tokens are deleted, then remove this section's description of stored tokens.
 
 ## Consent, choices, retention, and access
 
-Optional calendar and communication processing should require specific, informed, revocable consent. The product exposes account export and deletion routes. Production procedures must also address correction, consent withdrawal, provider-side deletion, legal holds, and verified privacy requests.
+Optional communication processing should require specific, informed, revocable consent. The product exposes account export and deletion routes. Production procedures must also address correction, consent withdrawal, provider-side deletion, legal holds, and verified privacy requests.
 
 Current internal proposals retain:
 
@@ -67,7 +68,7 @@ These periods remain proposals until business and legal review confirms them.
 
 ## Security and Canadian privacy guidance
 
-The application uses access controls, user-scoped queries, encrypted calendar tokens, no-store responses for wellness data, and security headers. No system is risk-free. Incident-response and breach-notification procedures must be confirmed before launch.
+The application uses access controls, user-scoped queries, no-store responses for wellness data, and security headers. No system is risk-free. Incident-response and breach-notification procedures must be confirmed before launch.
 
 Review the [PIPEDA fair information principles](https://www.priv.gc.ca/en/privacy-topics/privacy-laws-in-canada/the-personal-information-protection-and-electronic-documents-act-pipeda/p_principle/) and [Canadian privacy regulators' generative-AI principles](https://www.priv.gc.ca/en/privacy-topics/technology/artificial-intelligence/gd_principles_ai).
 

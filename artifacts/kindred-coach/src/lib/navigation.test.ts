@@ -41,7 +41,6 @@ describe("navigation model", () => {
     expect(secondaryHrefs).toContain("/app/evening");
     expect(secondaryHrefs).toContain("/app/habits");
     expect(secondaryHrefs).toContain("/app/medications");
-    expect(secondaryHrefs).not.toContain("/app/calendar");
     expect(secondaryHrefs).toContain("/app/reminders");
     expect(secondaryHrefs).toContain("/app/account");
     expect(secondaryHrefs).toContain("/app/archive");

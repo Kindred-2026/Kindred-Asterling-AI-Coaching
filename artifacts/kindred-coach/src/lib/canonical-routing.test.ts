@@ -58,9 +58,6 @@ vi.mock("@/pages/medications", () => ({
   default: () =>
     createElement("div", { "data-page": "Medications" }, "Medications"),
 }));
-vi.mock("@/pages/calendar", () => ({
-  default: () => createElement("div", { "data-page": "Calendar" }, "Calendar"),
-}));
 vi.mock("@/pages/reminders", () => ({
   default: () =>
     createElement("div", { "data-page": "Reminders" }, "Reminders"),
@@ -177,7 +174,6 @@ describe("canonical signed-in routing through App", () => {
     ["evening", "Evening"],
     ["habits", "Habits"],
     ["medications", "Medications"],
-    ["calendar", "Calendar"],
     ["reminders", "Reminders"],
     ["account", "Account"],
     ["archive", "Archive"],
@@ -195,7 +191,7 @@ describe("canonical signed-in routing through App", () => {
     "/insights",
     "/you",
     ...Object.keys(LEGACY_PRIMARY_ROUTE_REDIRECTS),
-    "/app/calendar",
+    "/app/reminders",
     "/app/account",
   ])("preserves signed-out %s through public login", async (path) => {
     auth.isSignedIn = false;

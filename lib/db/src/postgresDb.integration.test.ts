@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import { lookup } from "node:dns/promises";
 import { randomUUID } from "node:crypto";
 import { test } from "node:test";
-import { fileURLToPath } from "node:url";
 import { Pool } from "pg";
 import {
   PostgresDataApi,
@@ -16,11 +14,11 @@ import {
   initializePostgresDatabase,
   closePostgresDatabase,
 } from "./postgresDb";
+import { readPostgresMigrations } from "./postgresMigrations";
 import { assertEmptyTarget } from "./postgresTargetGuard";
 import { affirmationsTable, conversations, dailyUsageTable, usersTable } from "./mongoSchema";
 
 const optIn = "I_UNDERSTAND_THIS_IS_A_DISPOSABLE_REHEARSAL_DATABASE";
-const migrationPath = fileURLToPath(new URL("../migrations-postgres/0001_rehearsal_core.sql", import.meta.url));
 
 type HostResolver = (hostname: string) => Promise<readonly string[]>;
 type GuardConfig = {
@@ -127,7 +125,7 @@ test("real PostgreSQL rehearsal exercises PostgresDataApi", { skip: !live }, asy
     await pool.end();
     precheckPoolOpen = false;
 
-    const sql = await readFile(migrationPath, "utf8");
+    const sql = await readPostgresMigrations();
     const migrationPool = new Pool({ connectionString, max: 4, connectionTimeoutMillis: 5000 });
     try { await migrationPool.query(sql); } finally { await migrationPool.end(); }
     initialized = true;

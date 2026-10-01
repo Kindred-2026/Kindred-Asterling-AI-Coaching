@@ -217,7 +217,6 @@ async function validateReferences(database: Db): Promise<void> {
   const userOwned = [
     "beta_grants",
     "body_scans",
-    "calendar_connections",
     "conversations",
     "daily_usage",
     "entitlement_audit",

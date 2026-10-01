@@ -10,7 +10,7 @@ This draft must be reconciled with the deployed infrastructure, contracts, busin
 
 Kindred is an informational wellness and coaching tool. It is not a healthcare provider or emergency service.
 
-Kindred does not diagnose, treat, cure, or prevent any condition. Its assessments, calendar-load signals, summaries, and AI responses are not clinical evaluations and are not a substitute for a physician, therapist, pharmacist, or other qualified professional.
+Kindred does not diagnose, treat, cure, or prevent any condition. Its assessments, summaries, and AI responses are not clinical evaluations and are not a substitute for a physician, therapist, pharmacist, or other qualified professional.
 
 ## Medication information
 

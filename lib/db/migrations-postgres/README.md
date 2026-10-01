@@ -3,7 +3,7 @@
 MongoDB remains the default API database. The code has an opt-in PostgreSQL
 runtime adapter, but this schema is still applied only to isolated rehearsal
 databases until real PostgreSQL integration, migration, restore and production
-cutover gates pass. It covers every field and all 20 tables in `src/mongoSchema.ts`, with explicit SQL types,
+cutover gates pass. It covers every field and all 19 tables in `src/mongoSchema.ts`, with explicit SQL types,
 indexes, uniqueness and owner relationships. It is for an **empty, dedicated**
 database, never the historical PostgreSQL database or the application DB.
 Kindred `users.id` remains text; Auth0 subject, Clerk ID and email are attributes,
@@ -11,6 +11,33 @@ not migration joins. Integer IDs retain their source values. Dates are exact
 `YYYY-MM-DD`; timestamps are `timestamptz`; text arrays and JSONB stay typed.
 Cross-owner habit/medication children are prohibited by composite foreign keys.
 Messages inherit ownership through their conversation.
+
+Migrations are numbered SQL files applied in filename order;
+`src/postgresMigrations.ts` concatenates them for the rehearsal, adapter tests
+and integration suite. Never edit an applied migration; add the next number.
+`0002_drop_calendar_connections.sql` removes the table for the Google Calendar
+integration, which was permanently removed on 2026-10-01.
+
+### Dropping stored Calendar tokens (one-off, 2026-10-01)
+
+Deploy the build without Calendar code first, so nothing recreates the Mongo
+collection or index. Then run the job with the API's own runtime configuration
+(`DATABASE_PROVIDER`, plus `MONGODB_URI`/`MONGODB_DATABASE` or `POSTGRES_URL`)
+injected from the secret manager. Without arguments it is a dry run that prints
+only whether the table exists and its row count:
+
+```sh
+corepack pnpm --filter @workspace/db run drop:calendar-connections
+corepack pnpm --filter @workspace/db run drop:calendar-connections -- --confirm=<database name>
+```
+
+The drop runs only when `--confirm` exactly matches the connected database. On
+MongoDB it drops the `calendar_connections` collection; on PostgreSQL it applies
+`0002`. It is safe to re-run. Run it for every environment that has stored
+connections, and record the dry-run count and date. Backups keep the encrypted
+tokens until they expire (35 days); without the deleted key they cannot be
+decrypted. After every environment is done, remove `calendar_connections` from
+the account-deletion list in `src/mongoDb.ts`.
 
 The old SQL baseline at `d84b262^` had different nullability and omitted
 current Auth0 identity fields; this schema is isolated instead of mutating it.

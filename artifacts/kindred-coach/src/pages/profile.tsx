@@ -292,19 +292,6 @@ export default function Profile() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-5 space-y-2">
-        <h2 className="text-sm font-medium">Google Calendar retired</h2>
-        <p className="text-sm text-muted-foreground">
-          Kindred no longer connects to Google Calendar or uses calendar events.
-        </p>
-        <Link
-          href="/app/calendar"
-          className="text-sm text-primary underline underline-offset-2"
-        >
-          Manage previously saved calendar access
-        </Link>
-      </section>
-
       {/* Reflection fields */}
       <section className="rounded-lg border border-border bg-card p-5 space-y-5">
         <div>

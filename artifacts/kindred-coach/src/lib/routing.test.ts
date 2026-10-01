@@ -17,7 +17,7 @@ describe("canonicalPathname", () => {
   it("removes trailing slashes from public and protected routes", () => {
     expect(canonicalPathname("/legal/privacy/")).toBe("/legal/privacy");
     expect(canonicalPathname("/legal/terms///")).toBe("/legal/terms");
-    expect(canonicalPathname("/app/calendar/")).toBe("/app/calendar");
+    expect(canonicalPathname("/app/reminders/")).toBe("/app/reminders");
   });
 
   it("preserves the root and already-canonical paths", () => {
@@ -109,7 +109,7 @@ describe("protected destinations", () => {
     "/you",
     "/app",
     "/app/chat?session=abc#reply",
-    "/app/calendar?connected=true",
+    "/app/reminders?filter=today",
     "/app/account#security",
   ])("preserves %s through login", (path) => {
     expect(protectedDestination(path)).toBe(path);

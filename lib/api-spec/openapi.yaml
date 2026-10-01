@@ -23,8 +23,6 @@ tags:
     description: Dashboard summaries
   - name: affirmations
     description: Daily positive affirmations
-  - name: calendar
-    description: Google Calendar integration
   - name: profile
     description: User profile fields collected during onboarding
   - name: medications
@@ -685,39 +683,6 @@ paths:
         "404":
           description: Not found
 
-  /calendar/upcoming:
-    get:
-      operationId: getUpcomingCalendarEvents
-      tags: [calendar]
-      summary: Retired Google Calendar endpoint
-      deprecated: true
-      description: >
-        Calendar event retrieval is retired. Authenticated callers receive
-        410 calendar_retired. No Google API calls are made. The historical
-        success schema remains documented for older generated clients only.
-      responses:
-        "200":
-          description: Historical success shape; no longer returned
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CalendarEvent"
-        "401":
-          description: Authentication required
-        "410":
-          description: Calendar retired
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [error]
-                properties:
-                  error:
-                    type: string
-                    enum: [calendar_retired]
-
   /dashboard/today:
     get:
       operationId: getTodaySummary
@@ -1351,17 +1316,6 @@ components:
           type: string
           minLength: 1
           maxLength: 4000
-
-    CalendarEvent:
-      type: object
-      required: [date, time, title]
-      properties:
-        date:
-          type: string
-        time:
-          type: string
-        title:
-          type: string
 
     Affirmation:
       type: object

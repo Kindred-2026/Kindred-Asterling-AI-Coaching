@@ -283,7 +283,6 @@ export async function initializeMongoIndexes(current: Db): Promise<void> {
   await current
     .collection("evening_reports")
     .createIndex({ userId: 1, createdAt: -1 });
-  await current.collection("calendar_connections").createIndex({ provider: 1 });
   await current.collection("subscriptions").createIndex(
     { paymentCustomerId: 1 },
     {
@@ -838,6 +837,8 @@ async function cascadeDelete(
       "daily_usage",
       "reminder_settings",
       "reminder_deliveries",
+      // Removed Calendar integration: keeps account deletion complete until
+      // drop-calendar-connections has dropped this collection everywhere.
       "calendar_connections",
       "subscriptions",
       "entitlement_audit",

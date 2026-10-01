@@ -56,15 +56,15 @@ describe("Signup returnTo validation", () => {
   });
 
   it("passes a validated destination to Auth0 and back to sign in", async () => {
-    mocks.search = "returnTo=%2Fapp%2Fcalendar";
+    mocks.search = "returnTo=%2Fapp%2Freminders";
 
     await act(async () => {
       root.render(createElement(Signup));
     });
 
     await act(async () => container.querySelector("button")!.click());
-    expect(mocks.login).toHaveBeenCalledWith("/app/calendar", true);
-    expect(container.querySelector("a")?.getAttribute("href")).toBe("/login?returnTo=%2Fapp%2Fcalendar");
+    expect(mocks.login).toHaveBeenCalledWith("/app/reminders", true);
+    expect(container.querySelector("a")?.getAttribute("href")).toBe("/login?returnTo=%2Fapp%2Freminders");
   });
 
   it("collapses unsafe destinations to canonical /today", async () => {
@@ -81,12 +81,12 @@ describe("Signup returnTo validation", () => {
 
   it("redirects an already signed-in visitor safely", async () => {
     mocks.authState.isSignedIn = true;
-    mocks.search = "returnTo=%2Fapp%2Fcalendar";
+    mocks.search = "returnTo=%2Fapp%2Freminders";
 
     await act(async () => {
       root.render(createElement(Signup));
     });
 
-    expect(mocks.assign).toHaveBeenCalledWith("/app/calendar");
+    expect(mocks.assign).toHaveBeenCalledWith("/app/reminders");
   });
 });
