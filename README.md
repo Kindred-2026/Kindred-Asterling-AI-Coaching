@@ -82,6 +82,8 @@ release. See [docs/release-rollback.md](docs/release-rollback.md).
 
 ## Documentation
 
+- [docs/devin-workspaces.md](docs/devin-workspaces.md) — local (Devin CLI/Desktop)
+  and cloud Devin workspace profiles; `pnpm workspace:check` smoke test
 - [docs/local-development.md](docs/local-development.md) — first-run setup, env
   precedence, database modes, troubleshooting
 - [docs/CLOUDFLARE_SETUP.md](docs/CLOUDFLARE_SETUP.md) — custom domain, firewall,
