@@ -81,6 +81,13 @@ rather than crashing — the rest of the stack keeps working.
 
 Use `external` when you want persistent local data or need an existing dataset.
 
+## Smoke test: `pnpm workspace:check`
+
+To confirm a machine can run the stack end to end, run `pnpm workspace:check`.
+It installs from the lockfile, creates `.env.dev` if missing, starts `pnpm dev`,
+probes the UI and `GET /api/healthz/db`, stops the stack, and fails with the
+captured output if any step does not succeed.
+
 ## Running
 
 ```sh

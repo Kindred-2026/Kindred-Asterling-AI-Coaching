@@ -22,7 +22,8 @@
     "format:check": "node scripts/format-check.mjs",
     "verify": "node scripts/verify.mjs",
     "generate:check": "node scripts/verify-generated.mjs",
-    "release:check": "node scripts/release-check.mjs"
+    "release:check": "node scripts/release-check.mjs",
+    "workspace:check": "node scripts/workspace-check.mjs"
   },
   "devDependencies": {
     "mongodb-memory-server": "^10.4.3",

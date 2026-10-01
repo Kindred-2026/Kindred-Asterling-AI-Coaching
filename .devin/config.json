@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Exec(pnpm install)",
+      "Exec(pnpm dev)",
+      "Exec(pnpm verify)",
+      "Exec(pnpm workspace:check)",
+      "Exec(pnpm run)",
+      "Exec(pnpm --filter)",
+      "Exec(git status)",
+      "Exec(git diff)",
+      "Exec(git log)"
+    ],
+    "deny": ["Exec(sudo)", "Exec(fly)", "Exec(flyctl)", "Read(.env)", "Write(.env)"]
+  }
+}
