@@ -10,5 +10,6 @@ This rule configures the local Devin workspace (Devin CLI / Devin Desktop runnin
 - First run / health check: `pnpm workspace:check` installs, seeds `.env.dev` from `.env.dev.example` if missing, boots the stack on a disposable MongoDB, probes `http://127.0.0.1:8080/` and `/api/healthz/db`, then shuts down. Run it after setup and whenever the stack seems broken.
 - Run the app: `pnpm dev` (UI on :8080, API on :3000 behind the `/api` proxy). The API is not hot-reloaded — restart `pnpm dev` after API edits.
 - Before proposing a change: `pnpm verify` (format, typecheck, frontend/API/journey tests, builds). Focused: `pnpm --filter @workspace/kindred-coach run test`, `pnpm --filter @workspace/db run test:api`.
+- Sign-in: `pnpm auth0:local --check` reports whether Auth0 is configured; `pnpm auth0:local` writes the public tenant domain, client id and audience into `.env.dev`. Never use a client secret or management token.
 - Keep `KINDRED_DEV_DB=disposable` and `AI_PROVIDER=disabled` unless the task needs otherwise. Never put secrets in `.env.dev`; never read or write `.env`.
 - Never deploy from this workspace (no `fly`/`flyctl`), never touch production data, and work on a feature branch — open a PR into `main` rather than pushing to it.

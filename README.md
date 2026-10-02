@@ -53,6 +53,7 @@ pnpm run format                 # write formatting on the maintained boundary
 pnpm run format:check           # verify formatting only
 pnpm run test:verify            # unit tests for the verify/format machinery
 pnpm run test:release-check     # unit tests for the release gate
+pnpm run test:auth0-local       # unit tests for `pnpm auth0:local`
 pnpm run test:dev-supervisor    # unit tests for the dev launcher
 pnpm run generate:check         # generated-client drift check (no file writes)
 pnpm --filter @workspace/kindred-coach run test

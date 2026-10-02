@@ -70,6 +70,22 @@ credentials and never touches the provider):
 Until those values are set, `AuthProvider` renders "Sign-in is not configured"
 rather than crashing — the rest of the stack keeps working.
 
+Once the Application exists, write the values with:
+
+```sh
+pnpm auth0:local --domain <tenant-host> --client-id <public-client-id> --audience <api-identifier>
+# or just `pnpm auth0:local` to be prompted
+pnpm auth0:local --check   # report whether sign-in is configured (exit 1 if not)
+```
+
+It validates the values (bare host, not the `YOUR-DEV-TENANT` placeholder,
+public client id), confirms the tenant answers OIDC discovery with a matching
+issuer (use the tenant's custom domain if it has one; `--offline` skips this),
+and sets `VITE_AUTH0_DOMAIN`/`VITE_AUTH0_CLIENT_ID`/`VITE_AUTH0_AUDIENCE` plus
+the matching API `AUTH0_DOMAIN`/`AUTH0_AUDIENCE` in `.env.dev`. Restart
+`pnpm dev` afterwards. `pnpm workspace:check` warns when sign-in is not
+configured and, when it is, checks that the frontend serves the client id.
+
 ### Database modes
 
 `KINDRED_DEV_DB` in `.env.dev`:
@@ -150,6 +166,7 @@ pnpm run format              # rewrite formatting on the maintained boundary
 pnpm run format:check        # verify formatting only
 pnpm run test:verify         # unit tests for the verify/format machinery
 pnpm run test:release-check  # unit tests for the release gate
+pnpm run test:auth0-local    # unit tests for `pnpm auth0:local`
 pnpm run generate:check      # generated-client drift check (no file writes)
 pnpm run test:dev-supervisor # unit tests for this launcher
 pnpm --filter @workspace/kindred-coach run test

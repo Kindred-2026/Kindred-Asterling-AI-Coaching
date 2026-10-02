@@ -16,6 +16,7 @@ Runs on a developer machine with Devin CLI or Devin Desktop (local agent), again
   ```
 
 - `pnpm workspace:check` is the "does it run" test: it checks Node 24/pnpm, runs `pnpm install --frozen-lockfile`, creates `.env.dev` from `.env.dev.example` if missing, boots `pnpm dev` on a disposable MongoDB, probes the UI and `GET /api/healthz/db` through the Vite proxy, then stops the stack and requires a clean exit. It exits non-zero with the captured dev output on any failure (port conflict, build error, unhealthy DB).
+- Sign-in: `pnpm auth0:local` writes the local Auth0 Application's public values into `.env.dev` (see docs/local-development.md "Auth0 for local development"); until then the UI shows "Sign-in is not configured" and `pnpm workspace:check` warns.
 - Start the Devin CLI in the repo root (`devin`); use `/handoff` to move a task to the cloud workspace.
 
 ## 2. Cloud workspace (GitHub-connected, testing and bugfixes)

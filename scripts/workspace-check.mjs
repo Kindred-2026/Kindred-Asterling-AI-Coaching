@@ -10,6 +10,7 @@ import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readAuth0Status } from "./auth0-local.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const READY_LINE = "Both development servers are ready";
@@ -62,6 +63,13 @@ if (!fs.existsSync(envDevPath)) {
   log("created .env.dev from .env.dev.example");
 }
 
+const auth0 = readAuth0Status();
+if (auth0.configured) log(`sign-in configured for ${auth0.domain}`);
+else
+  log(
+    `WARNING sign-in not configured (${auth0.problems.join("; ")}); the UI will show "Sign-in is not configured". Run \`pnpm auth0:local\`.`,
+  );
+
 const webPort = readWebPort();
 log(`starting the dev stack (frontend port ${webPort})...`);
 
@@ -95,6 +103,12 @@ let probeError = null;
 try {
   await probe(`http://127.0.0.1:${webPort}/`);
   log(`frontend  http://127.0.0.1:${webPort}/ OK`);
+  if (auth0.configured) {
+    const authModule = await (await probe(`http://127.0.0.1:${webPort}/src/lib/auth.tsx`)).text();
+    if (!authModule.includes(JSON.stringify(auth0.clientId)))
+      throw new Error("frontend is not serving the configured VITE_AUTH0_CLIENT_ID");
+    log("auth0     frontend serves the configured client id");
+  }
   const health = await (await probe(`http://127.0.0.1:${webPort}/api/healthz/db`)).json();
   if (health.status !== "ok" || health.database !== "connected") {
     throw new Error(`/api/healthz/db reported ${JSON.stringify(health)}`);
