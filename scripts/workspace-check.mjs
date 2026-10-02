@@ -11,7 +11,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readAuth0Status } from "./auth0-local.mjs";
-import { DEV_ENV_FILE, loadEnvFile, parseDevConfig } from "./dev-supervisor-config.mjs";
+import {
+  DEFAULT_WEB_PORT,
+  DEV_ENV_FILE,
+  loadEnvFile,
+  parseDevConfig,
+} from "./dev-supervisor-config.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const READY_LINE = "Both development servers are ready";
@@ -70,8 +75,9 @@ function readWebPort() {
   try {
     const fileEnv = loadEnvFile(path.join(ROOT, DEV_ENV_FILE));
     return String(parseDevConfig({ processEnv: childEnv, fileEnv }).webPort);
-  } catch (error) {
-    fail(error.message);
+  } catch {
+    // Invalid configuration: dev.mjs reports the exact problem when it starts.
+    return String(DEFAULT_WEB_PORT);
   }
 }
 
