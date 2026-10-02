@@ -6,7 +6,7 @@
 // probes the frontend and the proxied `GET /api/healthz/db`, then stops the
 // stack and requires a clean exit. Nothing outside the repository is touched.
 
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -23,10 +23,51 @@ const READY_LINE = "Both development servers are ready";
 const READY_TIMEOUT_MS = 240_000;
 const STOP_TIMEOUT_MS = 60_000;
 const SIGNAL_EXIT_CODES = { SIGINT: 130, SIGTERM: 143 };
+const IS_WINDOWS = process.platform === "win32";
 const childEnv = { ...process.env, KINDRED_DEV_DB: "disposable" };
 
-let activeChild = null;
+// `tree` steps (pnpm) own their whole process tree: a POSIX process group, or
+// the taskkill /T tree on Windows. The dev supervisor stops its own children.
+let active = null;
 let interruptedBy = null;
+
+function stopActive(signal) {
+  const { child, tree } = active;
+  if (!tree) {
+    child.kill(signal);
+  } else if (IS_WINDOWS) {
+    spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" });
+  } else {
+    try {
+      process.kill(-child.pid, signal);
+    } catch {
+      // The group already exited.
+    }
+  }
+}
+
+function groupAlive(pid) {
+  try {
+    process.kill(-pid, 0);
+    return true;
+  } catch (error) {
+    return error.code === "EPERM";
+  }
+}
+
+async function waitForGroupExit(pid) {
+  const deadline = Date.now() + STOP_TIMEOUT_MS;
+  while (groupAlive(pid)) {
+    if (Date.now() > deadline) {
+      try {
+        process.kill(-pid, "SIGKILL");
+      } catch {
+        // The group exited meanwhile.
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+}
 
 function exitInterrupted() {
   console.error(`[workspace:check] INTERRUPTED by ${interruptedBy}`);
@@ -35,16 +76,15 @@ function exitInterrupted() {
 
 for (const signal of Object.keys(SIGNAL_EXIT_CODES)) {
   process.on(signal, () => {
-    const running = activeChild && activeChild.exitCode === null && activeChild.signalCode === null;
     if (interruptedBy) {
-      if (running) activeChild.kill("SIGKILL");
+      if (active) stopActive("SIGKILL");
       return;
     }
     interruptedBy = signal;
-    if (!running) exitInterrupted();
+    if (!active) exitInterrupted();
     log(`received ${signal}; stopping the running step...`);
-    activeChild.kill("SIGTERM");
-    setTimeout(() => activeChild.kill("SIGKILL"), STOP_TIMEOUT_MS).unref();
+    stopActive("SIGTERM");
+    setTimeout(() => active && stopActive("SIGKILL"), STOP_TIMEOUT_MS).unref();
   });
 }
 
@@ -61,13 +101,18 @@ function fail(message, output) {
 
 async function runPnpm(args) {
   const execPath = process.env.npm_execpath;
+  const options = { cwd: ROOT, stdio: "inherit", detached: !IS_WINDOWS };
   const child = execPath?.includes("pnpm")
-    ? spawn(process.execPath, [execPath, ...args], { cwd: ROOT, stdio: "inherit" })
-    : spawn("pnpm", args, { cwd: ROOT, stdio: "inherit", shell: process.platform === "win32" });
-  activeChild = child;
-  const { code, signal } = await new Promise((resolve) =>
-    child.on("exit", (exitCode, exitSignal) => resolve({ code: exitCode, signal: exitSignal })),
-  );
+    ? spawn(process.execPath, [execPath, ...args], options)
+    : spawn("pnpm", args, { ...options, shell: IS_WINDOWS });
+  active = { child, tree: true };
+  const { code, signal, error } = await new Promise((resolve) => {
+    child.once("error", (spawnError) => resolve({ error: spawnError }));
+    child.once("exit", (exitCode, exitSignal) => resolve({ code: exitCode, signal: exitSignal }));
+  });
+  if (interruptedBy && !IS_WINDOWS && child.pid) await waitForGroupExit(child.pid);
+  active = null;
+  if (error) fail(`could not run pnpm ${args.join(" ")}: ${error.message}`);
   if (code !== 0) fail(`pnpm ${args.join(" ")} exited with ${code ?? signal}`);
 }
 
@@ -116,7 +161,7 @@ const child = spawn(process.execPath, ["scripts/dev.mjs"], {
   env: childEnv,
   stdio: ["ignore", "pipe", "pipe"],
 });
-activeChild = child;
+active = { child, tree: false };
 let output = "";
 child.stdout.on("data", (chunk) => (output += chunk));
 child.stderr.on("data", (chunk) => (output += chunk));
