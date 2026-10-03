@@ -11,11 +11,82 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readAuth0Status } from "./auth0-local.mjs";
+import {
+  DEFAULT_WEB_PORT,
+  DEV_ENV_FILE,
+  loadEnvFile,
+  parseDevConfig,
+} from "./dev-supervisor-config.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const READY_LINE = "Both development servers are ready";
 const READY_TIMEOUT_MS = 240_000;
 const STOP_TIMEOUT_MS = 60_000;
+const SIGNAL_EXIT_CODES = { SIGINT: 130, SIGTERM: 143 };
+const IS_WINDOWS = process.platform === "win32";
+const childEnv = { ...process.env, KINDRED_DEV_DB: "disposable" };
+
+// `tree` steps (pnpm) own their whole process tree: a POSIX process group, or
+// the taskkill /T tree on Windows. The dev supervisor stops its own children.
+let active = null;
+let interruptedBy = null;
+
+function stopActive(signal) {
+  const { child, tree } = active;
+  if (!tree) {
+    child.kill(signal);
+  } else if (IS_WINDOWS) {
+    spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" });
+  } else {
+    try {
+      process.kill(-child.pid, signal);
+    } catch {
+      // The group already exited.
+    }
+  }
+}
+
+function groupAlive(pid) {
+  try {
+    process.kill(-pid, 0);
+    return true;
+  } catch (error) {
+    return error.code === "EPERM";
+  }
+}
+
+async function waitForGroupExit(pid) {
+  const deadline = Date.now() + STOP_TIMEOUT_MS;
+  while (groupAlive(pid)) {
+    if (Date.now() > deadline) {
+      try {
+        process.kill(-pid, "SIGKILL");
+      } catch {
+        // The group exited meanwhile.
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+}
+
+function exitInterrupted() {
+  console.error(`[workspace:check] INTERRUPTED by ${interruptedBy}`);
+  process.exit(SIGNAL_EXIT_CODES[interruptedBy]);
+}
+
+for (const signal of Object.keys(SIGNAL_EXIT_CODES)) {
+  process.on(signal, () => {
+    if (interruptedBy) {
+      if (active) stopActive("SIGKILL");
+      return;
+    }
+    interruptedBy = signal;
+    if (!active) exitInterrupted();
+    log(`received ${signal}; stopping the running step...`);
+    stopActive("SIGTERM");
+    setTimeout(() => active && stopActive("SIGKILL"), STOP_TIMEOUT_MS).unref();
+  });
+}
 
 function log(message) {
   console.log(`[workspace:check] ${message}`);
@@ -23,24 +94,36 @@ function log(message) {
 
 function fail(message, output) {
   if (output) process.stderr.write(output);
+  if (interruptedBy) exitInterrupted();
   console.error(`[workspace:check] FAILED: ${message}`);
   process.exit(1);
 }
 
-function runPnpm(args) {
+async function runPnpm(args) {
   const execPath = process.env.npm_execpath;
-  const result = execPath?.includes("pnpm")
-    ? spawnSync(process.execPath, [execPath, ...args], { cwd: ROOT, stdio: "inherit" })
-    : spawnSync("pnpm", args, { cwd: ROOT, stdio: "inherit", shell: process.platform === "win32" });
-  if (result.status !== 0)
-    fail(`pnpm ${args.join(" ")} exited with ${result.status ?? result.signal}`);
+  const options = { cwd: ROOT, stdio: "inherit", detached: !IS_WINDOWS };
+  const child = execPath?.includes("pnpm")
+    ? spawn(process.execPath, [execPath, ...args], options)
+    : spawn("pnpm", args, { ...options, shell: IS_WINDOWS });
+  active = { child, tree: true };
+  const { code, signal, error } = await new Promise((resolve) => {
+    child.once("error", (spawnError) => resolve({ error: spawnError }));
+    child.once("exit", (exitCode, exitSignal) => resolve({ code: exitCode, signal: exitSignal }));
+  });
+  if (interruptedBy && !IS_WINDOWS && child.pid) await waitForGroupExit(child.pid);
+  active = null;
+  if (error) fail(`could not run pnpm ${args.join(" ")}: ${error.message}`);
+  if (code !== 0) fail(`pnpm ${args.join(" ")} exited with ${code ?? signal}`);
 }
 
 function readWebPort() {
-  if (process.env.KINDRED_WEB_PORT) return process.env.KINDRED_WEB_PORT;
-  const envDev = fs.readFileSync(path.join(ROOT, ".env.dev"), "utf8");
-  const match = envDev.match(/^KINDRED_WEB_PORT=(\d+)\s*$/m);
-  return match ? match[1] : "8080";
+  try {
+    const fileEnv = loadEnvFile(path.join(ROOT, DEV_ENV_FILE));
+    return String(parseDevConfig({ processEnv: childEnv, fileEnv }).webPort);
+  } catch {
+    // Invalid configuration: dev.mjs reports the exact problem when it starts.
+    return String(DEFAULT_WEB_PORT);
+  }
 }
 
 async function probe(url) {
@@ -54,8 +137,8 @@ if (nodeMajor !== 24)
   fail(`Node.js 24 is required (engines.node is 24.x); found ${process.version}.`);
 log(`Node ${process.version}`);
 
-runPnpm(["--version"]);
-runPnpm(["install", "--frozen-lockfile"]);
+await runPnpm(["--version"]);
+await runPnpm(["install", "--frozen-lockfile"]);
 
 const envDevPath = path.join(ROOT, ".env.dev");
 if (!fs.existsSync(envDevPath)) {
@@ -75,8 +158,10 @@ log(`starting the dev stack (frontend port ${webPort})...`);
 
 const child = spawn(process.execPath, ["scripts/dev.mjs"], {
   cwd: ROOT,
+  env: childEnv,
   stdio: ["ignore", "pipe", "pipe"],
 });
+active = { child, tree: false };
 let output = "";
 child.stdout.on("data", (chunk) => (output += chunk));
 child.stderr.on("data", (chunk) => (output += chunk));
@@ -126,4 +211,5 @@ clearTimeout(stopTimer);
 
 if (probeError) fail(probeError.message, output);
 if (code !== 0) fail(`dev stack did not shut down cleanly (${code ?? signal}).`, output);
+if (interruptedBy) exitInterrupted();
 log("PASSED: local workspace installs, starts, serves the UI and API, and shuts down cleanly.");
