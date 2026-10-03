@@ -2,6 +2,12 @@
 
 Audit date: 2026-08-19
 
+> **Superseded.** The Google Calendar integration was permanently removed on
+> 2026-10-01, and the tracked `.env.1password` template was deleted when
+> 1Password was dropped. Do not configure the Calendar variables or OAuth client
+> below. Stored tokens are dropped with the one-off job in
+> `lib/db/migrations-postgres/README.md`. Retained as a historical record.
+
 ## Conclusion
 
 The integration is implemented across the frontend, API, database, and tests. The immediate local/deployment blocker is configuration: no Google Calendar variable is loaded in the audited shell, the checked-in environment example contains names but no values, and the 1Password environment template does not currently declare the Calendar credentials. Google Cloud project state cannot be verified from this repository.

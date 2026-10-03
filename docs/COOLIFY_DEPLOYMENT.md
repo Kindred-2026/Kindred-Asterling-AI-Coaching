@@ -62,8 +62,9 @@ browser or the relevant provider dashboard:
 - Auth0 sign-in, API access, refresh, and sign-out work with the approved production application and a mapped test identity.
 - A synthetic test coaching message receives a response from the configured AI
   provider. Do not use real health information for deployment smoke testing.
-- Helcim webhook delivery remains healthy when enabled. Calendar new connections
-  remain retired; existing disconnect/revocation remains available. The new release
+- Helcim webhook delivery remains healthy when enabled. Current builds have no
+  Calendar integration: `/api/calendar/*` returns 404 and there is no Calendar
+  page or disconnect flow. The new release
   does not mount the old Clerk webhook; retain its configuration for rollback.
 - A push to `main` starts a new Coolify deployment if automatic deployments are
   enabled; otherwise, a manual **Redeploy** builds the latest Git commit.
@@ -147,8 +148,11 @@ Register public HTTPS endpoints using the canonical hostname:
 - Auth0 callback and logout: `https://<host>/`; web origin: `https://<host>`
 - Helcim webhook: inspect the API route registered by the deployed release and
   use `https://<host>/api/payment/webhook`; preserve the raw request body.
-- Legacy Clerk and Calendar provider configuration: retain through the approved
-  audit/rollback window. This release does not accept new Calendar connections.
+- Legacy Clerk provider configuration: retain through the approved
+  audit/rollback window. The Google Calendar integration was removed; current
+  builds read no `GOOGLE_CLIENT_*`, `GOOGLE_CALENDAR_REDIRECT_URI` or
+  `CALENDAR_*` variables. Drop stored Calendar tokens with the one-off job in
+  `lib/db/migrations-postgres/README.md`.
 
 Store the Helcim signing secret in Coolify and preserve existing rollback secrets.
 Do not put secrets in `VITE_*` variables. Confirm payment webhook delivery and the

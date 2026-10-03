@@ -5,8 +5,12 @@
 `29277d252f19daf489018fc0b14c1d74cab8d852`, with the explicit deployment override
 `DATABASE_PROVIDER=postgres`; `fly.toml` now persists that setting. One 1 GB
 shared-CPU machine runs in `yyz`. Both health endpoints return 200 and the
-homepage renders. **Sign-in is blocked by Auth0's missing Fly callback URL.**
-AI remains disabled and payments are not enabled. This is not full staging
+homepage renders. Fresh sign-in and authenticated reads later passed after the
+owner registered the `fly.dev` Auth0 callback (see the evidence record below);
+sign-out and two-account isolation remain open. AI was disabled for release v1.
+Since then `fly.toml` sets `AI_PROVIDER = 'anthropic'` (step 6a) and the
+custom-domain `APP_PUBLIC_URL` (step 8), so the next deploy changes both.
+Payments are not enabled. This is not full staging
 acceptance or a production cutover. Production remains on the existing
 server/MongoDB despite cancellation of the Coolify Cloud subscription.
 
@@ -33,15 +37,20 @@ or MongoDB smoke database. Production still runs on the existing server/MongoDB.
 1. Record the exact reviewed, post-merge source SHA from a clean checkout.
 2. Use `DATABASE_PROVIDER=postgres` and the writer-role `POSTGRES_URL` in Fly's
    secret store. Never copy the production MongoDB URI into staging.
-3. For a new empty staging database only, apply
-   `lib/db/migrations-postgres/0001_rehearsal_core.sql` in a transaction after
-   `assertEmptyTarget` passes. Run `initializePostgresDatabase` before committing
+3. For a new empty staging database only, apply every
+   `lib/db/migrations-postgres/NNNN_*.sql` file in filename order (currently
+   `0001_rehearsal_core.sql` then `0002_drop_calendar_connections.sql`) in one
+   transaction after `assertEmptyTarget` passes. Run `initializePostgresDatabase` before committing
    and verify the app writer can access every runtime table. Use schema-admin
    credentials only for this operator step. Do not rerun the schema on the
-   initialized database. This staging schema remains subject to full application
+   initialized database. The already-initialized `fly-db` was created with the
+   Calendar table; remove it with the one-off `drop:calendar-connections` job in
+   `lib/db/migrations-postgres/README.md` (whether it has run on staging is not
+   recorded here). This staging schema remains subject to full application
    acceptance and is not authorization for a production migration.
 4. Required runtime names are `POSTGRES_URL`, `AUTH0_DOMAIN`, `AUTH0_AUDIENCE`,
-   `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `SUBSCRIPTION_OWNER_IDS`.
+   `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `SUBSCRIPTION_OWNER_IDS`, plus
+   `ANTHROPIC_API_KEY` while `fly.toml` sets `AI_PROVIDER = 'anthropic'`.
    `NODE_ENV=production`, `PORT=8080`, and `APP_PUBLIC_URL` come from `fly.toml`.
    Store credentials only in Fly secrets; use standard input for imports.
 5. Supply public `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, and
@@ -81,15 +90,21 @@ or MongoDB smoke database. Production still runs on the existing server/MongoDB.
    effort. To turn AI off again, set `AI_PROVIDER = 'disabled'`.
 7. Record image digest, release, machine count, region, and the effective
    `DATABASE_PROVIDER`. Verify both health endpoints and browser rendering.
-8. Auth0 must allow callback and logout URL
-   `https://kindred-asterling-ai-coaching.fly.dev/` and web origin
-   `https://kindred-asterling-ai-coaching.fly.dev`. Keep existing production
-   entries. Current code returns to the origin root, not `/login/callback`.
+8. `fly.toml` now sets `APP_PUBLIC_URL = 'https://kindred-asterling-ai-coaching.com'`
+   and `TRUST_PROXY_HOPS = '2'`. Deploy it only after the Cloudflare domain and
+   Fly certificate are live ([Cloudflare setup](CLOUDFLARE_SETUP.md) steps 1–7);
+   after that deploy the `fly.dev` address no longer works for signed-in use.
+   Auth0 must allow callback and logout URL
+   `https://kindred-asterling-ai-coaching.com/` and web origin
+   `https://kindred-asterling-ai-coaching.com` (plus the `www.` forms if used).
+   The `fly.dev` entries registered for release v1 apply only to a build whose
+   `APP_PUBLIC_URL` is the `fly.dev` URL. Keep existing production entries. Current code returns to the origin root, not `/login/callback`.
    Verify fresh sign-in and authenticated API behavior with test identities.
 
 Keep `auto_stop_machines='off'` and one 1 GB shared-CPU machine running while
 reminders use the in-process scheduler. Autostart does not replay missed ticks.
-AI is initially disabled and payments are not enabled. This health smoke does
+`fly.toml` enables Anthropic AI; for an AI-disabled health smoke, deploy with
+`--env AI_PROVIDER=disabled`. Payments are not enabled. This health smoke does
 not pass AI, payment, or other feature acceptance. Reminder checks must use
 controlled test destinations even when an existing Resend credential is reused.
 

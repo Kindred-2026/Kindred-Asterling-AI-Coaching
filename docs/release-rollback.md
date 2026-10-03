@@ -3,9 +3,9 @@
 This page records how to capture release/rollback evidence during Kindred's
 hosting transition. **Coolify/MongoDB remain the current production rollback
 baseline until the Fly.io cutover passes its gates.** A Toronto staging app
-and Managed Postgres cluster were provisioned on 2026-09-24. The app has no
-machines or deployment, and the database is unattached. No production cutover
-is verified. Do not guess provider state here; record only what an operator can
+and Managed Postgres cluster were provisioned on 2026-09-24, and staging
+release v1 was deployed on 2026-09-26 with the database attached (see
+`docs/FLY_DEPLOYMENT.md`). No production cutover is verified. Do not guess provider state here; record only what an operator can
 verify in GitHub Actions or the relevant provider dashboard.
 
 ## Responsibilities
@@ -13,7 +13,7 @@ verify in GitHub Actions or the relevant provider dashboard.
 - The repository-root **`Dockerfile`** is the supported production image
   definition. Until cutover, follow the current Coolify deployment instructions
   in `docs/COOLIFY_DEPLOYMENT.md`. For the selected Fly.io target, follow
-  `docs/FLY_DEPLOYMENT.md`; no Fly deployment is currently verified.
+  `docs/FLY_DEPLOYMENT.md`; only the staging deployment is verified, not production.
 - **Before Fly cutover:** GitHub Actions validates the monorepo, the MongoDB
   source backup has been restore-tested, the isolated PostgreSQL target has
   been validated, and the exact commit is built and verified.
