@@ -33,9 +33,9 @@ tears it down when you stop `pnpm dev`.
   so Vite naturally falls back to the package file, while an explicit nonblank
   shell value still wins.
 - **`AI_PROVIDER=disabled`** keeps the API runnable without AI infrastructure;
-  switch to `openai`/`ollama` when you need live AI. Hosted endpoints should be
+  switch to `anthropic`/`openai`/`ollama` when you need live AI. Hosted endpoints should be
   used only with synthetic data unless the provider review is complete.
-- Secret values (`RESEND_API_KEY`, `OPENAI_API_KEY`, …) belong in
+- Secret values (`RESEND_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, …) belong in
   your environment or a secrets manager, **never** in `.env.dev`. The launcher
   sends only public nonblank `VITE_*` values to the browser child; anything else
   in `.env.dev` goes only to the API child, but keeping secrets out keeps them
