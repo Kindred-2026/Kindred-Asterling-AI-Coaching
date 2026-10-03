@@ -9,10 +9,12 @@ homepage renders. Fresh sign-in and authenticated reads later passed after the
 owner registered the `fly.dev` Auth0 callback (see the evidence record below);
 sign-out and two-account isolation remain open. AI was disabled for release v1.
 Since then `fly.toml` sets `AI_PROVIDER = 'anthropic'` (step 6a) and the
-custom-domain `APP_PUBLIC_URL` (step 8), so the next deploy changes both.
+custom-domain `APP_PUBLIC_URL` (step 8). On 2026-10-03 a later deploy with
+that `APP_PUBLIC_URL` was live, and the custom domain was served by this Fly app
+through Cloudflare ([public check](#public-read-only-check--2026-10-03)).
 Payments are not enabled. This is not full staging
-acceptance or a production cutover. Production remains on the existing
-server/MongoDB despite cancellation of the Coolify Cloud subscription.
+acceptance or a production cutover. The old server/MongoDB was not
+re-inspected; the cutover gates below are still open.
 
 The empty `fly-db` database in `kindred-staging-db-20260924` was initialized
 atomically after the empty-target guard passed. Runtime catalog checks passed
@@ -165,6 +167,23 @@ be resolved or the path explicitly retired with a documented sunset disposition.
 | AI configuration | Fly remains `AI_PROVIDER=disabled`. Account-scoped Workers AI Read token created with owner approval and staged as `OPENAI_API_KEY` in Fly; direct synthetic API calls authenticated successfully. Existing production remains configured for Bedrock. Named gateway routing requires `CLOUDFLARE_AI_GATEWAY_ID=kindred-staging`; the app has not yet passed an AI-enabled chat check |
 | Initial model probes | Same repository coaching instructions with synthetic profile, five synthetic scenarios per model, app-equivalent `store:false` and privacy headers. Workers AI GPT-OSS-120B returned HTTP 200 but three replies were truncated/unusable at its default 256 output-token limit; do not select it with current settings. Llama 3.3 70B returned four complete text replies and one expected habit tool call (0.56–2.91 seconds). This small direct-provider probe is not full application, clinical, or production acceptance |
 | Funded comparison | GPT-4.1 mini is listed at $0.40/M input and $1.60/M output tokens with ZDR available. Owner approved one $10 credit purchase plus $0.50 fee; the saved card was declined, so no successful top-up is claimed. Owner is updating payment details. Funded comparison and final model selection remain pending |
+
+### Public read-only check — 2026-10-03
+
+Unauthenticated `curl`/`openssl` checks from 04:20 to 04:35 UTC against
+`https://kindred-asterling-ai-coaching.com` and
+`https://kindred-asterling-ai-coaching.fly.dev`. No sign-in, form, or AI request
+was made. Gate statuses above are unchanged.
+
+| Check | Observed result |
+| --- | --- |
+| Health | On both hosts `/api/healthz` returned 200 `{"status":"ok"}` and `/api/healthz/db` returned 200 `{"status":"ok","database":"connected"}`. The endpoint does not show which database it reached |
+| Custom domain routing | Custom-domain responses carry `server: cloudflare` and `via: 1.1 fly.io`. Their ETags, `Last-Modified` and asset hashes match `fly.dev`, so the same Fly app serves both hosts. Whether the old server still gets any traffic was not checked |
+| Deployed build | A deploy newer than release v1 is live. Static files are dated 2026-10-03 03:25:55 UTC. `/api/auth/user` with origin `https://kindred-asterling-ai-coaching.com` returned 401 with a matching `Access-Control-Allow-Origin`. With the `fly.dev` origin it returned 500 with no CORS header, which matches the `APP_PUBLIC_URL` in `fly.toml`. Served `index.html`, the six `/legal/*/` pages and `assets/index-CL37htpO.js` are byte-identical to a local `build:deployment` of `main` at `b2ce37e`; frontend source has not changed since `2a3d986`. The Fly release ID, image digest and API source SHA are not public, so **Reviewed release** stays unverified |
+| Public and legal pages | `/`, `/login` and `/legal/{privacy,terms,ai-disclosure,cookies,health-disclaimer,marketing-consent}/` returned 200 on both hosts. `/legal/privacy` and `/legal/terms` first redirect (301) to the trailing-slash path. On the custom domain, Cloudflare answered non-browser requests for some other paths (`/privacy`, `/api/auth/user`, `/api/calendar/status`) with a 403 managed challenge (`cf-mitigated: challenge`) |
+| Security headers | Both hosts send the CSP from `securityHeaders.ts` (`script-src 'self'`, `frame-ancestors 'none'`, Auth0 tenant in `connect-src`/`frame-src`). Both also send HSTS `max-age=31536000; includeSubDomains`, `X-Frame-Options: SAMEORIGIN` and `X-Content-Type-Options: nosniff`. `fly.dev` sends Helmet's `Referrer-Policy: no-referrer`, but the custom domain sends `same-origin` because Cloudflare replaces the header. Cloudflare also rewrites the Google Fonts links to `/cf-fonts/` and injects an inline challenge script with no nonce, which `script-src 'self'` does not allow |
+| TLS | Custom domain: Let's Encrypt `YE1` certificate for `kindred-asterling-ai-coaching.com` and `*.kindred-asterling-ai-coaching.com`, expiring 2026-12-20 (78 days). `fly.dev`: `*.fly.dev`, expiring 2026-11-19 (47 days). `www.` could not be checked from this network |
+| Calendar removal | The bundle and legal pages carry the removal text. Unauthenticated `/api/calendar/status` on `fly.dev` returns 401 because authentication runs before routing, so the 404 criterion is still unverified |
 
 ## Application deployment shape
 
