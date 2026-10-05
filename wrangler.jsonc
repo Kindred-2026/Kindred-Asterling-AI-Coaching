@@ -1,0 +1,14 @@
+// Marketing website for kindred-asterling-ai.xyz, served as static assets by
+// a Cloudflare Worker (docs/DOMAIN_SPLIT.md). Workers Builds runs the build
+// command set in the dashboard, then `npx wrangler deploy` with this file.
+{
+  "name": "kindred-asterling-ai-website",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    // Built with VITE_APP_URL set, so sign-in, checkout and signed-in pages
+    // hand off to the app domain. The build also writes the _headers file.
+    "directory": "./artifacts/kindred-coach/dist/public",
+    // Paths without a prerendered page get the SPA shell.
+    "not_found_handling": "single-page-application"
+  }
+}
