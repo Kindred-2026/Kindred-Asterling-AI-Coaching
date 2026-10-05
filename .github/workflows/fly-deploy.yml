@@ -31,9 +31,6 @@ jobs:
           VITE_AUTH0_DOMAIN: ${{ vars.VITE_AUTH0_DOMAIN }}
           VITE_AUTH0_CLIENT_ID: ${{ vars.VITE_AUTH0_CLIENT_ID }}
           VITE_AUTH0_AUDIENCE: ${{ vars.VITE_AUTH0_AUDIENCE }}
-          # Optional; set only once the marketing website has its own domain
-          # (docs/DOMAIN_SPLIT.md).
-          VITE_MARKETING_SITE_URL: ${{ vars.VITE_MARKETING_SITE_URL }}
         run: |
           for name in FLY_API_TOKEN VITE_AUTH0_DOMAIN VITE_AUTH0_CLIENT_ID VITE_AUTH0_AUDIENCE; do
             if [ -z "${!name}" ]; then echo "::error::$name is not configured"; exit 1; fi
@@ -42,5 +39,4 @@ jobs:
             --ha=false --remote-only \
             --build-secret "VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN" \
             --build-secret "VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID" \
-            --build-secret "VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE" \
-            --build-arg "VITE_MARKETING_SITE_URL=$VITE_MARKETING_SITE_URL"
+            --build-secret "VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE"
