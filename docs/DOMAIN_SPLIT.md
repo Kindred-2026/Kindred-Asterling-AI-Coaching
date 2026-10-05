@@ -1,7 +1,7 @@
 # Domain split: marketing website and app
 
 Goal: the public website (landing, about, science, pricing, legal pages) moves
-to its own domain, and `kindred-asterling-ai-coaching.com` serves only the
+to its own domain, `kindred-asterling-ai.xyz`, and `kindred-asterling-ai-coaching.com` serves only the
 app, whose root is the sign-in page.
 
 ## Where things stood (2026-10-05)
@@ -16,7 +16,8 @@ app, whose root is the sign-in page.
 - `robots.txt`, `sitemap.xml`, `llms.txt`, `index.html` JSON-LD and
   `scripts/prerender.mjs` hard-code `kindred-asterling-ai-coaching.com` as the
   marketing origin.
-- No second domain name appears anywhere in the repository.
+- No second domain name appeared anywhere in the repository. The owner chose
+  `kindred-asterling-ai.xyz` on 2026-10-05.
 
 ## How the split works in code
 
@@ -28,26 +29,28 @@ Two build/runtime settings, both off by default so a plain build is unchanged.
 | `MARKETING_SITE_URL` | Fly runtime env for the API server | Server-side 301 for `/about`, `/science`, `/legal/*`, `/legal-documents/*`, `sitemap.xml` and `llms.txt` to the marketing domain; `robots.txt` disallows everything |
 | `VITE_APP_URL` | Frontend build for the marketing domain | No Auth0 on this site. Sign in, checkout, `/login`, `/signup`, `/payment-success` and every signed-in page go to the app domain. Pricing stays as an information page whose checkout buttons go to the app's sign-in and return to the app's `/pricing` |
 
+Either split setting also points the prerendered canonical links (marketing
+build), the JSON-LD graph, `robots.txt`, `sitemap.xml` and `llms.txt` at the
+marketing domain (`VITE_MARKETING_SITE_URL`, else `kindred-asterling-ai.xyz`).
+Unsplit builds keep `kindred-asterling-ai-coaching.com`.
+
 The Auth0 callback (`/?code=…&state=…`) stays on the app root, so the Auth0
 application's callback, logout and web-origin URLs need no change for the app
 domain. The marketing domain never signs anyone in and is not added to Auth0.
 
 ## Rollout (each step needs the owner's go-ahead)
 
-1. Pick and register the marketing domain, and add it to Cloudflare.
-2. Point the hard-coded marketing origin (`public/robots.txt`,
-   `public/sitemap.xml`, `public/llms.txt`, `index.html` JSON-LD and
-   `SITE_ORIGIN` in `scripts/prerender.mjs`) at the new domain in a follow-up
-   PR.
-3. Build the marketing site and publish `artifacts/kindred-coach/dist/public`
+1. Register `kindred-asterling-ai.xyz` and add it to Cloudflare.
+2. Build the marketing site and publish `artifacts/kindred-coach/dist/public`
    to Cloudflare Pages on the new domain:
    `VITE_APP_URL=https://kindred-asterling-ai-coaching.com pnpm --filter @workspace/kindred-coach run build`.
-4. Check the marketing site end to end (pages, legal PDFs, Sign in and
+3. Check the marketing site end to end (pages, legal PDFs, Sign in and
    checkout handing off to the app).
-5. Rebuild and deploy the Fly app with
-   `VITE_MARKETING_SITE_URL` (build arg) and `MARKETING_SITE_URL`
-   (`fly.toml` `[env]`) set to the marketing domain.
-6. In Google Search Console, add the new domain and file a change of address
+4. Rebuild and deploy the Fly app with
+   `VITE_MARKETING_SITE_URL` (the `VITE_MARKETING_SITE_URL` GitHub variable
+   for the deploy workflow) and `MARKETING_SITE_URL` (`fly.toml` `[env]`) set
+   to `https://kindred-asterling-ai.xyz`.
+5. In Google Search Console, add the new domain and file a change of address
    from the old one.
 
 Rollback: unset both settings and redeploy the Fly app; the old single-site
