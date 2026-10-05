@@ -1,7 +1,7 @@
 # Privacy Policy
 
 **Status:** Approved — not legal advice
-**Last repository review:** August 24, 2026
+**Last repository review:** October 5, 2026
 **Intended users:** Adults aged 18 and older only
 
 This draft must be reconciled with the deployed infrastructure, contracts, business practices, supported launch locations, and applicable law. Confirmation items require approval by the proprietor, an authorized adult, and qualified legal counsel before publication.
@@ -36,11 +36,11 @@ Kindred uses information to:
 
 ## Service providers and disclosures
 
-The hosting provider, database provider, and AI processor must be reconciled with the live deployment before publication. A staging app and Managed Postgres cluster were provisioned with Fly.io in Toronto (`yyz`) on 2026-09-24. The app has no deployed machines and the database is unattached; production has not been cut over. Billing and payment details have not been inspected. The planned hosted AI route is Cloudflare AI Gateway to a selected upstream model provider. These are planning choices and are not confirmation of a completed cutover.
+The application and its Managed Postgres database run on Fly.io in Toronto (`yyz`). Since 2026-10-03 the public domain has been served by the Fly app through Cloudflare, which provides DNS, TLS, and network protection. `fly.toml` selects Anthropic's Claude models through the Anthropic API for coaching replies; requests can optionally be routed through Cloudflare AI Gateway with payload logging and caching turned off. The production cutover gates in the Fly.io runbook are still open, and the previous server and MongoDB database are kept for rollback until they close.
 
-The service uses Auth0 for identity, Helcim for payments, Sentry for error and performance monitoring when enabled, Twilio for SMS, Resend for email, and ElevenLabs for voice features. Legacy Clerk identity mappings are retained only for account-history reconciliation and rollback. Information should be sent to a provider only when its feature is enabled and needed.
+The service uses Auth0 for identity, Helcim for payments, Twilio for SMS, Resend for email, and ElevenLabs for voice features. Legacy Clerk identity mappings are retained only for account-history reconciliation and rollback. Information should be sent to a provider only when its feature is enabled and needed.
 
-> **Founder/legal confirmation required:** Before publication, confirm actual hosting and database locations, live AI model/provider and processing region, enabled optional providers, retention and training terms, subprocessors, cross-border transfers, and contractual safeguards. Remove providers not used in production.
+> **Founder/legal confirmation required:** Before publication, confirm actual hosting and database locations, live AI model/provider and processing region, enabled optional providers, retention and training terms, subprocessors, cross-border transfers, and contractual safeguards. Remove providers not used in production. The application does not include a third-party error-monitoring SDK; add one here before enabling it.
 
 ## Former Google Calendar integration
 
@@ -71,18 +71,3 @@ These periods remain proposals until business and legal review confirms them.
 The application uses access controls, user-scoped queries, no-store responses for wellness data, and security headers. No system is risk-free. Incident-response and breach-notification procedures must be confirmed before launch.
 
 Review the [PIPEDA fair information principles](https://www.priv.gc.ca/en/privacy-topics/privacy-laws-in-canada/the-personal-information-protection-and-electronic-documents-act-pipeda/p_principle/) and [Canadian privacy regulators' generative-AI principles](https://www.priv.gc.ca/en/privacy-topics/technology/artificial-intelligence/gd_principles_ai).
-
----
-
-## Internal Contabo vendor reference
-
-These supplier-identification details were provided for review. They are generally more appropriate for vendor records or an imprint, if one is legally required, than for the public Privacy Policy itself:
-
-- **Provider:** Contabo GmbH
-- **Address:** Welfenstrasse 22, 81541 Munich, Germany
-- **Fax:** +49 89 216 658 62
-- **Email:** info@contabo.com
-- **Managing directors:** Stephan Wolfram and Mario Wilhelm
-- **Register court:** AG Munich
-- **Register number:** HRB 180722
-- **VAT ID:** DE267602842
