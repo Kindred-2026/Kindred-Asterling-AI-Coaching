@@ -32,6 +32,10 @@ primary_region = 'yyz'
   # only after the domain is live in Cloudflare and `fly certs show` reports
   # the certificate as issued: the fly.dev address stops working for sign-in.
   APP_PUBLIC_URL = 'https://kindred-asterling-ai-coaching.com'
+  # Domain split (see docs/DOMAIN_SPLIT.md): once the marketing website is live
+  # on its own domain, set this and build with VITE_MARKETING_SITE_URL to the
+  # same value. This domain then serves only the sign-in portal and the app.
+  # MARKETING_SITE_URL = 'https://kindred-asterling-ai.xyz'
   # Cloudflare -> Fly is two proxy hops, so rate limits see the real visitor IP.
   TRUST_PROXY_HOPS = '2'
   DATABASE_PROVIDER = 'postgres'

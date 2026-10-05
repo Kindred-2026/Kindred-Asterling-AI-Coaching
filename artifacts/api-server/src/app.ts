@@ -8,6 +8,10 @@ import { authMiddleware } from "./middlewares/authMiddleware";
 import { testClerkIdentityAdapter } from "./middlewares/testClerkIdentityAdapter";
 import { generalLimiter, writeLimiter } from "./middlewares/rateLimiter";
 import { securityHeaders } from "./middlewares/securityHeaders";
+import {
+  marketingSiteOrigin,
+  marketingSiteRedirect,
+} from "./middlewares/marketingSiteRedirect";
 import router from "./routes";
 import healthRouter from "./routes/health";
 import { logger } from "./lib/logger";
@@ -126,6 +130,11 @@ if (process.env.NODE_ENV === "production") {
   const serverDir = path.dirname(fileURLToPath(import.meta.url));
   const publicDir = path.resolve(serverDir, "../../kindred-coach/dist/public");
 
+  // With the public website on its own domain, this one is the app only.
+  const marketingOrigin = marketingSiteOrigin(process.env.MARKETING_SITE_URL);
+  if (marketingOrigin) {
+    app.use(marketingSiteRedirect(marketingOrigin));
+  }
   app.use(express.static(publicDir));
   app.get(/^(?!\/api(?:\/|$)).*/, (_req, res) => {
     res.sendFile(path.join(publicDir, "index.html"));

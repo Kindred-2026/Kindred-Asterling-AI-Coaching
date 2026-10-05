@@ -31,6 +31,18 @@ const root = resolve(__dirname, "..");
 
 const SITE_NAME = "Kindred Asterling";
 
+// The public website's origin. Before the domain split it shares the app's
+// domain; once split (either split setting present) it is the marketing
+// domain (docs/DOMAIN_SPLIT.md).
+const LEGACY_SITE_ORIGIN = "https://kindred-asterling-ai-coaching.com";
+const MARKETING_SITE_ORIGIN = (
+  process.env.VITE_MARKETING_SITE_URL?.trim() || "https://kindred-asterling-ai.xyz"
+).replace(/\/+$/, "");
+const IS_MARKETING_BUILD = Boolean(process.env.VITE_APP_URL?.trim());
+const IS_SPLIT =
+  IS_MARKETING_BUILD || Boolean(process.env.VITE_MARKETING_SITE_URL?.trim());
+const SITE_ORIGIN = IS_SPLIT ? MARKETING_SITE_ORIGIN : LEGACY_SITE_ORIGIN;
+
 const ROUTES = [
   // Private routes receive metadata and an empty SPA shell, never member data.
   ...Object.keys({
@@ -51,7 +63,20 @@ const ROUTES = [
       private: true,
     };
   }),
-  {
+  // On the app-only domain (VITE_MARKETING_SITE_URL set) the root is the
+  // sign-in portal: an empty, unindexed shell instead of the landing page.
+  process.env.VITE_MARKETING_SITE_URL?.trim()
+    ? {
+        path: "/",
+        outputFile: "index.html",
+        title: `Sign in | ${SITE_NAME}`,
+        description: "Sign in to access your Kindred workspace.",
+        ogTitle: `Sign in | ${SITE_NAME}`,
+        ogDescription: "Your private Kindred workspace.",
+        robots: "noindex, nofollow",
+        private: true,
+      }
+    : {
     path: "/",
     outputFile: "index.html",
     title: "Kindred Asterling — AI Coaching",
@@ -102,13 +127,13 @@ const ROUTES = [
       name: "Kindred Asterling — AI Coaching",
       applicationCategory: "HealthApplication",
       operatingSystem: "Web",
-      url: "https://kindred-asterling-ai-coaching.com/",
+      url: `${SITE_ORIGIN}/`,
       description:
         "An AI wellness companion grounded in cognitive neuroscience — daily journaling, habit tracking, medication adherence, and personalized coaching with Kindred.",
       publisher: {
         "@type": "Organization",
         name: "Kindred Asterling",
-        url: "https://kindred-asterling-ai-coaching.com/",
+        url: `${SITE_ORIGIN}/`,
       },
       offers: [
         {
@@ -119,7 +144,7 @@ const ROUTES = [
           description:
             "Full access to Kindred AI coaching — daily rhythm, medication & behavior tracking, self-assessments, journal, and progress view. Billed annually.",
           eligibleDuration: "P1Y",
-          url: "https://kindred-asterling-ai-coaching.com/pricing",
+          url: `${SITE_ORIGIN}/pricing`,
         },
         {
           "@type": "Offer",
@@ -128,7 +153,7 @@ const ROUTES = [
           priceCurrency: "USD",
           description:
             "One payment for lifetime access to Kindred AI coaching — all current features and all future updates included.",
-          url: "https://kindred-asterling-ai-coaching.com/pricing",
+          url: `${SITE_ORIGIN}/pricing`,
         },
       ],
     },
@@ -181,10 +206,12 @@ const ROUTES = [
 // ---------------------------------------------------------------------------
 
 function getProductionOrigin() {
+  // The marketing-only site is canonical on its own domain.
+  if (IS_MARKETING_BUILD) return SITE_ORIGIN;
   if (process.env.APP_PUBLIC_URL) {
     return process.env.APP_PUBLIC_URL.replace(/\/+$/, "");
   }
-  return "https://kindred-asterling-ai-coaching.com";
+  return LEGACY_SITE_ORIGIN;
 }
 
 function escapeHtml(str) {
@@ -204,7 +231,6 @@ function escapeHtml(str) {
 // Organization/WebSite graph in index.html.
 // ---------------------------------------------------------------------------
 
-const SITE_ORIGIN = "https://kindred-asterling-ai-coaching.com";
 // Last date the health-adjacent public content was reviewed (ISO 8601).
 const CONTENT_REVIEWED_ISO = "2026-06-28";
 
@@ -337,7 +363,11 @@ execSync(
 // ---------------------------------------------------------------------------
 
 const { render } = await import(`${root}/dist/server/entry-server.js`);
-const template = readFileSync(`${root}/dist/public/index.html`, "utf-8");
+// Once split, the Organization/WebSite graph names the marketing domain.
+const template = readFileSync(`${root}/dist/public/index.html`, "utf-8").replaceAll(
+  LEGACY_SITE_ORIGIN,
+  SITE_ORIGIN,
+);
 const origin = getProductionOrigin();
 
 if (origin) {
@@ -373,6 +403,59 @@ for (const route of ROUTES) {
   writeFileSync(outPath, html, "utf-8");
 
   console.log("done");
+}
+
+// Once split, the static SEO files name the marketing domain.
+if (IS_SPLIT) {
+  for (const file of ["robots.txt", "sitemap.xml", "llms.txt"]) {
+    const filePath = resolve(root, "dist/public", file);
+    writeFileSync(
+      filePath,
+      readFileSync(filePath, "utf-8").replaceAll(
+        LEGACY_SITE_ORIGIN,
+        SITE_ORIGIN,
+      ),
+      "utf-8",
+    );
+  }
+  console.log(`▶ Pointed public SEO files at ${SITE_ORIGIN}`);
+}
+
+// Cloudflare Pages serves the marketing-only build. Give it the same security
+// headers the API server sends for the app, minus Auth0 (this site never
+// signs anyone in), and long caching for hashed assets.
+if (IS_MARKETING_BUILD) {
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self'",
+    "script-src-attr 'none'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: https:",
+    "connect-src 'self'",
+    "font-src 'self' https://fonts.gstatic.com",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "worker-src 'self' blob:",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "upgrade-insecure-requests",
+  ].join("; ");
+  writeFileSync(
+    resolve(root, "dist/public/_headers"),
+    [
+      "/*",
+      `  Content-Security-Policy: ${csp}`,
+      "  Strict-Transport-Security: max-age=31536000; includeSubDomains",
+      "  X-Content-Type-Options: nosniff",
+      "  X-Frame-Options: SAMEORIGIN",
+      "  Referrer-Policy: no-referrer",
+      "/assets/*",
+      "  Cache-Control: public, max-age=31536000, immutable",
+      "",
+    ].join("\n"),
+    "utf-8",
+  );
+  console.log("▶ Wrote Cloudflare Pages _headers");
 }
 
 console.log("✓ Prerender complete.");

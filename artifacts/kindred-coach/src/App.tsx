@@ -15,7 +15,7 @@ import {
   useSearch,
 } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider, useAuth } from "@/lib/auth";
+import { AuthProvider, SignedOutAuthProvider, useAuth } from "@/lib/auth";
 import {
   setAuthTokenGetter,
   useGetCurrentAuthUser,
@@ -62,6 +62,11 @@ import {
   PrivacyPolicy,
   TermsAndConditions,
 } from "@/pages/public/legal";
+import {
+  APP_SITE_ORIGIN,
+  crossSiteDestination,
+  MARKETING_SITE_ORIGIN,
+} from "@/lib/site";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -112,7 +117,8 @@ function PublicRoutes() {
   return (
     <PublicLayout>
       <Switch>
-        <Route path="/" component={Landing} />
+        {/* On the app-only domain the root is the sign-in portal. */}
+        <Route path="/" component={MARKETING_SITE_ORIGIN ? Login : Landing} />
         <Route path="/about" component={About} />
         <Route path="/science" component={Science} />
         <Route path="/pricing" component={Pricing} />
@@ -249,17 +255,37 @@ function LegalShell() {
   );
 }
 
+// Full-page navigation to the other Kindred domain when the site is split.
+function CrossSiteRedirect({ to }: { to: string }) {
+  useEffect(() => {
+    window.location.replace(to);
+  }, [to]);
+  return null;
+}
+
 function App() {
-  // Serve legal pages without loading authentication at all.
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   const [pathname] = useLocation();
   const pathWithoutBase = base ? pathname.replace(base, "") || "/" : pathname;
+  const crossSite = crossSiteDestination(
+    pathWithoutBase,
+    window.location.search,
+    window.location.hash,
+  );
+  if (crossSite) {
+    return <CrossSiteRedirect to={crossSite} />;
+  }
+
+  // Serve legal pages without loading authentication at all.
   if (Object.keys(LEGAL_ROUTES).some((r) => pathWithoutBase === r)) {
     return <LegalShell />;
   }
 
+  // The marketing-only site has no sign-in of its own.
+  const SiteAuthProvider = APP_SITE_ORIGIN ? SignedOutAuthProvider : AuthProvider;
+
   return (
-    <AuthProvider>
+    <SiteAuthProvider>
       <AuthTokenBridge>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
@@ -289,7 +315,7 @@ function App() {
           </ThemeProvider>
         </QueryClientProvider>
       </AuthTokenBridge>
-    </AuthProvider>
+    </SiteAuthProvider>
   );
 }
 

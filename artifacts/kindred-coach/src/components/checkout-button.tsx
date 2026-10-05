@@ -4,6 +4,7 @@ import { createCheckout } from "@workspace/api-client-react";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { buildLoginUrl, PRICING_RETURN_PATH } from "@/lib/routing";
+import { appHref } from "@/lib/site";
 
 interface CheckoutButtonProps {
   planType: "yearly" | "lifetime";
@@ -14,7 +15,9 @@ interface CheckoutButtonProps {
 
 // Starts an in-app Helcim checkout. If the visitor isn't signed in yet we send
 // them through login first (returning to /pricing) so the Helcim payment is tied
-// to the same email they sign in with — that's how access is granted.
+// to the same email they sign in with — that's how access is granted. On the
+// marketing-only site that sign-in, and the checkout after it, happen on the
+// app domain.
 export function CheckoutButton({
   planType,
   label,
@@ -29,7 +32,7 @@ export function CheckoutButton({
     setError(null);
     if (!isLoaded) return;
     if (!isSignedIn) {
-      window.location.href = buildLoginUrl(PRICING_RETURN_PATH);
+      window.location.href = appHref(buildLoginUrl(PRICING_RETURN_PATH));
       return;
     }
 
