@@ -421,4 +421,41 @@ if (IS_SPLIT) {
   console.log(`▶ Pointed public SEO files at ${SITE_ORIGIN}`);
 }
 
+// Cloudflare Pages serves the marketing-only build. Give it the same security
+// headers the API server sends for the app, minus Auth0 (this site never
+// signs anyone in), and long caching for hashed assets.
+if (IS_MARKETING_BUILD) {
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self'",
+    "script-src-attr 'none'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: https:",
+    "connect-src 'self'",
+    "font-src 'self' https://fonts.gstatic.com",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "worker-src 'self' blob:",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "upgrade-insecure-requests",
+  ].join("; ");
+  writeFileSync(
+    resolve(root, "dist/public/_headers"),
+    [
+      "/*",
+      `  Content-Security-Policy: ${csp}`,
+      "  Strict-Transport-Security: max-age=31536000; includeSubDomains",
+      "  X-Content-Type-Options: nosniff",
+      "  X-Frame-Options: SAMEORIGIN",
+      "  Referrer-Policy: no-referrer",
+      "/assets/*",
+      "  Cache-Control: public, max-age=31536000, immutable",
+      "",
+    ].join("\n"),
+    "utf-8",
+  );
+  console.log("▶ Wrote Cloudflare Pages _headers");
+}
+
 console.log("✓ Prerender complete.");

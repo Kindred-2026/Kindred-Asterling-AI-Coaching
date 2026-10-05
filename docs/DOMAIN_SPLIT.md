@@ -40,10 +40,20 @@ domain. The marketing domain never signs anyone in and is not added to Auth0.
 
 ## Rollout (each step needs the owner's go-ahead)
 
-1. Register `kindred-asterling-ai.xyz` and add it to Cloudflare.
-2. Build the marketing site and publish `artifacts/kindred-coach/dist/public`
-   to Cloudflare Pages on the new domain:
-   `VITE_APP_URL=https://kindred-asterling-ai-coaching.com pnpm --filter @workspace/kindred-coach run build`.
+1. `kindred-asterling-ai.xyz` is registered at Spaceship. Add it to
+   Cloudflare as a site (free plan) and replace its nameservers in Spaceship
+   with the two Cloudflare gives you. The registration stays at Spaceship.
+2. Once Cloudflare shows the domain as active, create a Cloudflare Pages
+   project connected to this repository:
+   - Build command: `pnpm install --frozen-lockfile && pnpm --filter @workspace/kindred-coach run build`
+   - Build output directory: `artifacts/kindred-coach/dist/public`
+   - Environment variables: `VITE_APP_URL=https://kindred-asterling-ai-coaching.com`
+     and `NODE_VERSION=24`
+   - Custom domains: `kindred-asterling-ai.xyz` and `www.kindred-asterling-ai.xyz`
+
+   The marketing build needs no Auth0 settings. It writes a `_headers` file
+   with the same security headers as the app, and Pages serves the SPA shell
+   for any path without a prerendered page.
 3. Check the marketing site end to end (pages, legal PDFs, Sign in and
    checkout handing off to the app).
 4. Rebuild and deploy the Fly app with
