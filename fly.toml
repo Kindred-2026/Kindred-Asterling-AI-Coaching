@@ -13,10 +13,13 @@ primary_region = 'yyz'
   # These are public browser identifiers (never a client secret). Either keep
   # passing them with `--build-secret` (see docs/FLY_DEPLOYMENT.md) or fill in
   # and uncomment these so a plain `fly deploy` / Fly dashboard build works.
-  # [build.args]
+  [build.args]
   #   VITE_AUTH0_DOMAIN = 'YOUR-TENANT.ca.auth0.com'
   #   VITE_AUTH0_CLIENT_ID = 'YOUR-SPA-CLIENT-ID'
   #   VITE_AUTH0_AUDIENCE = 'https://kindred-asterling-ai-coaching.com/api'
+  # The public website lives on kindred-asterling-ai.xyz (docs/DOMAIN_SPLIT.md),
+  # so this domain's root is the sign-in page. Pairs with MARKETING_SITE_URL.
+  VITE_MARKETING_SITE_URL = 'https://kindred-asterling-ai.xyz'
 
 [env]
   # Claude via the Anthropic API. Requires the ANTHROPIC_API_KEY Fly secret;
@@ -32,10 +35,10 @@ primary_region = 'yyz'
   # only after the domain is live in Cloudflare and `fly certs show` reports
   # the certificate as issued: the fly.dev address stops working for sign-in.
   APP_PUBLIC_URL = 'https://kindred-asterling-ai-coaching.com'
-  # Domain split (see docs/DOMAIN_SPLIT.md): once the marketing website is live
-  # on its own domain, set this and build with VITE_MARKETING_SITE_URL to the
-  # same value. This domain then serves only the sign-in portal and the app.
-  # MARKETING_SITE_URL = 'https://kindred-asterling-ai.xyz'
+  # Domain split (see docs/DOMAIN_SPLIT.md): the marketing website lives on its
+  # own domain, so this one serves only the sign-in portal and the app, and
+  # redirects marketing and legal pages there. Pairs with the build arg above.
+  MARKETING_SITE_URL = 'https://kindred-asterling-ai.xyz'
   # Cloudflare -> Fly is two proxy hops, so rate limits see the real visitor IP.
   TRUST_PROXY_HOPS = '2'
   DATABASE_PROVIDER = 'postgres'

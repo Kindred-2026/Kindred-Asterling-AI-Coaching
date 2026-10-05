@@ -59,12 +59,12 @@ domain. The marketing domain never signs anyone in and is not added to Auth0.
    prerendered page get the SPA shell.
 3. Check the marketing site end to end (pages, legal PDFs, Sign in and
    checkout handing off to the app).
-4. Rebuild and deploy the Fly app with
-   `VITE_MARKETING_SITE_URL` (the `VITE_MARKETING_SITE_URL` GitHub variable
-   for the deploy workflow) and `MARKETING_SITE_URL` (`fly.toml` `[env]`) set
-   to `https://kindred-asterling-ai.xyz`.
+4. Rebuild and deploy the Fly app. `fly.toml` sets `VITE_MARKETING_SITE_URL`
+   (`[build.args]`) and `MARKETING_SITE_URL` (`[env]`) to
+   `https://kindred-asterling-ai.xyz`, so either the "Deploy to Fly.io"
+   workflow or a plain `fly deploy` picks them up.
 5. In Google Search Console, add the new domain and file a change of address
    from the old one.
 
-Rollback: unset both settings and redeploy the Fly app; the old single-site
-behaviour returns. The marketing deploy can stay up.
+Rollback: remove both settings from `fly.toml` and redeploy the Fly app; the
+old single-site behaviour returns. The marketing deploy can stay up.
