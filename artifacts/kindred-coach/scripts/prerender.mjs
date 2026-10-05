@@ -51,7 +51,20 @@ const ROUTES = [
       private: true,
     };
   }),
-  {
+  // On the app-only domain (VITE_MARKETING_SITE_URL set) the root is the
+  // sign-in portal: an empty, unindexed shell instead of the landing page.
+  process.env.VITE_MARKETING_SITE_URL?.trim()
+    ? {
+        path: "/",
+        outputFile: "index.html",
+        title: `Sign in | ${SITE_NAME}`,
+        description: "Sign in to access your Kindred workspace.",
+        ogTitle: `Sign in | ${SITE_NAME}`,
+        ogDescription: "Your private Kindred workspace.",
+        robots: "noindex, nofollow",
+        private: true,
+      }
+    : {
     path: "/",
     outputFile: "index.html",
     title: "Kindred Asterling — AI Coaching",

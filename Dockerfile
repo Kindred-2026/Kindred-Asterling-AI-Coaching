@@ -33,9 +33,13 @@ COPY tsconfig.base.json ./
 ARG VITE_AUTH0_DOMAIN
 ARG VITE_AUTH0_CLIENT_ID
 ARG VITE_AUTH0_AUDIENCE
+# Optional domain split (docs/DOMAIN_SPLIT.md): the marketing website's URL.
+# Empty keeps the website and app on one domain.
+ARG VITE_MARKETING_SITE_URL=""
 ENV VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN \
     VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID \
-    VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE
+    VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE \
+    VITE_MARKETING_SITE_URL=$VITE_MARKETING_SITE_URL
 # These identifiers are public. Accept build arguments or optional BuildKit
 # secret mounts; never pass a client secret to the browser build.
 RUN --mount=type=secret,id=VITE_AUTH0_DOMAIN,env=VITE_AUTH0_DOMAIN,required=false \

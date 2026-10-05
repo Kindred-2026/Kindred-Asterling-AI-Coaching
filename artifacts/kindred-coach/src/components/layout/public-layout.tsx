@@ -1,28 +1,42 @@
-import { ReactNode, useState } from "react";
+import { ComponentProps, ReactNode, useState } from "react";
 import { Link } from "wouter";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import logoMark from "@/assets/brand/logo-mark.png";
 import { CONFIGURED_SOCIAL_LINKS } from "@/config/social-links";
+import { appHref, marketingHref } from "@/lib/site";
 
 function signInToApp() {
-  window.location.href = "/login";
+  window.location.href = appHref("/login");
+}
+
+// Client-side navigation within this site; a plain link when the target lives
+// on the other Kindred domain.
+function SiteLink({ href, ...props }: ComponentProps<"a"> & { href: string }) {
+  if (/^https?:\/\//.test(href)) return <a href={href} {...props} />;
+  return <Link href={href} {...props} />;
 }
 
 const NAV_LINKS = [
-  { label: "Science", href: "/science" },
-  { label: "About", href: "/about" },
+  { label: "Science", href: marketingHref("/science") },
+  { label: "About", href: marketingHref("/about") },
   { label: "Pricing", href: "/pricing" },
 ];
 
 const LEGAL_LINKS = [
-  { label: "Privacy", href: "/legal/privacy" },
-  { label: "Terms", href: "/legal/terms" },
-  { label: "Health Disclaimer", href: "/legal/health-disclaimer" },
-  { label: "AI Disclosure", href: "/legal/ai-disclosure" },
-  { label: "Cookies", href: "/legal/cookies" },
-  { label: "Marketing Consent", href: "/legal/marketing-consent" },
+  { label: "Privacy", href: marketingHref("/legal/privacy") },
+  { label: "Terms", href: marketingHref("/legal/terms") },
+  {
+    label: "Health Disclaimer",
+    href: marketingHref("/legal/health-disclaimer"),
+  },
+  { label: "AI Disclosure", href: marketingHref("/legal/ai-disclosure") },
+  { label: "Cookies", href: marketingHref("/legal/cookies") },
+  {
+    label: "Marketing Consent",
+    href: marketingHref("/legal/marketing-consent"),
+  },
 ];
 
 function PublicHeader() {
@@ -31,8 +45,8 @@ function PublicHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 md:px-8">
-        <Link
-          href="/"
+        <SiteLink
+          href={marketingHref("/")}
           className="flex items-center gap-2.5"
           onClick={() => setOpen(false)}
         >
@@ -44,17 +58,17 @@ function PublicHeader() {
           <span className="font-serif text-lg font-medium tracking-tight text-foreground">
             Kindred Asterling
           </span>
-        </Link>
+        </SiteLink>
 
         <nav className="hidden items-center gap-1 md:flex">
           {NAV_LINKS.map((l) => (
-            <Link
+            <SiteLink
               key={l.href}
               href={l.href}
               className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {l.label}
-            </Link>
+            </SiteLink>
           ))}
           <button
             onClick={signInToApp}
@@ -85,14 +99,14 @@ function PublicHeader() {
         <div className="border-t border-border/60 bg-background md:hidden">
           <nav className="mx-auto flex max-w-6xl flex-col px-5 py-3">
             {NAV_LINKS.map((l) => (
-              <Link
+              <SiteLink
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
                 className="rounded-md px-2 py-3 text-sm font-medium text-foreground hover:bg-muted"
               >
                 {l.label}
-              </Link>
+              </SiteLink>
             ))}
             <button
               onClick={() => {
@@ -138,13 +152,13 @@ function PublicFooter() {
                 Explore
               </p>
               {NAV_LINKS.map((l) => (
-                <Link
+                <SiteLink
                   key={l.href}
                   href={l.href}
                   className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {l.label}
-                </Link>
+                </SiteLink>
               ))}
             </div>
             <div className="flex flex-col gap-2">
@@ -152,13 +166,13 @@ function PublicFooter() {
                 Legal
               </p>
               {LEGAL_LINKS.map((l) => (
-                <Link
+                <SiteLink
                   key={l.href}
                   href={l.href}
                   className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {l.label}
-                </Link>
+                </SiteLink>
               ))}
             </div>
             {CONFIGURED_SOCIAL_LINKS.length > 0 && (

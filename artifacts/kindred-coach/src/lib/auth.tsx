@@ -40,6 +40,18 @@ export function PublicAuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// The marketing-only site never signs anyone in: sign-in lives on the app
+// domain. Report a settled, signed-out state so public pages render normally
+// and checkout sends visitors to the app's sign-in.
+const signedOutState: AuthState = { ...publicState, isLoaded: true };
+export function SignedOutAuthProvider({ children }: { children: ReactNode }) {
+  return (
+    <AuthContext.Provider value={signedOutState}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
 function AuthBridge({ children }: { children: ReactNode }) {
   const auth = useAuth0();
   const [redirectError, setRedirectError] = useState<Error>();
