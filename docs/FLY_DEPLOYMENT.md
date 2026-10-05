@@ -12,6 +12,8 @@ Since then `fly.toml` sets `AI_PROVIDER = 'anthropic'` (step 6a) and the
 custom-domain `APP_PUBLIC_URL` (step 8). On 2026-10-03 a later deploy with
 that `APP_PUBLIC_URL` was live, and the custom domain was served by this Fly app
 through Cloudflare ([public check](#public-read-only-check--2026-10-03)).
+Since 2026-10-05 `fly.toml` also turns on the [domain split](DOMAIN_SPLIT.md)
+(step 9), so the next deploy from `main` changes what the custom domain serves.
 Payments are not enabled. This is not full staging
 acceptance or a production cutover. The old server/MongoDB was not
 re-inspected; the cutover gates below are still open.
@@ -53,7 +55,8 @@ or MongoDB smoke database. Production still runs on the existing server/MongoDB.
 4. Required runtime names are `POSTGRES_URL`, `AUTH0_DOMAIN`, `AUTH0_AUDIENCE`,
    `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `SUBSCRIPTION_OWNER_IDS`, plus
    `ANTHROPIC_API_KEY` while `fly.toml` sets `AI_PROVIDER = 'anthropic'`.
-   `NODE_ENV=production`, `PORT=8080`, and `APP_PUBLIC_URL` come from `fly.toml`.
+   `NODE_ENV=production`, `PORT=8080`, `APP_PUBLIC_URL`, and
+   `MARKETING_SITE_URL` (step 9) come from `fly.toml`.
    Store credentials only in Fly secrets; use standard input for imports.
 5. Supply public `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, and
    `VITE_AUTH0_AUDIENCE` separately to the existing Dockerfile's BuildKit mounts.
@@ -78,8 +81,10 @@ or MongoDB smoke database. Production still runs on the existing server/MongoDB.
    (`fly tokens create deploy`) and `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`,
    `VITE_AUTH0_AUDIENCE` variables in the `fly-staging` GitHub environment.
    Deploys started from the Fly dashboard without these build values fail at
-   the frontend build step; `fly.toml` has a commented `[build.args]` block for
-   that case.
+   the frontend build step. `fly.toml`'s `[build.args]` block is active and
+   sets `VITE_MARKETING_SITE_URL` (step 9); its three `VITE_AUTH0_*` entries
+   are still commented out, so fill them in for dashboard or plain
+   `fly deploy` builds.
 6a. AI uses Claude through the Anthropic API (`AI_PROVIDER=anthropic` in
    `fly.toml`). Set the key **before** deploying, or the app refuses to start:
 
@@ -102,6 +107,17 @@ or MongoDB smoke database. Production still runs on the existing server/MongoDB.
    The `fly.dev` entries registered for release v1 apply only to a build whose
    `APP_PUBLIC_URL` is the `fly.dev` URL. Keep existing production entries. Current code returns to the origin root, not `/login/callback`.
    Verify fresh sign-in and authenticated API behavior with test identities.
+9. `fly.toml` sets `VITE_MARKETING_SITE_URL` (`[build.args]`) and
+   `MARKETING_SITE_URL` (`[env]`) to `https://kindred-asterling-ai.xyz`, so
+   every deploy from `main` (workflow or plain `fly deploy`) makes this app
+   the sign-in portal: `/` renders sign-in, `/about`, `/science`, `/legal/*`,
+   `/legal-documents/*`, `sitemap.xml` and `llms.txt` return a 301 to the
+   marketing domain, and `robots.txt` disallows all crawling. Deploy only
+   after the marketing Worker is live on that domain
+   ([domain split rollout](DOMAIN_SPLIT.md#rollout-each-step-needs-the-owners-go-ahead)
+   steps 1–3). Whether it is live cannot be verified from this repository. To
+   deploy without the split, remove both settings first. After the split,
+   check public and legal pages on the marketing domain, not this one.
 
 Keep `auto_stop_machines='off'` and one 1 GB shared-CPU machine running while
 reminders use the in-process scheduler. Autostart does not replay missed ticks.
