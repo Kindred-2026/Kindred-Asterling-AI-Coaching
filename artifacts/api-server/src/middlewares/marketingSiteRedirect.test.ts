@@ -8,6 +8,7 @@ import {
 
 function createTestApp() {
   const app = express();
+  app.disable("x-powered-by");
   app.use(marketingSiteRedirect("https://marketing.example"));
   app.all(/.*/, (_req, res) => res.send("app"));
   return app;
