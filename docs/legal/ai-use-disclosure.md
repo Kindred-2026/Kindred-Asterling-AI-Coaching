@@ -1,7 +1,7 @@
 # AI Use Disclosure
 
 **Status:** Approved — not legal advice
-**Last repository review:** August 24, 2026
+**Last repository review:** October 5, 2026
 **Intended users:** Adults aged 18 and older only
 
 This draft must be reconciled with the deployed infrastructure, contracts, business practices, supported launch locations, and applicable law. Confirmation items require approval by the proprietor, an authorized adult, and qualified legal counsel before publication.
@@ -22,7 +22,7 @@ Kindred's context assembler selects source categories using the current interact
 
 ## Providers and data use
 
-The production AI provider and its processing region must be confirmed against the live deployment before publication. The application supports local Ollama and an OpenAI-compatible hosted endpoint. The planned hosted route is Cloudflare AI Gateway to a selected upstream model provider; this is a target architecture, not confirmation that either service currently processes production data.
+The deployed configuration (`fly.toml`) selects Anthropic's Claude models through the Anthropic API, processed in the United States. Requests can optionally be routed through Cloudflare AI Gateway; when they are, Kindred sends `cf-aig-collect-log-payload: false` and `cf-aig-skip-cache: true`. The application also supports an OpenAI-compatible endpoint and local Ollama, which are not selected for the hosted service.
 
 > **Founder/legal confirmation required:** Before publication, confirm the live model vendor, model, processing regions, retention, abuse monitoring, training policy, human-review access, and opt-out or consent choices. Confirm the Gateway payload logging configuration and the upstream provider's controls.
 
