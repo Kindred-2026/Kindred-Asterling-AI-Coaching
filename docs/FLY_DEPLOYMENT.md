@@ -12,8 +12,9 @@ Since then `fly.toml` sets `AI_PROVIDER = 'anthropic'` (step 6a) and the
 custom-domain `APP_PUBLIC_URL` (step 8). On 2026-10-03 a later deploy with
 that `APP_PUBLIC_URL` was live, and the custom domain was served by this Fly app
 through Cloudflare ([public check](#public-read-only-check--2026-10-03)).
-Since 2026-10-05 `fly.toml` also turns on the [domain split](DOMAIN_SPLIT.md)
-(step 9), so the next deploy from `main` changes what the custom domain serves.
+On 2026-10-05 a deploy with the domain-split settings (`docs/DOMAIN_SPLIT.md`)
+was live: both hosts redirect marketing and legal pages to
+`kindred-asterling-ai.xyz` ([public check](#public-read-only-check--2026-10-05)).
 Payments are not enabled. This is not full staging
 acceptance or a production cutover. The old server/MongoDB was not
 re-inspected; the cutover gates below are still open.
@@ -109,15 +110,15 @@ or MongoDB smoke database. Production still runs on the existing server/MongoDB.
    Verify fresh sign-in and authenticated API behavior with test identities.
 9. `fly.toml` sets `VITE_MARKETING_SITE_URL` (`[build.args]`) and
    `MARKETING_SITE_URL` (`[env]`) to `https://kindred-asterling-ai.xyz`, so
-   every deploy from `main` (workflow or plain `fly deploy`) makes this app
-   the sign-in portal: `/` renders sign-in, `/about`, `/science`, `/legal/*`,
+   every deploy from `main` (workflow or plain `fly deploy`) keeps this app
+   as the sign-in portal: `/` renders sign-in, `/about`, `/science`, `/legal/*`,
    `/legal-documents/*`, `sitemap.xml` and `llms.txt` return a 301 to the
-   marketing domain, and `robots.txt` disallows all crawling. Deploy only
-   after the marketing Worker is live on that domain
-   ([domain split rollout](DOMAIN_SPLIT.md#rollout-each-step-needs-the-owners-go-ahead)
-   steps 1–3). Whether it is live cannot be verified from this repository. To
-   deploy without the split, remove both settings first. After the split,
-   check public and legal pages on the marketing domain, not this one.
+   marketing domain, and `robots.txt` disallows all crawling. The split was
+   observed live on 2026-10-05 ([public check](#public-read-only-check--2026-10-05)).
+   That check could not confirm the marketing pages load on
+   `kindred-asterling-ai.xyz`. To deploy without the split, remove both
+   settings first ([domain split rollback](DOMAIN_SPLIT.md)). Check public
+   and legal pages on the marketing domain, not this one.
 
 Keep `auto_stop_machines='off'` and one 1 GB shared-CPU machine running while
 reminders use the in-process scheduler. Autostart does not replay missed ticks.
@@ -200,6 +201,24 @@ was made. Gate statuses above are unchanged.
 | Security headers | Both hosts send the CSP from `securityHeaders.ts` (`script-src 'self'`, `frame-ancestors 'none'`, Auth0 tenant in `connect-src`/`frame-src`). Both also send HSTS `max-age=31536000; includeSubDomains`, `X-Frame-Options: SAMEORIGIN` and `X-Content-Type-Options: nosniff`. `fly.dev` sends Helmet's `Referrer-Policy: no-referrer`, but the custom domain sends `same-origin` because Cloudflare replaces the header. Cloudflare also rewrites the Google Fonts links to `/cf-fonts/` and injects an inline challenge script with no nonce, which `script-src 'self'` does not allow |
 | TLS | Custom domain: Let's Encrypt `YE1` certificate for `kindred-asterling-ai-coaching.com` and `*.kindred-asterling-ai-coaching.com`, expiring 2026-12-20 (78 days). `fly.dev`: `*.fly.dev`, expiring 2026-11-19 (47 days). `www.` could not be checked from this network |
 | Calendar removal | The bundle and legal pages carry the removal text. Unauthenticated `/api/calendar/status` on `fly.dev` returns 401 because authentication runs before routing, so the 404 criterion is still unverified |
+
+### Public read-only check — 2026-10-05
+
+Unauthenticated `curl`/`openssl` checks from 13:03 to 13:06 UTC against
+`https://kindred-asterling-ai-coaching.com` and
+`https://kindred-asterling-ai-coaching.fly.dev`. No sign-in, form, or AI request
+was made. Gate statuses above are unchanged. Where this differs from the
+2026-10-03 check, this one is current.
+
+| Check | Observed result |
+| --- | --- |
+| Health | On both hosts `/api/healthz` returned 200 `{"status":"ok"}` and `/api/healthz/db` returned 200 `{"status":"ok","database":"connected"}` |
+| Deployed build | A new deploy is live. Static files are dated 2026-10-05 12:37:50 UTC. Served `index.html`, `/pricing/`, `assets/index-D9p40Vic.js` and `assets/index-Bcvm6LN-.css` are byte-identical to a local `build:deployment` of `main` at `1ced84c`, built with the public Auth0 values from the served bundle and `VITE_MARKETING_SITE_URL=https://kindred-asterling-ai.xyz` from `fly.toml`. The custom domain serves the same files, except for the HTML that Cloudflare rewrites. The Fly release ID, image digest and API source SHA are not public, so **Reviewed release** stays unverified |
+| Domain split | Server redirects from `MARKETING_SITE_URL` are live on both hosts. `/about`, `/science`, `/legal/*`, `/legal-documents/*` and `/llms.txt` return 301 to the same path on `https://kindred-asterling-ai.xyz`. On `fly.dev`, `/sitemap.xml` also returns 301. `/robots.txt` returns `Disallow: /`. `/`, `/login`, `/signup` and `/pricing/` return 200. The marketing domain is outside this check's network allowlist, so this check did not confirm that the redirected legal and privacy pages load there |
+| Auth and CORS | On `fly.dev`, `/api/auth/user` returned 401 with a matching `Access-Control-Allow-Origin` for origin `https://kindred-asterling-ai-coaching.com`. With the `fly.dev` origin it returned 500 with no CORS header, which is unchanged from 2026-10-03. On the custom domain, Cloudflare still answers non-browser requests for `/api/auth/user`, `/api/calendar/status`, `/sitemap.xml` and `/dashboard` with a 403 managed challenge (`cf-mitigated: challenge`) |
+| Security headers | Both hosts send the CSP from `securityHeaders.ts`, HSTS `max-age=31536000; includeSubDomains`, `X-Frame-Options: SAMEORIGIN` and `X-Content-Type-Options: nosniff`. `fly.dev` sends Helmet's `Referrer-Policy: no-referrer` and `X-XSS-Protection: 0`. The custom domain sends `same-origin` and `1; mode=block`, because Cloudflare rewrites both headers. Cloudflare still rewrites the Google Fonts links to `/cf-fonts/` and injects an inline challenge script with no nonce |
+| TLS | Custom domain: Let's Encrypt `YE1` certificate for `kindred-asterling-ai-coaching.com` and `*.kindred-asterling-ai-coaching.com`, expiring 2026-12-20 (76 days). `fly.dev`: `*.fly.dev`, expiring 2026-11-19 (45 days) |
+| Calendar removal | Unauthenticated `/api/calendar/status` on `fly.dev` still returns 401, so the 404 criterion is still unverified |
 
 ## Application deployment shape
 
