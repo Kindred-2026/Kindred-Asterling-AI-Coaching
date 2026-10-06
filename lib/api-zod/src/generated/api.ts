@@ -885,6 +885,15 @@ export const GetTodaySummaryResponse = zod.object({
 /**
  * @summary Get habit streaks
  */
+export const getStreaksQueryTzOffsetMin = -840;
+export const getStreaksQueryTzOffsetMax = 840;
+
+
+
+export const GetStreaksQueryParams = zod.object({
+  "tzOffset": zod.coerce.number().int().min(getStreaksQueryTzOffsetMin).max(getStreaksQueryTzOffsetMax).optional().describe('Client time-zone offset in minutes as returned by JavaScript Date.getTimezoneOffset() (UTC minus local; e.g. 300 for UTC-5). Used to resolve \"today\" in the user\'s local day. Defaults to 0 (UTC).\n')
+})
+
 export const GetStreaksResponseItem = zod.object({
   "habitId": zod.number().int(),
   "habitName": zod.string(),
@@ -899,6 +908,15 @@ export const GetStreaksResponse = zod.array(GetStreaksResponseItem)
 /**
  * @summary Get mood/mental load trend for the past 7 days
  */
+export const getMoodTrendQueryTzOffsetMin = -840;
+export const getMoodTrendQueryTzOffsetMax = 840;
+
+
+
+export const GetMoodTrendQueryParams = zod.object({
+  "tzOffset": zod.coerce.number().int().min(getMoodTrendQueryTzOffsetMin).max(getMoodTrendQueryTzOffsetMax).optional().describe('Client time-zone offset in minutes as returned by JavaScript Date.getTimezoneOffset() (UTC minus local; e.g. 300 for UTC-5). Used to resolve \"today\" in the user\'s local day. Defaults to 0 (UTC).\n')
+})
+
 export const GetMoodTrendResponseItem = zod.object({
   "date": zod.string(),
   "mentalLoadLevel": zod.string().nullable(),
