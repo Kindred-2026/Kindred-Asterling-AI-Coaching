@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { track } from "@amplitude/analytics-node";
 import { and, asc, eq, gte, lte, or, isNull } from "@workspace/db";
 import {
   db,
@@ -253,6 +254,7 @@ router.post("/medications", requireAuth, async (req, res): Promise<void> => {
     },
     todayDateStr(),
   );
+  track("medication_created", undefined, { user_id: userId });
   res.status(201).json(JSON.parse(JSON.stringify(created)));
 });
 
