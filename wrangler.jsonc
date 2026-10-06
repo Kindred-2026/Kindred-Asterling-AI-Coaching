@@ -4,6 +4,12 @@
 {
   "name": "kindred-asterling-ai-website",
   "compatibility_date": "2026-10-01",
+  // Attached on every deploy, so the site never loses its domains. Wrangler
+  // creates the DNS records for custom domains itself.
+  "routes": [
+    { "pattern": "kindred-asterling-ai.xyz", "custom_domain": true },
+    { "pattern": "www.kindred-asterling-ai.xyz", "custom_domain": true }
+  ],
   "assets": {
     // Built with VITE_APP_URL set, so sign-in, checkout and signed-in pages
     // hand off to the app domain. The build also writes the _headers file.

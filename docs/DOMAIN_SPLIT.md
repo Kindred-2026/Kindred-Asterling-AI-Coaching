@@ -50,9 +50,10 @@ domain. The marketing domain never signs anyone in and is not added to Auth0.
    - Build command: `VITE_APP_URL=https://kindred-asterling-ai-coaching.com pnpm --filter @workspace/kindred-coach run build`
    - Deploy command: `npx wrangler deploy`
    - Root directory: empty. `.node-version` pins Node 24.
-   - After the first deploy, add `kindred-asterling-ai.xyz` and
-     `www.kindred-asterling-ai.xyz` under the Worker's **Settings → Domains &
-     Routes**.
+   - `wrangler.jsonc` attaches `kindred-asterling-ai.xyz` and
+     `www.kindred-asterling-ai.xyz` as custom domains on every deploy, and
+     Cloudflare creates their DNS records. Don't add them by hand under
+     **Settings → Domains & Routes**: a deploy keeps only what the file lists.
 
    The marketing build needs no Auth0 settings. It writes a `_headers` file
    with the same security headers as the app, and paths without a
