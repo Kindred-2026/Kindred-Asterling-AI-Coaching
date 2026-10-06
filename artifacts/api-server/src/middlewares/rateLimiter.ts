@@ -8,10 +8,6 @@ function keyByUserOrIp(req: Request): string {
   return `ip:${ipKeyGenerator(req.ip ?? "unknown")}`;
 }
 
-function keyByIp(req: Request): string {
-  return `ip:${ipKeyGenerator(req.ip ?? "unknown")}`;
-}
-
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 300,
@@ -49,16 +45,4 @@ export const chatLimiter = rateLimit({
     error:
       "You're sending messages to Kindred too quickly. Take a breath and try again in a few minutes.",
   },
-});
-
-// Stricter per-IP limit for auth endpoints (login, register) to prevent brute
-// force and credential stuffing. Keyed by IP since unauthenticated users don't
-// have a user ID.
-export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 15, // 15 attempts per IP per window
-  standardHeaders: "draft-8",
-  legacyHeaders: false,
-  keyGenerator: keyByIp,
-  message: { error: "Too many login attempts, please try again later." },
 });

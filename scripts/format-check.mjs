@@ -52,7 +52,6 @@ const LEGACY_FORMAT_BASELINE = new Set([
   "scripts/dev-supervisor-fixture.mjs",
   "scripts/generate-docs.mjs",
   "scripts/src/clerk-admin.ts",
-  "scripts/src/hello.ts",
 ]);
 
 async function listDirFiles(relDir, extensions) {

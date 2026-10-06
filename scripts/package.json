@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "clerk:admin": "tsx ./src/clerk-admin.ts",
-    "hello": "tsx ./src/hello.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
