@@ -46,7 +46,7 @@ domain. The marketing domain never signs anyone in and is not added to Auth0.
 2. Create a Cloudflare Worker connected to this repository (**Workers &
    Pages → Create → Continue with GitHub**). `wrangler.jsonc` at the
    repository root serves the build output as static assets:
-   - Project name: `kindred-asterling-ai-website` (must match `wrangler.jsonc`)
+   - Project name: `kindred-asterling-ai-coaching` (must match `wrangler.jsonc`)
    - Build command: `VITE_APP_URL=https://kindred-asterling-ai-coaching.com pnpm --filter @workspace/kindred-coach run build`
    - Deploy command: `npx wrangler deploy`
    - Root directory: empty. `.node-version` pins Node 24.
