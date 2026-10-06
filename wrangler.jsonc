@@ -2,7 +2,7 @@
 // a Cloudflare Worker (docs/DOMAIN_SPLIT.md). Workers Builds runs the build
 // command set in the dashboard, then `npx wrangler deploy` with this file.
 {
-  "name": "kindred-asterling-ai-website",
+  "name": "kindred-asterling-ai-coaching",
   "compatibility_date": "2026-10-01",
   // Attached on every deploy, so the site never loses its domains. Wrangler
   // creates the DNS records for custom domains itself.
