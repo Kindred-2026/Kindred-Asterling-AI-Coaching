@@ -1,3 +1,4 @@
+import "./instrumentation/amplitude";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { startReminderScheduler } from "./lib/reminderScheduler";
