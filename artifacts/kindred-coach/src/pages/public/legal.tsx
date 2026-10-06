@@ -246,6 +246,7 @@ const privacySections: LegalSection[] = [
         "Authentication & Identity: Auth0 (USA / Global) - secure session management.",
         "Payment Processing: Helcim (Calgary, AB, Canada) - PCI-DSS compliant checkout and subscription billing.",
         "Communications: Resend (transactional email), Twilio (SMS reminders, where enabled), and ElevenLabs (voice synthesis, where enabled).",
+        "Product Analytics: Amplitude (USA) - receives the names of actions you take in the app, such as completing a morning check-in, sent from our servers under a scrambled identifier. It never receives your name, email, notes, chat messages, medication details or other health information.",
       ]),
     ],
   },
@@ -590,6 +591,7 @@ const cookieSections: LegalSection[] = [
       list([
         "Application and Hosting Logs: Technical server and infrastructure logs may be used to operate, secure, and troubleshoot the service.",
         "No Third-Party Browser Diagnostics: Kindred does not load a third-party browser analytics or error-reporting SDK.",
+        "Server-Side Product Analytics: Our servers tell Amplitude when an action is completed, such as a morning check-in, under a scrambled identifier. No cookies or tracking scripts are placed in your browser for this, and no health details are sent.",
       ]),
     ],
   },

@@ -31,6 +31,7 @@ import {
   detectCrisis,
   emitSafetySignalEvent,
 } from "../lib/crisisSafety";
+import { trackEvent } from "../lib/analytics";
 
 const router: IRouter = Router();
 
@@ -531,6 +532,7 @@ router.post(
       role: "assistant",
       content: clipMessage(assistantText),
     });
+    trackEvent(userId, "Chat Message Sent");
 
     const full = await loadWithMessages(
       conv.id,

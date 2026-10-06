@@ -62,6 +62,8 @@ The tracked files are `.env.example`, `.env.dev.example`, and `auth0-deploy/.env
 | `TWILIO_AUTH_TOKEN` | S; SMS auth; optional as complete SMS group | local secret | unverified | Fly secret if SMS used | verify/rotate or remove |
 | `TWILIO_PHONE_NUMBER` | N; SMS sender number; optional as complete SMS group | local config | unverified | Fly config if SMS used | verify/retain or remove |
 | `ELEVENLABS_API_KEY` | S; voice API; optional | local secret | unverified | Fly secret if voice used | verify/rotate or remove |
+| `AMPLITUDE_API_KEY` | S; server-side product analytics; optional (unset = no events sent) | local secret | not set | Fly secret if analytics used | add when ready |
+| `AMPLITUDE_ID_SALT` | S; keeps scrambled Amplitude user IDs stable across key rotation; optional | local secret | not set | Fly secret if analytics used | add with key |
 | `VITE_SOCIAL_WHATSAPP_URL` | P; browser social link; optional | local config | unverified | Fly build | verify/retain |
 | `VITE_SOCIAL_INSTAGRAM_URL` | P; browser social link; optional | local config | unverified | Fly build | verify/retain |
 | `VITE_SOCIAL_THREADS_URL` | P; browser social link; optional | local config | unverified | Fly build | verify/retain |

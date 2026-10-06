@@ -13,6 +13,7 @@ import {
   UpdateHabitResponse,
 } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
+import { trackEvent } from "../lib/analytics";
 import { createHabitTx, logHabitEntryTx } from "../lib/journalWrites";
 
 const router: IRouter = Router();
@@ -57,6 +58,7 @@ router.post("/habits", requireAuth, async (req, res): Promise<void> => {
     targetDays: parsed.data.targetDays ?? 90,
     startDate: parsed.data.startDate ?? today,
   });
+  trackEvent(userId, "Habit Created");
   res.status(201).json(habit);
 });
 
@@ -178,6 +180,9 @@ router.post(
       res.status(404).json({ error: "Habit not found" });
       return;
     }
+    trackEvent(userId, "Habit Logged", {
+      completed: parsed.data.completed,
+    });
     res.status(201).json(entry);
   },
 );
