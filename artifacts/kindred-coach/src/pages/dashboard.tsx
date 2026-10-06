@@ -62,13 +62,13 @@ export default function Dashboard() {
     isLoading: isLoadingStreaks,
     isError: streaksError,
     refetch: refetchStreaks,
-  } = useGetStreaks({ query: { queryKey: getGetStreaksQueryKey() } });
+  } = useGetStreaks(todayParams, { query: { queryKey: getGetStreaksQueryKey(todayParams) } });
   const {
     data: moodTrend,
     isLoading: isLoadingMood,
     isError: moodError,
     refetch: refetchMood,
-  } = useGetMoodTrend({ query: { queryKey: getGetMoodTrendQueryKey() } });
+  } = useGetMoodTrend(todayParams, { query: { queryKey: getGetMoodTrendQueryKey(todayParams) } });
   // Resolve "today's doses" in the device's local day, matching /medications.
   const medListParams = { tzOffset: new Date().getTimezoneOffset() };
   const {

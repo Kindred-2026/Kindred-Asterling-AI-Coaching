@@ -12,16 +12,23 @@ import { requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 
+// Largest valid UTC offset is ±14h; clamp anything outside that (and NaN → 0).
+function parseTzOffset(raw: unknown): number {
+  const n = Number(raw ?? 0);
+  return Number.isFinite(n) ? Math.max(-840, Math.min(840, Math.trunc(n))) : 0;
+}
+
+// The user's current wall-clock, expressed as a UTC instant: read the local
+// calendar day from it with toISOString()/setUTCDate().
+function localNow(tzOffsetMinutes: number): Date {
+  return new Date(Date.now() - tzOffsetMinutes * 60_000);
+}
+
 router.get("/dashboard/today", requireAuth, async (req, res): Promise<void> => {
   const userId = req.user!.id;
   // Match the device-local day used by journal forms and medication status.
-  const rawOffset = Number(req.query.tzOffset ?? 0);
-  const offset = Number.isFinite(rawOffset)
-    ? Math.max(-840, Math.min(840, Math.trunc(rawOffset)))
-    : 0;
-  const today = new Date(Date.now() - offset * 60_000)
-    .toISOString()
-    .split("T")[0];
+  const offset = parseTzOffset(req.query.tzOffset);
+  const today = localNow(offset).toISOString().split("T")[0];
   const todayStart = new Date(`${today}T00:00:00.000Z`);
   const tomorrowStart = new Date(todayStart);
   tomorrowStart.setUTCDate(tomorrowStart.getUTCDate() + 1);
@@ -113,9 +120,9 @@ router.get(
       .where(eq(habitsTable.userId, userId))
       .limit(MAX_DASHBOARD_HABITS);
 
-    const today = new Date();
+    const today = localNow(parseTzOffset(req.query.tzOffset));
     const cutoff = new Date(today);
-    cutoff.setDate(cutoff.getDate() - STREAK_LOOKBACK_DAYS);
+    cutoff.setUTCDate(cutoff.getUTCDate() - STREAK_LOOKBACK_DAYS);
     const cutoffStr = cutoff.toISOString().split("T")[0];
 
     const allEntries = await db
@@ -152,7 +159,7 @@ router.get(
 
       for (let i = 0; i < 90; i++) {
         const d = new Date(today);
-        d.setDate(d.getDate() - i);
+        d.setUTCDate(d.getUTCDate() - i);
         const ds = d.toISOString().split("T")[0];
         if (completedDates.includes(ds)) {
           if (i === 0 || currentStreak > 0) currentStreak++;
@@ -184,11 +191,12 @@ router.get(
   async (req, res): Promise<void> => {
     const userId = req.user!.id;
 
-    const today = new Date();
+    const offset = parseTzOffset(req.query.tzOffset);
+    const today = localNow(offset);
     const days: string[] = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today);
-      d.setDate(d.getDate() - i);
+      d.setUTCDate(d.getUTCDate() - i);
       days.push(d.toISOString().split("T")[0]);
     }
 
@@ -216,9 +224,15 @@ router.get(
             eq(bodyScansTable.userId, userId),
             gte(
               bodyScansTable.scannedAt,
-              new Date(`${startDate}T00:00:00.000Z`),
+              new Date(
+                new Date(`${startDate}T00:00:00.000Z`).getTime() +
+                  offset * 60_000,
+              ),
             ),
-            lt(bodyScansTable.scannedAt, afterEndDate),
+            lt(
+              bodyScansTable.scannedAt,
+              new Date(afterEndDate.getTime() + offset * 60_000),
+            ),
           ),
         ),
       db
@@ -236,7 +250,9 @@ router.get(
     const morningLogMap = new Map(morningLogs.map((log) => [log.date, log]));
     const bodyScanMap = new Map<string, number>();
     for (const scan of bodyScans) {
-      const date = scan.scannedAt.toISOString().split("T")[0];
+      const date = new Date(scan.scannedAt.getTime() - offset * 60_000)
+        .toISOString()
+        .split("T")[0];
       bodyScanMap.set(date, (bodyScanMap.get(date) ?? 0) + 1);
     }
     const eveningReportMap = new Map(

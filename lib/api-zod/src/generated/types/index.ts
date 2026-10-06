@@ -24,6 +24,8 @@ export * from './errorEnvelope';
 export * from './eveningReport';
 export * from './eveningReportInput';
 export * from './getMedicationWeeklyReportParams';
+export * from './getMoodTrendParams';
+export * from './getStreaksParams';
 export * from './getTodaySummaryParams';
 export * from './habit';
 export * from './habitEntry';
