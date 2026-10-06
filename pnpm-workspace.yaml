@@ -62,3 +62,4 @@ overrides:
   "undici@7": "^7.29.1"
   "undici@8": "^8.10.2"
   "raw-body@3": "4.0.0"
+  "@noble/hashes@1": "2.4.0"

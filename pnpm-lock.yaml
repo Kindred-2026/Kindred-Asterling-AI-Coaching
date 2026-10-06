@@ -81,6 +81,7 @@ overrides:
   undici@7: ^7.29.1
   undici@8: ^8.10.2
   raw-body@3: 4.0.0
+  '@noble/hashes@1': 2.4.0
 
 importers:
 
@@ -779,7 +780,7 @@ packages:
     resolution: {integrity: sha512-S6mL0yNB/Abt9Ei4tq8gDhcczc4S3+vQ4ra7vxnAf+YHC02srtqxKKZghx2Dq6p0e66THKwR6r8N6P95wEty7Q==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
     peerDependencies:
-      '@noble/hashes': ^1.8.0 || ^2.0.0
+      '@noble/hashes': 2.4.0
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
@@ -832,10 +833,6 @@ packages:
 
   '@noble/ciphers@1.3.0':
     resolution: {integrity: sha512-2I0gnIVPtfnMw9ee9h1dJG7tp81+8Ob3OJb3Mv37rx5L40/b0i7djjCVvGOVqc9AEIQyvyu1i6ypKdFw8R8gQw==}
-    engines: {node: ^14.21.3 || >=16}
-
-  '@noble/hashes@1.8.0':
-    resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
     engines: {node: ^14.21.3 || >=16}
 
   '@noble/hashes@2.4.0':
@@ -4496,8 +4493,6 @@ snapshots:
 
   '@noble/ciphers@1.3.0': {}
 
-  '@noble/hashes@1.8.0': {}
-
   '@noble/hashes@2.4.0': {}
 
   '@opentelemetry/api@1.9.1': {}
@@ -6863,7 +6858,7 @@ snapshots:
   pdfkit@0.20.2:
     dependencies:
       '@noble/ciphers': 1.3.0
-      '@noble/hashes': 1.8.0
+      '@noble/hashes': 2.4.0
       fflate: 0.8.3
       fontkit: 2.0.4
       linebreak: 1.1.0
