@@ -6,6 +6,25 @@ interface Env {
   ORIGIN: string;
 }
 
+function buildValidatedUrl(
+  baseUrl: string,
+  path: string,
+  search: string
+): string {
+  try {
+    if (path.includes("../") || /%2e%2e/i.test(path)) {
+      throw new Error("Invalid path");
+    }
+    const url = new URL(baseUrl);
+    // Assigning to pathname keeps the host fixed to the configured origin.
+    url.pathname = path;
+    url.search = search;
+    return url.href;
+  } catch {
+    throw new Error("Invalid URL");
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -13,7 +32,7 @@ export default {
       span.setAttribute("http.request.method", request.method);
       span.setAttribute("url.path", url.pathname);
 
-      const upstream = new URL(url.pathname + url.search, env.ORIGIN);
+      const upstream = buildValidatedUrl(env.ORIGIN, url.pathname, url.search);
       const response = await fetch(new Request(upstream, request));
 
       span.setAttribute("http.response.status_code", response.status);
