@@ -17,7 +17,9 @@ was live: both hosts redirect marketing and legal pages to
 `kindred-asterling-ai.xyz` ([public check](#public-read-only-check--2026-10-05)).
 On 2026-10-06 the app and the marketing site served builds of `main` at
 `f67ba35`, and the redirected legal pages loaded on the marketing domain
-([public check](#public-read-only-check--2026-10-06)).
+([public check](#public-read-only-check--2026-10-06)). Later that day a
+newer deploy served a build of `main` at `afc7f37` ([second public
+check](#public-read-only-check--2026-10-06-1305-utc)).
 Payments are not enabled. This is not full staging
 acceptance or a production cutover. The old server/MongoDB was not
 re-inspected; the cutover gates below are still open.
@@ -239,6 +241,27 @@ the 2026-10-05 check, this one is current.
 | Marketing site | On `kindred-asterling-ai.xyz` and `www.kindred-asterling-ai.xyz`, `/`, `/about/`, `/science/`, `/pricing/` and the six `/legal/*/` pages returned 200. `/legal-documents/privacy-policy.pdf`, `robots.txt`, `sitemap.xml` and `llms.txt` also returned 200. `/legal/privacy` returns 307 to the trailing-slash path. These pages, `assets/index-kXP--RnR.js`, the CSS and the privacy PDF are byte-identical to a local marketing build of `f67ba35` (the `VITE_APP_URL` build command in `docs/DOMAIN_SPLIT.md`). The app domain still returns 301 to these paths |
 | Security headers | The app hosts are unchanged from 2026-10-05. The marketing domain sends the `_headers` CSP: the app's policy with `connect-src 'self'`, no Auth0 origin and no `frame-src`. It also sends HSTS `max-age=31536000; includeSubDomains`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: no-referrer` |
 | TLS | Custom domain expires 2026-12-20 (75 days) and `*.fly.dev` expires 2026-11-19 (44 days). The marketing domain uses a Google Trust Services `WE1` certificate for `kindred-asterling-ai.xyz`, `www.` and `*.www.`, expiring 2027-01-03 (89 days) |
+| Calendar removal | Unauthenticated `/api/calendar/status` on `fly.dev` still returns 401, so the 404 criterion is still unverified |
+
+### Public read-only check — 2026-10-06 13:05 UTC
+
+Unauthenticated `curl`/`openssl` checks from 13:03 to 13:07 UTC against
+`https://kindred-asterling-ai-coaching.com` and
+`https://kindred-asterling-ai-coaching.fly.dev`. The marketing domain was
+outside this run's network allowlist, so the redirected pages were not
+re-verified there. No sign-in, form, or AI request was made. Gate statuses
+above are unchanged. Where this differs from the 01:36 UTC check, this one
+is current.
+
+| Check | Observed result |
+| --- | --- |
+| Health | On both app hosts `/api/healthz` returned 200 `{"status":"ok"}` and `/api/healthz/db` returned 200 `{"status":"ok","database":"connected"}` |
+| Deployed app build | Another deploy is live. Static files are dated 2026-10-06 05:32:50 UTC. On `fly.dev`, `index.html`, `/pricing/`, `assets/index-BiiVVIf-.js` and `assets/index-Bcvm6LN-.css` are byte-identical to a local `build:deployment` of `main` at `afc7f37`, which was the `main` HEAD when the deploy ran. Current `main` is `1a06cae`. **Reviewed release** stays unverified for the reasons given on 2026-10-05 |
+| Domain split | Unchanged. `/about`, `/science`, `/legal/*`, `/legal-documents/*` and `/llms.txt` return 301 to the same path on `https://kindred-asterling-ai.xyz` on both hosts. `/sitemap.xml` returns 301 on `fly.dev` and a Cloudflare 403 managed challenge on the custom domain. `/robots.txt` returns `Disallow: /`. `/`, `/login`, `/signup` and `/pricing/` return 200 |
+| Marketing domain | `kindred-asterling-ai.xyz` and `www.` were not reachable from this run's network, so the redirected legal and marketing pages were not re-verified. The 01:36 UTC check the same day confirmed them |
+| Auth and CORS | On `fly.dev`, `/api/auth/user` returned 401 with a matching `Access-Control-Allow-Origin` for origin `https://kindred-asterling-ai-coaching.com`, and 500 with no CORS header for the `fly.dev` origin — unchanged. On the custom domain, Cloudflare still answers non-browser requests for `/api/auth/user`, `/api/calendar/status`, `/sitemap.xml` and `/dashboard` with a 403 managed challenge |
+| Security headers | Both hosts send the CSP from `securityHeaders.ts` (Auth0 tenant in `connect-src`/`frame-src`), HSTS `max-age=31536000; includeSubDomains`, `X-Frame-Options: SAMEORIGIN` and `X-Content-Type-Options: nosniff`. `fly.dev` sends `Referrer-Policy: no-referrer` and `X-XSS-Protection: 0`; the custom domain sends `same-origin` and `1; mode=block` because Cloudflare rewrites both — all unchanged |
+| TLS | Custom domain's Let's Encrypt `YE1` certificate expires 2026-12-20 (75 days). `*.fly.dev` expires 2026-11-19 (44 days) |
 | Calendar removal | Unauthenticated `/api/calendar/status` on `fly.dev` still returns 401, so the 404 criterion is still unverified |
 
 ## Application deployment shape
