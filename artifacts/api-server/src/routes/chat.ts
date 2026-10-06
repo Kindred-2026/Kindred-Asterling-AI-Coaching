@@ -31,6 +31,7 @@ import {
   detectCrisis,
   emitSafetySignalEvent,
 } from "../lib/crisisSafety";
+import { trackEvent } from "../lib/analytics";
 
 const router: IRouter = Router();
 
@@ -492,8 +493,23 @@ router.post(
         );
       }
     } catch (err) {
-      failureReason = normalizeProviderError(err).category;
-      req.log.error({ err, category: failureReason }, "AI chat request failed");
+      const providerError = normalizeProviderError(err);
+      failureReason = providerError.category;
+      // The provider's own status and message (e.g. "invalid x-api-key",
+      // "credit balance is too low") are what an operator needs to fix it.
+      const cause = providerError.cause as
+        | { status?: unknown; message?: unknown }
+        | undefined;
+      req.log.error(
+        {
+          err,
+          category: failureReason,
+          providerStatus: typeof cause?.status === "number" ? cause.status : undefined,
+          providerMessage:
+            typeof cause?.message === "string" ? cause.message.slice(0, 500) : undefined,
+        },
+        "AI chat request failed",
+      );
     }
 
     if (!assistantText) {
@@ -516,6 +532,7 @@ router.post(
       role: "assistant",
       content: clipMessage(assistantText),
     });
+    trackEvent(userId, "Chat Message Sent");
 
     const full = await loadWithMessages(
       conv.id,

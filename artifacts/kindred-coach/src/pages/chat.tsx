@@ -13,6 +13,7 @@ import {
   type AuthUser,
 } from "@workspace/api-client-react";
 import { useGetCurrentAuthUser } from "@workspace/api-client-react";
+import { chatSendErrorMessage } from "@/lib/chatSendError";
 import { Send, Archive, Loader2, History } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { SpeakButton } from "@/components/speak-button";
@@ -212,19 +213,7 @@ export default function Chat() {
           // saves the user turn before calling Ollama, so refetch so the
           // user's message still shows, then surface a transient banner
           // so they can retry without losing what they typed.
-          const reason =
-            err && typeof err === "object" && "data" in err
-              ? (err as { data?: unknown }).data
-              : null;
-          const unavailableReason =
-            reason && typeof reason === "object" && "reason" in reason
-              ? (reason as { reason?: unknown }).reason
-              : null;
-          setSendError(
-            unavailableReason === "provider_not_configured"
-              ? "Kindred's AI provider has not been configured yet. An administrator needs to finish the server setup."
-              : "Kindred couldn't put a reply together. Try sending that again in a moment.",
-          );
+          setSendError(chatSendErrorMessage(err));
           setDraft(text);
           await qc.invalidateQueries({ queryKey: getGetActiveChatQueryKey() });
           return;

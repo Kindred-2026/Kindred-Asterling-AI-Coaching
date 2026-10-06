@@ -9,6 +9,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
 import { createMorningLogTx } from "../lib/journalWrites";
+import { trackEvent } from "../lib/analytics";
 
 const router: IRouter = Router();
 
@@ -36,6 +37,7 @@ router.post("/morning-logs", requireAuth, async (req, res): Promise<void> => {
     miniGoals: parsed.data.miniGoals ?? [],
     notes: parsed.data.notes ?? null,
   });
+  trackEvent(userId, "Morning Check-in Completed");
   res.status(201).json(log);
 });
 
