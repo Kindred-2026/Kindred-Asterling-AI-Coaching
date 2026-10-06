@@ -7,6 +7,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
 import { createEveningReportTx } from "../lib/journalWrites";
+import { trackEvent } from "../lib/analytics";
 
 const router: IRouter = Router();
 
@@ -41,6 +42,7 @@ router.post(
       challenges: parsed.data.challenges ?? null,
       tomorrowIntent: parsed.data.tomorrowIntent ?? null,
     });
+    trackEvent(userId, "Evening Report Completed");
     res.status(201).json(report);
   },
 );

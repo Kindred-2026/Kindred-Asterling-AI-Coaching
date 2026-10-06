@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { db, eq, usersTable } from "@workspace/db";
+import { trackEvent } from "./analytics";
 
 export interface AuthIdentity {
   id: string;
@@ -21,7 +22,8 @@ export class IdentityLinkRequiredError extends Error {
 /** Never link accounts by email. Existing accounts need an explicit subject mapping. */
 export async function syncAuth0Identity(identity: AuthIdentity) {
   const now = new Date();
-  return db.transaction(async (tx) => {
+  let created = false;
+  const user = await db.transaction(async (tx) => {
     const [existing] = await tx
       .select()
       .from(usersTable)
@@ -36,6 +38,7 @@ export async function syncAuth0Identity(identity: AuthIdentity) {
         .limit(1);
       if (emailOwner) throw new IdentityLinkRequiredError();
     }
+    created = !existing;
     const [user] = await tx
       .insert(usersTable)
       .values({
@@ -61,6 +64,8 @@ export async function syncAuth0Identity(identity: AuthIdentity) {
       .returning();
     return user;
   });
+  if (created) trackEvent(user.id, "Account Created");
+  return user;
 }
 
 /** Application IDs remain stable across identity provider migrations. */
