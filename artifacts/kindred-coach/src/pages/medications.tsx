@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,8 +76,29 @@ function normalizeTimes(times: string[]): string[] {
     .sort();
 }
 
+function failureDescription(err: unknown): string {
+  const status =
+    typeof err === "object" && err !== null && "status" in err
+      ? Number((err as { status: unknown }).status)
+      : NaN;
+  if (status === 401 || status === 403) {
+    return "Your session may have expired or your plan doesn't allow this. Sign in again and retry.";
+  }
+  if (status === 400) {
+    return "Please check the details you entered and try again.";
+  }
+  return Number.isFinite(status)
+    ? `Something went wrong (error ${status}). Please try again.`
+    : "Something went wrong. Check your connection and try again.";
+}
+
 export default function Medications() {
   const qc = useQueryClient();
+  const { toast } = useToast();
+
+  function reportFailure(title: string, err: unknown) {
+    toast({ title, description: failureDescription(err), variant: "destructive" });
+  }
   // Resolve "today's doses" in the device's local day, matching how doses are
   // recorded — so a dose toggled near midnight stays attached to the right day.
   const listParams = { tzOffset: new Date().getTimezoneOffset() };
@@ -131,6 +153,8 @@ export default function Medications() {
       }
       cancelEdit();
       await refresh();
+    } catch (err) {
+      reportFailure("Couldn't save medication", err);
     } finally {
       setBusy(false);
     }
@@ -143,6 +167,8 @@ export default function Medications() {
       await deleteMedication(id);
       if (editingId === id) cancelEdit();
       await refresh();
+    } catch (err) {
+      reportFailure("Couldn't delete medication", err);
     } finally {
       setBusy(false);
     }
@@ -167,6 +193,8 @@ export default function Medications() {
         });
       }
       await refresh();
+    } catch (err) {
+      reportFailure("Couldn't update dose", err);
     } finally {
       setBusy(false);
     }
@@ -187,6 +215,8 @@ export default function Medications() {
         tzOffset: new Date().getTimezoneOffset(),
       });
       await refresh();
+    } catch (err) {
+      reportFailure("Couldn't save rating", err);
     } finally {
       setBusy(false);
     }
