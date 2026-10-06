@@ -43,7 +43,11 @@ server and MongoDB active through migration, cutover, and rollback gates.
   settings. This header does not set upstream model-provider retention. Compare
   Workers AI only after coaching-quality, privacy, and cost review.
 - **Edge/security:** Keep Cloudflare for DNS, TLS/proxy, application security,
-  and AI Gateway. Keep Auth0, Helcim, email, reminders, and voice until each
+  and AI Gateway. The repository also has Cloudflare Worker configs for the
+  marketing website on `kindred-asterling-ai.xyz` (root `wrangler.jsonc`, see
+  [domain split](DOMAIN_SPLIT.md)) and an optional metadata-only tracing proxy
+  (`artifacts/tracing-worker/`). Whether either Worker is deployed is not
+  recorded here. Keep Auth0, Helcim, email, reminders, and voice until each
   feature has a separately reviewed replacement decision.
 
 ## Repository disposition
