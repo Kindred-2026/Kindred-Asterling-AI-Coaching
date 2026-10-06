@@ -713,6 +713,18 @@ paths:
       operationId: getStreaks
       tags: [dashboard]
       summary: Get habit streaks
+      parameters:
+        - name: tzOffset
+          in: query
+          required: false
+          description: >
+            Client time-zone offset in minutes as returned by JavaScript
+            Date.getTimezoneOffset() (UTC minus local; e.g. 300 for UTC-5).
+            Used to resolve "today" in the user's local day. Defaults to 0 (UTC).
+          schema:
+            type: integer
+            minimum: -840
+            maximum: 840
       responses:
         "200":
           description: Habit streaks
@@ -728,6 +740,18 @@ paths:
       operationId: getMoodTrend
       tags: [dashboard]
       summary: Get mood/mental load trend for the past 7 days
+      parameters:
+        - name: tzOffset
+          in: query
+          required: false
+          description: >
+            Client time-zone offset in minutes as returned by JavaScript
+            Date.getTimezoneOffset() (UTC minus local; e.g. 300 for UTC-5).
+            Used to resolve "today" in the user's local day. Defaults to 0 (UTC).
+          schema:
+            type: integer
+            minimum: -840
+            maximum: 840
       responses:
         "200":
           description: Mood trend data

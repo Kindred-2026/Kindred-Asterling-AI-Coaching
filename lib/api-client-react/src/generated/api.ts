@@ -35,6 +35,8 @@ import type {
   EveningReportInput,
   GetMedicationWeeklyReportParams,
   GetTodaySummaryParams,
+  GetStreaksParams,
+  GetMoodTrendParams,
   Habit,
   HabitEntry,
   HabitEntryInput,
@@ -2854,20 +2856,27 @@ export function useGetTodaySummary<TData = Awaited<ReturnType<typeof getTodaySum
 
 
 
-export const getGetStreaksUrl = () => {
+export const getGetStreaksUrl = (params?: GetStreaksParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/dashboard/streaks`
+  return stringifiedParams.length > 0 ? `/api/dashboard/streaks?${stringifiedParams}` : `/api/dashboard/streaks`
 }
 
 /**
  * @summary Get habit streaks
  */
-export const getStreaks = async ( options?: Parameters<typeof customFetch>[1]): Promise<HabitStreak[]> => {
+export const getStreaks = async (params?: GetStreaksParams, options?: Parameters<typeof customFetch>[1]): Promise<HabitStreak[]> => {
 
-  return customFetch<HabitStreak[]>(getGetStreaksUrl(),
+  return customFetch<HabitStreak[]>(getGetStreaksUrl(params),
   {
     ...options,
     method: 'GET'
@@ -2880,23 +2889,23 @@ export const getStreaks = async ( options?: Parameters<typeof customFetch>[1]): 
 
 
 
-export const getGetStreaksQueryKey = () => {
+export const getGetStreaksQueryKey = (params?: GetStreaksParams,) => {
     return [
-    `/api/dashboard/streaks`
+    `/api/dashboard/streaks`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetStreaksQueryOptions = <TData = Awaited<ReturnType<typeof getStreaks>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreaks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetStreaksQueryOptions = <TData = Awaited<ReturnType<typeof getStreaks>>, TError = ErrorType<unknown>>(params?: GetStreaksParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreaks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetStreaksQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetStreaksQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStreaks>>> = ({ signal }) => getStreaks({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStreaks>>> = ({ signal }) => getStreaks(params, { signal, ...requestOptions });
 
 
 
@@ -2914,11 +2923,11 @@ export type GetStreaksQueryError = ErrorType<unknown>
  */
 
 export function useGetStreaks<TData = Awaited<ReturnType<typeof getStreaks>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreaks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params?: GetStreaksParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreaks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetStreaksQueryOptions(options)
+  const queryOptions = getGetStreaksQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -2931,20 +2940,27 @@ export function useGetStreaks<TData = Awaited<ReturnType<typeof getStreaks>>, TE
 
 
 
-export const getGetMoodTrendUrl = () => {
+export const getGetMoodTrendUrl = (params?: GetMoodTrendParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/dashboard/mood-trend`
+  return stringifiedParams.length > 0 ? `/api/dashboard/mood-trend?${stringifiedParams}` : `/api/dashboard/mood-trend`
 }
 
 /**
  * @summary Get mood/mental load trend for the past 7 days
  */
-export const getMoodTrend = async ( options?: Parameters<typeof customFetch>[1]): Promise<MoodTrendPoint[]> => {
+export const getMoodTrend = async (params?: GetMoodTrendParams, options?: Parameters<typeof customFetch>[1]): Promise<MoodTrendPoint[]> => {
 
-  return customFetch<MoodTrendPoint[]>(getGetMoodTrendUrl(),
+  return customFetch<MoodTrendPoint[]>(getGetMoodTrendUrl(params),
   {
     ...options,
     method: 'GET'
@@ -2957,23 +2973,23 @@ export const getMoodTrend = async ( options?: Parameters<typeof customFetch>[1])
 
 
 
-export const getGetMoodTrendQueryKey = () => {
+export const getGetMoodTrendQueryKey = (params?: GetMoodTrendParams,) => {
     return [
-    `/api/dashboard/mood-trend`
+    `/api/dashboard/mood-trend`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetMoodTrendQueryOptions = <TData = Awaited<ReturnType<typeof getMoodTrend>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMoodTrend>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetMoodTrendQueryOptions = <TData = Awaited<ReturnType<typeof getMoodTrend>>, TError = ErrorType<unknown>>(params?: GetMoodTrendParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMoodTrend>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetMoodTrendQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetMoodTrendQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMoodTrend>>> = ({ signal }) => getMoodTrend({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMoodTrend>>> = ({ signal }) => getMoodTrend(params, { signal, ...requestOptions });
 
 
 
@@ -2991,11 +3007,11 @@ export type GetMoodTrendQueryError = ErrorType<unknown>
  */
 
 export function useGetMoodTrend<TData = Awaited<ReturnType<typeof getMoodTrend>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMoodTrend>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params?: GetMoodTrendParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMoodTrend>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetMoodTrendQueryOptions(options)
+  const queryOptions = getGetMoodTrendQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

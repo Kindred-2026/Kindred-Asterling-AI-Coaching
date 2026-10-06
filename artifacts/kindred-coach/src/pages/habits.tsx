@@ -165,7 +165,8 @@ export default function Habits() {
   const [targetDays, setTargetDays] = useState("90");
 
   const { data: habits, isLoading } = useListHabits({ query: { queryKey: getListHabitsQueryKey() } });
-  const { data: streaks } = useGetStreaks({ query: { queryKey: getGetStreaksQueryKey() } });
+  const streakParams = { tzOffset: new Date().getTimezoneOffset() };
+  const { data: streaks } = useGetStreaks(streakParams, { query: { queryKey: getGetStreaksQueryKey(streakParams) } });
   const createHabit = useCreateHabit();
 
   const handleCreate = () => {
