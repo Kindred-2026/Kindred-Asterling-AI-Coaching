@@ -15,6 +15,9 @@ through Cloudflare ([public check](#public-read-only-check--2026-10-03)).
 On 2026-10-05 a deploy with the domain-split settings (`docs/DOMAIN_SPLIT.md`)
 was live: both hosts redirect marketing and legal pages to
 `kindred-asterling-ai.xyz` ([public check](#public-read-only-check--2026-10-05)).
+On 2026-10-06 the app and the marketing site served builds of `main` at
+`f67ba35`, and the redirected legal pages loaded on the marketing domain
+([public check](#public-read-only-check--2026-10-06)).
 Payments are not enabled. This is not full staging
 acceptance or a production cutover. The old server/MongoDB was not
 re-inspected; the cutover gates below are still open.
@@ -56,7 +59,8 @@ or MongoDB smoke database. Production still runs on the existing server/MongoDB.
 4. Required runtime names are `POSTGRES_URL`, `AUTH0_DOMAIN`, `AUTH0_AUDIENCE`,
    `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `SUBSCRIPTION_OWNER_IDS`, plus
    `ANTHROPIC_API_KEY` while `fly.toml` sets `AI_PROVIDER = 'anthropic'`.
-   `NODE_ENV=production`, `PORT=8080`, and `APP_PUBLIC_URL` come from `fly.toml`.
+   `NODE_ENV=production`, `PORT=8080`, `APP_PUBLIC_URL`, and
+   `MARKETING_SITE_URL` (step 9) come from `fly.toml`.
    Store credentials only in Fly secrets; use standard input for imports.
 5. Supply public `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, and
    `VITE_AUTH0_AUDIENCE` separately to the existing Dockerfile's BuildKit mounts.
@@ -81,8 +85,10 @@ or MongoDB smoke database. Production still runs on the existing server/MongoDB.
    (`fly tokens create deploy`) and `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`,
    `VITE_AUTH0_AUDIENCE` variables in the `fly-staging` GitHub environment.
    Deploys started from the Fly dashboard without these build values fail at
-   the frontend build step; `fly.toml` has a commented `[build.args]` block for
-   that case.
+   the frontend build step. `fly.toml`'s `[build.args]` block is active and
+   sets `VITE_MARKETING_SITE_URL` (step 9); its three `VITE_AUTH0_*` entries
+   are still commented out, so fill them in for dashboard or plain
+   `fly deploy` builds.
 6a. AI uses Claude through the Anthropic API (`AI_PROVIDER=anthropic` in
    `fly.toml`). Set the key **before** deploying, or the app refuses to start:
 
@@ -105,6 +111,17 @@ or MongoDB smoke database. Production still runs on the existing server/MongoDB.
    The `fly.dev` entries registered for release v1 apply only to a build whose
    `APP_PUBLIC_URL` is the `fly.dev` URL. Keep existing production entries. Current code returns to the origin root, not `/login/callback`.
    Verify fresh sign-in and authenticated API behavior with test identities.
+9. `fly.toml` sets `VITE_MARKETING_SITE_URL` (`[build.args]`) and
+   `MARKETING_SITE_URL` (`[env]`) to `https://kindred-asterling-ai.xyz`, so
+   every deploy from `main` (workflow or plain `fly deploy`) keeps this app
+   as the sign-in portal: `/` renders sign-in, `/about`, `/science`, `/legal/*`,
+   `/legal-documents/*`, `sitemap.xml` and `llms.txt` return a 301 to the
+   marketing domain, and `robots.txt` disallows all crawling. The split was
+   observed live on 2026-10-05 ([public check](#public-read-only-check--2026-10-05)).
+   That check could not confirm the marketing pages load on
+   `kindred-asterling-ai.xyz`. To deploy without the split, remove both
+   settings first ([domain split rollback](DOMAIN_SPLIT.md)). Check public
+   and legal pages on the marketing domain, not this one.
 
 Keep `auto_stop_machines='off'` and one 1 GB shared-CPU machine running while
 reminders use the in-process scheduler. Autostart does not replay missed ticks.
@@ -204,6 +221,24 @@ was made. Gate statuses above are unchanged. Where this differs from the
 | Auth and CORS | On `fly.dev`, `/api/auth/user` returned 401 with a matching `Access-Control-Allow-Origin` for origin `https://kindred-asterling-ai-coaching.com`. With the `fly.dev` origin it returned 500 with no CORS header, which is unchanged from 2026-10-03. On the custom domain, Cloudflare still answers non-browser requests for `/api/auth/user`, `/api/calendar/status`, `/sitemap.xml` and `/dashboard` with a 403 managed challenge (`cf-mitigated: challenge`) |
 | Security headers | Both hosts send the CSP from `securityHeaders.ts`, HSTS `max-age=31536000; includeSubDomains`, `X-Frame-Options: SAMEORIGIN` and `X-Content-Type-Options: nosniff`. `fly.dev` sends Helmet's `Referrer-Policy: no-referrer` and `X-XSS-Protection: 0`. The custom domain sends `same-origin` and `1; mode=block`, because Cloudflare rewrites both headers. Cloudflare still rewrites the Google Fonts links to `/cf-fonts/` and injects an inline challenge script with no nonce |
 | TLS | Custom domain: Let's Encrypt `YE1` certificate for `kindred-asterling-ai-coaching.com` and `*.kindred-asterling-ai-coaching.com`, expiring 2026-12-20 (76 days). `fly.dev`: `*.fly.dev`, expiring 2026-11-19 (45 days) |
+| Calendar removal | Unauthenticated `/api/calendar/status` on `fly.dev` still returns 401, so the 404 criterion is still unverified |
+
+### Public read-only check — 2026-10-06
+
+Unauthenticated `curl`/`openssl` checks from 01:36 to 01:40 UTC against
+`https://kindred-asterling-ai-coaching.com`,
+`https://kindred-asterling-ai-coaching.fly.dev` and the marketing domain
+`https://kindred-asterling-ai.xyz` (plus `www.`). No sign-in, form, or AI
+request was made. Gate statuses above are unchanged. Where this differs from
+the 2026-10-05 check, this one is current.
+
+| Check | Observed result |
+| --- | --- |
+| Health | On both app hosts `/api/healthz` returned 200 `{"status":"ok"}` and `/api/healthz/db` returned 200 `{"status":"ok","database":"connected"}` |
+| Deployed app build | Another deploy is live. Static files are dated 2026-10-06 00:23:27 UTC. On `fly.dev`, `index.html`, `/pricing/`, `assets/index-BYx9HQHO.js` and `assets/index-Bcvm6LN-.css` are byte-identical to a local `build:deployment` of `main` at `f67ba35`, built with the same settings as the 2026-10-05 check. The custom domain serves the same asset name. **Reviewed release** stays unverified for the reasons given on 2026-10-05 |
+| Marketing site | On `kindred-asterling-ai.xyz` and `www.kindred-asterling-ai.xyz`, `/`, `/about/`, `/science/`, `/pricing/` and the six `/legal/*/` pages returned 200. `/legal-documents/privacy-policy.pdf`, `robots.txt`, `sitemap.xml` and `llms.txt` also returned 200. `/legal/privacy` returns 307 to the trailing-slash path. These pages, `assets/index-kXP--RnR.js`, the CSS and the privacy PDF are byte-identical to a local marketing build of `f67ba35` (the `VITE_APP_URL` build command in `docs/DOMAIN_SPLIT.md`). The app domain still returns 301 to these paths |
+| Security headers | The app hosts are unchanged from 2026-10-05. The marketing domain sends the `_headers` CSP: the app's policy with `connect-src 'self'`, no Auth0 origin and no `frame-src`. It also sends HSTS `max-age=31536000; includeSubDomains`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: no-referrer` |
+| TLS | Custom domain expires 2026-12-20 (75 days) and `*.fly.dev` expires 2026-11-19 (44 days). The marketing domain uses a Google Trust Services `WE1` certificate for `kindred-asterling-ai.xyz`, `www.` and `*.www.`, expiring 2027-01-03 (89 days) |
 | Calendar removal | Unauthenticated `/api/calendar/status` on `fly.dev` still returns 401, so the 404 criterion is still unverified |
 
 ## Application deployment shape
