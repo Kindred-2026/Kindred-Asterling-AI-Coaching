@@ -207,7 +207,9 @@ describe("canonical signed-in routing through App", () => {
   it("explains an identity migration conflict without showing private pages", async () => {
     auth.accountError = { status: 409 };
     await renderAt("/today");
-    expect(container.textContent).toContain("Link your existing Kindred account");
+    expect(container.textContent).toContain("This email already has a Kindred account");
+    expect(container.textContent).toContain("sign in the way you used before");
+    expect(container.querySelector("button")?.textContent).toBe("Sign out");
     expect(container.querySelector('[data-page="Today"]')).toBeNull();
     auth.accountError = null;
   });

@@ -34,6 +34,10 @@ describe("Auth0 integration boundary", () => {
     await act(async () => state.login("https://attacker.invalid"));
     expect(mocks.sdk.loginWithRedirect).toHaveBeenLastCalledWith({ appState: { returnTo: "/today" }, authorizationParams: {} });
   });
+  it("asks Universal Login for the passwordless email connection by name", async () => {
+    await render(); await act(async () => state.login("/today", false, "email"));
+    expect(mocks.sdk.loginWithRedirect).toHaveBeenLastCalledWith({ appState: { returnTo: "/today" }, authorizationParams: { connection: "email" } });
+  });
   it("reports a failed redirect instead of leaving an unhandled rejection", async () => {
     mocks.sdk.loginWithRedirect.mockRejectedValueOnce(new Error("Network")); await render();
     await act(async () => state.login("/today")); expect(state.error).toBeInstanceOf(Error);

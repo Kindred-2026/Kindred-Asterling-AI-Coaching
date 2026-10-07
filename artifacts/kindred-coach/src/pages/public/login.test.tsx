@@ -68,6 +68,20 @@ describe("Login returnTo validation", () => {
     expect(container.querySelector("a")?.getAttribute("href")).toBe("/signup?returnTo=%2Fpricing");
   });
 
+  it("offers an emailed sign-in code through Auth0's email connection", async () => {
+    mocks.search = "returnTo=%2Fpricing";
+
+    await act(async () => {
+      root.render(createElement(Login));
+    });
+
+    const codeButton = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Email me a sign-in code",
+    );
+    await act(async () => codeButton!.click());
+    expect(mocks.login).toHaveBeenCalledWith("/pricing", false, "email");
+  });
+
   it("collapses an unsafe return destination to /today in Auth0 login", async () => {
     mocks.search = "returnTo=https%3A%2F%2Fevil.example.com";
 

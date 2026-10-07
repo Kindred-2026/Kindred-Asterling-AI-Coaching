@@ -32,6 +32,9 @@ export default function Login() {
         <button className="w-full rounded-lg bg-primary px-4 py-3 text-primary-foreground" onClick={() => void login(returnTo, false)}>
           Sign in
         </button>
+        <button className="mt-3 w-full rounded-lg border border-border px-4 py-3" onClick={() => void login(returnTo, false, "email")}>
+          Email me a sign-in code
+        </button>
         <a className="mt-4 block underline" href={signUpUrl}> New to Kindred? Create an account</a>
       </div>
     </div>
