@@ -11,8 +11,7 @@ verify in GitHub Actions or the relevant provider dashboard.
 ## Responsibilities
 
 - The repository-root **`Dockerfile`** is the supported production image
-  definition. Until cutover, follow the current Coolify deployment instructions
-  in `docs/COOLIFY_DEPLOYMENT.md`. For the selected Fly.io target, follow
+  definition. For the selected Fly.io target, follow
   `docs/FLY_DEPLOYMENT.md`; only the staging deployment is verified, not production.
 - **Before Fly cutover:** GitHub Actions validates the monorepo, the MongoDB
   source backup has been restore-tested, the isolated PostgreSQL target has

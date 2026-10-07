@@ -16,10 +16,9 @@ review read/write behaviour below before use.
 | Migrate from PostgreSQL | `pnpm --filter @workspace/db run migrate:from-postgres` | `lib/db/scripts/migrate-from-postgres.ts` | **Writes** a new target database: opens the PostgreSQL source in one `REPEATABLE READ READ ONLY` transaction, streams rows, refuses a non-empty target, builds indexes + counters, validates references, and writes a report file (`MONGODB_MIGRATION_REPORT_PATH` or a timestamped default, mode `0600`). No dry-run; requires reviewed migration/rollback evidence. |
 | Validate a Mongo restore | `pnpm --filter @workspace/db run validate:restore` | `lib/db/scripts/validate-mongodb-restore.ts` | **Read-only**: compares `MONGODB_VALIDATION_SOURCE_DATABASE` vs `MONGODB_VALIDATION_RESTORE_DATABASE` with order-independent digests per expected collection; fails on any row/digest mismatch. |
 | Link Auth0 identities | none (run `tsx lib/db/scripts/link-auth0-identities.ts`) | `lib/db/scripts/link-auth0-identities.ts` | **Validates by default, writes only with `--apply`.** Reads a reviewed mapping file (`--mapping`), requires `--database` to match `MONGODB_DATABASE`, checks each mapping (user exists, clerk match, no conflicting Auth0 identity) inside a transaction, then applies `auth0UserId` writes only when `--apply` is passed. Without `--apply` it is a dry run (no writes). Never run against production without separately approved identity-migration and rollback evidence. |
-| Inspect Clerk instance | `pnpm --filter @workspace/scripts run clerk:admin` | `scripts/src/clerk-admin.ts` | **Read-only** network inspection of the Clerk instance via the Backend API (`GET` only, requires `CLERK_SECRET_KEY`). No local writes. |
 
-Rule of thumb from the implementation: the only always-read-only commands are
-`validate:restore` and `clerk:admin`. Everything else either writes or needs an
+Rule of thumb from the implementation: the only always-read-only command is
+`validate:restore`. Everything else either writes or needs an
 explicit apply flag — never describe a mutating command as safe/read-only.
 
 Documented procedures: `docs/mongodb-migration.md` (PostgreSQL cutover) and
@@ -49,7 +48,6 @@ and `scripts/{deploy-eks-autoscaling.sh,verify-eks.sh}` had no active repository
 consumers. The owner confirmed there is no AWS cluster. Repository files were
 removed; no AWS resources were changed.
 
-**Retained (active local workflow)** — `scripts/test-local.sh` is called by the
-Codex project Test action in `.codex/environments/environment.toml`; it runs the
+**Retained (active local workflow)** — `scripts/test-local.sh` runs the
 API test harness with payments disabled. Keep it as part of the documented
 developer workflow.

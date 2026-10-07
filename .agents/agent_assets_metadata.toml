@@ -1,8 +1,0 @@
-uploads = []
-generated = []
-
-[[outputs]]
-id = "unvfwoyhEzWypk1wftmAG"
-uri = "file://dist/kindred-asterling-project.zip"
-type = "unspecified"
-title = "Kindred Asterling — full project source (zip)"
