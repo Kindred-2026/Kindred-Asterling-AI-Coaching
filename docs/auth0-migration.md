@@ -1,5 +1,7 @@
 # Auth0 replacement and rollout
 
+> **Current tenant (2026-10-07):** production runs on `dev-4c281gnuylq4hccq.ca.auth0.com`. This document records the earlier setup; see [sign-in options](releases/sign-in-options.md) for what is live.
+
 > **Historical rollout record.** This document records the implementation and
 > evidence from that phase; it is not the source of current production status.
 > Check `docs/FINALIZATION_RECORD.md` and the latest release evidence for
