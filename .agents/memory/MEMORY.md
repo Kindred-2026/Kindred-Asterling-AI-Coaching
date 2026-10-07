@@ -1,7 +1,0 @@
-- [Replit Auth setup](replit-auth-setup.md) — auth fully wired; every data table has a userId FK scoping data per user.
-- [DB date serialization](db-date-serialization.md) — Drizzle returns Date objects; wrap rows in JSON.parse(JSON.stringify(...)) before Zod .parse().
-- [Journal write rollback pattern](write-rollback-tests.md) — multi-step saves use db.transaction; tested by mocking a seam to throw and asserting no rows persist.
-- [Publish DB migration gotcha](publish-db-migration.md) — non-castable column changes (text→text[]) break publish auto-migration; use "Copy development data to production".
-- [Auth provider options](auth-provider-options.md) — app uses Replit Auth (OIDC); Replit→Clerk migration unsupported, don't hand-roll; passkeys blocked until then.
-- [Subscription paywall (Helcim)](subscription-paywall.md) — immutable-user-id / beta-grant / helcim-cache gate; must fail closed; webhook HMAC over URL+raw body.
-- [Reminders scheduler](reminders-scheduler.md) — in-process cron needs always-on (Reserved VM); senders fail SOFT; reserve-before-send dedupe + 10-min catch-up window.
