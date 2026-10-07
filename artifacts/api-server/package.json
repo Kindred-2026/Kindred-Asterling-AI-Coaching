@@ -23,8 +23,7 @@
     "node-cron": "^4.5.0",
     "pdfkit": "^0.20.2",
     "pino": "^10.1.1",
-    "pino-http": "^11.0.0",
-    "svix": "^1.99.1"
+    "pino-http": "^11.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

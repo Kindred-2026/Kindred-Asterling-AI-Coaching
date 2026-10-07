@@ -97,8 +97,6 @@ cutover.
 | `POSTGRES_RESTORE_URL` | Create schema and write data only in the isolated rehearsal target; no production access. | Job-only; not currently provisioned |
 | `MONGODB_MESSAGE_OWNERSHIP_URI` | Read/write access only to an isolated non-production MongoDB restore used for message-owner backfill; never use production credentials. | Temporary staging/rehearsal job only; remove after validation and rollback window |
 | `AUTH0_CLIENT_SECRET` | Auth0 Deploy CLI machine-to-machine scopes limited to the explicitly managed tenant resources; no user impersonation or runtime API access. | Exact Deploy CLI scopes require tenant review |
-| `CLERK_SECRET_KEY` | Read-only Clerk user/identity inspection only while legacy account reconciliation is authorized. | Legacy-only; exact grant and continued need unverified |
-| `CLERK_WEBHOOK_SECRET` | Verify signatures for a legacy Clerk webhook only if that endpoint is still intentionally operated. | Unmounted code; remove after migration/rollback review |
 | `SNYK_TOKEN` | Read-only project dependency/code scanning sufficient for the CI scans; no organization administration. | Verify token type and org scope in Snyk |
 | `OPENCODE_API_KEY` | Model/API access for the GitHub comment bot; its sole workflow consumer was removed by PR #164 | Removed from repository settings on 2026-09-24 after merge; no value was accessed |
 | `GITHUB_TOKEN` | GitHub-managed per-job API token; permissions are bounded by each workflow's `permissions:` declaration. It is not a repository secret and needs no manual rotation. | Automatic; retain least-privilege workflow permissions |
@@ -120,10 +118,6 @@ The names below are present in examples or tracked consumers, but are **not evid
 | `MONGODB_MESSAGE_OWNERSHIP_DATABASE` | N; dedicated non-production database name for the message-owner backfill; required only for that job | local config | not runtime; production execution prohibited | isolated job config; remove after backfill/rollback window | Kindred owner; verify target name, then remove |
 | `AUTH0_CLIENT_ID` | P; Auth0 Deploy CLI application ID, required for tenant deployment only | local config | not runtime; deployment job unverified | job config | verify/retain |
 | `AUTH0_CLIENT_SECRET` | S; Auth0 Deploy CLI machine-to-machine credential, required for tenant deployment only | local secret | not runtime; deployment job unverified | job secret | verify/rotate |
-| `CLERK_SECRET_KEY` | S; retired Clerk admin script; required only if that script is run | local secret | not runtime; unverified | no app runtime target | verify/remove after migration check |
-| `CLERK_WEBHOOK_SECRET` | S; unmounted standalone Clerk webhook module requires it outside tests if imported | local secret | not runtime; unverified | no app runtime target | verify/remove after migration check |
-| `CLERK_PUBLISHABLE_KEY` | P; root example only, no active consumer found | local config | not runtime | none | verify/remove |
-| `VITE_CLERK_PUBLISHABLE_KEY` | P; root example only, no active browser consumer found | local config | not runtime | none | verify/remove |
 | `REPLIT_DOMAINS` | P; legacy fallback for reminder link origin | platform/local config | unverified | none; use `APP_PUBLIC_URL` | verify/remove |
 | `REMINDER_SCHEDULER_DISABLED` | N; disables reminder scheduler when `true`, optional | local config | unverified | Fly config if operationally needed | verify/retain |
 | `KINDRED_API_ORIGIN` | P; local Vite proxy target, optional | local config | not runtime | none (dev only) | verify/retain locally |

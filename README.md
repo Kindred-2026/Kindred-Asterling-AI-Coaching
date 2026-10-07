@@ -93,8 +93,6 @@ release. See [docs/release-rollback.md](docs/release-rollback.md).
   migration, and cutover runbook; provider steps remain unverified until run
 - [docs/release-rollback.md](docs/release-rollback.md) — release evidence and
   rollback responsibilities during and after the hosting transition
-- [docs/COOLIFY_DEPLOYMENT.md](docs/COOLIFY_DEPLOYMENT.md) — retained legacy
-  Coolify deployment record for the current rollback baseline
 - [docs/FINALIZATION_RECORD.md](docs/FINALIZATION_RECORD.md) — foundation
   decisions, repository dispositions, and remaining external gates
 - [docs/operations-tools.md](docs/operations-tools.md) — MongoDB / identity tool
