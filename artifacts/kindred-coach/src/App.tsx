@@ -132,7 +132,7 @@ function PublicRoutes() {
 }
 
 function PrivateRoutes() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, signOut } = useAuth();
   const tokenBridgeReady = useContext(AuthTokenReadyContext);
   const account = useGetCurrentAuthUser({
     query: {
@@ -170,17 +170,23 @@ function PrivateRoutes() {
       <main className="mx-auto max-w-lg space-y-4 p-8" role="alert">
         <h1 className="text-2xl font-serif">
           {needsLink
-            ? "Link your existing Kindred account"
+            ? "This email already has a Kindred account"
             : "We couldn’t open your account"}
         </h1>
         <p>
           {needsLink
-            ? "Contact Kindred support to link your sign-in and keep your coaching history and subscription."
+            ? "It was set up with a different sign-in method, such as Google, a password or passkey, or an emailed code. Sign out, then sign in the way you used before. If that doesn’t work, contact Kindred support to link your sign-in and keep your coaching history and subscription."
             : "Please try again. If this continues, sign in again or contact Kindred support."}
         </p>
-        <button className="underline" onClick={() => void account.refetch()}>
-          Try again
-        </button>
+        {needsLink ? (
+          <button className="underline" onClick={() => void signOut()}>
+            Sign out
+          </button>
+        ) : (
+          <button className="underline" onClick={() => void account.refetch()}>
+            Try again
+          </button>
+        )}
       </main>
     );
   }

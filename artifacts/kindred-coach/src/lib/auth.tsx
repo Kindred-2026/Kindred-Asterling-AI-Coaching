@@ -20,8 +20,14 @@ interface AuthState {
   error: Error | undefined;
   getToken: () => Promise<string | null>;
   signOut: () => Promise<void>;
-  login: (returnTo: string, signup?: boolean) => Promise<void>;
+  login: (
+    returnTo: string,
+    signup?: boolean,
+    connection?: LoginConnection,
+  ) => Promise<void>;
 }
+/** Auth0's passwordless email connection; Universal Login shows it only when asked by name. */
+export type LoginConnection = "email";
 const publicState: AuthState = {
   isLoaded: false,
   isSignedIn: false,
@@ -65,12 +71,15 @@ function AuthBridge({ children }: { children: ReactNode }) {
     [auth.logout],
   );
   const login = useCallback(
-    async (returnTo: string, signup = false) => {
+    async (returnTo: string, signup = false, connection?: LoginConnection) => {
       setRedirectError(undefined);
       try {
         await auth.loginWithRedirect({
           appState: { returnTo: resolveReturnDestination(returnTo) },
-          authorizationParams: signup ? { screen_hint: "signup" } : {},
+          authorizationParams: {
+            ...(signup ? { screen_hint: "signup" } : {}),
+            ...(connection ? { connection } : {}),
+          },
         });
       } catch (err) {
         setRedirectError(
