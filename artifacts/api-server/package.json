@@ -15,8 +15,6 @@
     "@opentelemetry/api": "^1.9.1",
     "@workspace/api-zod": "workspace:*",
     "@workspace/db": "workspace:*",
-    "bcryptjs": "^3.0.2",
-    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "express-oauth2-jwt-bearer": "^1.10.0",
@@ -25,14 +23,12 @@
     "node-cron": "^4.5.0",
     "pdfkit": "^0.20.2",
     "pino": "^10.1.1",
-    "pino-http": "^11.0.0",
-    "svix": "^1.99.1"
+    "pino-http": "^11.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "catalog:",
-    "@types/node-cron": "^3.0.11",
     "@types/pdfkit": "^0.17.6",
     "@types/supertest": "^7.2.1",
     "esbuild": "0.28.1",
