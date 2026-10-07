@@ -1,5 +1,7 @@
 # Auth0 production cutover preparation
 
+> **Current tenant (2026-10-07):** production runs on `dev-4c281gnuylq4hccq.ca.auth0.com`. This document records the earlier setup; see [sign-in options](sign-in-options.md) for what is live.
+
 Prepared September 8, 2026 from GitLab `origin/main` at
 `2205b982401cd809fd0a297eb9cd378e5e0c0159`, which includes Phase 2D.
 This is a review package, not evidence of a completed cutover.
