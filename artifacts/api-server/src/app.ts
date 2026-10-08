@@ -8,10 +8,7 @@ import { authMiddleware } from "./middlewares/authMiddleware";
 import { testClerkIdentityAdapter } from "./middlewares/testClerkIdentityAdapter";
 import { generalLimiter, writeLimiter } from "./middlewares/rateLimiter";
 import { securityHeaders } from "./middlewares/securityHeaders";
-import {
-  marketingSiteOrigin,
-  marketingSiteRedirect,
-} from "./middlewares/marketingSiteRedirect";
+import { marketingSiteOrigin, marketingSiteRedirect } from "./middlewares/marketingSiteRedirect";
 import router from "./routes";
 import healthRouter from "./routes/health";
 import { logger } from "./lib/logger";
@@ -21,9 +18,7 @@ app.use(helmet());
 app.disable("x-powered-by");
 
 const isTest = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
-const auth0Origins = process.env.AUTH0_DOMAIN
-  ? [`https://${process.env.AUTH0_DOMAIN.trim()}`]
-  : [];
+const auth0Origins = process.env.AUTH0_DOMAIN ? [`https://${process.env.AUTH0_DOMAIN.trim()}`] : [];
 
 // Security headers go first so every response, health checks included,
 // carries HSTS and the rest.
@@ -46,14 +41,8 @@ const allowedOrigins = new Set(
     .map((origin) => origin.replace(/\/$/, "")),
 );
 
-const trustedProxyHops = Number.parseInt(
-  process.env.TRUST_PROXY_HOPS ?? "1",
-  10,
-);
-app.set(
-  "trust proxy",
-  Number.isFinite(trustedProxyHops) ? trustedProxyHops : 1,
-);
+const trustedProxyHops = Number.parseInt(process.env.TRUST_PROXY_HOPS ?? "1", 10);
+app.set("trust proxy", Number.isFinite(trustedProxyHops) ? trustedProxyHops : 1);
 
 app.use(
   pinoHttp({
@@ -74,24 +63,33 @@ app.use(
     },
   }),
 );
-app.use(
-  cors({
-    credentials: true,
-    origin: (origin, callback) => {
-      // Allow requests with no origin (same-origin, curl, server-to-server)
-      // and any localhost origin (for local dev on any port).
-      if (
-        !origin ||
-        allowedOrigins.has(origin.replace(/\/$/, "")) ||
-        /^https?:\/\/localhost(:\d+)?$/i.test(origin)
-      ) {
-        callback(null, true);
-        return;
-      }
-      callback(new Error("Not allowed by CORS"));
-    },
-  }),
-);
+const corsMiddleware = cors({
+  credentials: true,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (same-origin, curl, server-to-server)
+    // and any localhost origin (for local dev on any port).
+    if (
+      !origin ||
+      allowedOrigins.has(origin.replace(/\/$/, "")) ||
+      /^https?:\/\/localhost(:\d+)?$/i.test(origin)
+    ) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error("Not allowed by CORS"));
+  },
+});
+// Answer disallowed origins with 403 instead of letting the CORS error fall
+// through to Express's default 500 handler.
+app.use((req, res, next) => {
+  corsMiddleware(req, res, (err?: unknown) => {
+    if (err) {
+      res.status(403).json({ error: "Origin not allowed" });
+      return;
+    }
+    next();
+  });
+});
 app.use(
   express.json({
     limit: "32kb",
