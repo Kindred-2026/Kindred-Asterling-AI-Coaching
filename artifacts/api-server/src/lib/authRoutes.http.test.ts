@@ -45,10 +45,7 @@ afterAll(async () => {
   await db.delete(usersTable).where(eq(usersTable.id, userId));
 });
 
-async function get(
-  path: string,
-  opts: { token?: string } = {},
-): Promise<{ status: number }> {
+async function get(path: string, opts: { token?: string } = {}): Promise<{ status: number }> {
   const headers: Record<string, string> = {};
   if (opts.token) headers["authorization"] = `Bearer ${opts.token}`;
   const res = await fetch(`${baseUrl}${path}`, { headers });
@@ -64,6 +61,14 @@ describe("app authentication path", () => {
   it("rejects signed-out protected API requests", async () => {
     const res = await get("/habits");
     expect(res.status).toBe(401);
+  });
+
+  it("rejects disallowed cross-site origins with 403", async () => {
+    const res = await fetch(`${baseUrl}/habits`, {
+      headers: { origin: "https://not-allowed.example" },
+    });
+    expect(res.status).toBe(403);
+    expect(res.headers.get("access-control-allow-origin")).toBeNull();
   });
 
   it("reaches protected handlers for valid authenticated requests", async () => {
