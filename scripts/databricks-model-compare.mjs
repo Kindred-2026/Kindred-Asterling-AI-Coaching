@@ -94,6 +94,20 @@ if (tokensIndex !== -1) {
 }
 const endpoints = args.length > 0 ? args : DEFAULT_ENDPOINTS;
 
+// Validate CLI input: results stay inside the current directory as a .md file,
+// endpoint names are plain serving-endpoint names, and the token cap is sane.
+if (!/^[\w.-]+\.md$/.test(out) || out.startsWith(".")) {
+  throw new Error("--out must be a plain file name ending in .md (no directories).");
+}
+for (const endpoint of endpoints) {
+  if (!/^[A-Za-z0-9][\w.-]*$/.test(endpoint)) {
+    throw new Error(`Invalid endpoint name: ${endpoint}`);
+  }
+}
+if (!Number.isInteger(maxTokens) || maxTokens < 1 || maxTokens > 32000) {
+  throw new Error("--max-tokens must be an integer between 1 and 32000.");
+}
+
 function cli(cmdArgs) {
   return execFileSync("databricks", cmdArgs, { encoding: "utf8" }).trim();
 }
@@ -144,7 +158,7 @@ const lines = [
   `System prompt: ${SYSTEM}`,
   "",
 ];
-const totals = Object.fromEntries(endpoints.map((m) => [m, { ms: 0, tokens: 0, errors: 0 }]));
+const totals = new Map(endpoints.map((m) => [m, { ms: 0, tokens: 0, errors: 0 }]));
 
 for (const scenario of SCENARIOS) {
   console.log(`\n## ${scenario.id}`);
@@ -158,11 +172,12 @@ for (const scenario of SCENARIOS) {
   );
   for (const model of endpoints) {
     const r = await ask(model, scenario.prompt);
-    totals[model].ms += r.ms;
+    const t = totals.get(model);
+    t.ms += r.ms;
     if (r.error) {
-      totals[model].errors += 1;
+      t.errors += 1;
     } else {
-      totals[model].tokens += r.usage?.completion_tokens ?? 0;
+      t.tokens += r.usage?.completion_tokens ?? 0;
     }
     const body = r.error ?? r.text;
     console.log(`  ${model}: ${r.ms} ms${r.error ? " ERROR" : ""}`);
@@ -176,7 +191,7 @@ lines.push(
   "| Model | Total ms | Completion tokens | Errors |",
   "|---|---|---|---|",
 );
-for (const [model, t] of Object.entries(totals)) {
+for (const [model, t] of totals) {
   lines.push(`| ${model} | ${t.ms} | ${t.tokens} | ${t.errors} |`);
 }
 writeFileSync(out, lines.join("\n") + "\n");
