@@ -4,6 +4,9 @@ import { fetchWithDeadline } from "./http";
 
 export class OllamaProvider implements AIProvider {
   readonly name = "ollama" as const;
+  get modelName(): string {
+    return this.model;
+  }
   constructor(
     private readonly baseUrl: string,
     private readonly model: string,
@@ -55,6 +58,9 @@ export class OllamaProvider implements AIProvider {
     const raw = body as {
       message?: { content?: unknown; tool_calls?: unknown };
       done_reason?: unknown;
+      model?: unknown;
+      prompt_eval_count?: unknown;
+      eval_count?: unknown;
     };
     if (
       !raw.message ||
@@ -70,6 +76,15 @@ export class OllamaProvider implements AIProvider {
       toolCalls: parseToolCalls(raw.message.tool_calls),
       finishReason:
         typeof raw.done_reason === "string" ? raw.done_reason : undefined,
+      model: typeof raw.model === "string" ? raw.model : undefined,
+      usage:
+        typeof raw.prompt_eval_count === "number" &&
+        typeof raw.eval_count === "number"
+          ? {
+              inputTokens: raw.prompt_eval_count,
+              outputTokens: raw.eval_count,
+            }
+          : undefined,
     };
   }
 }

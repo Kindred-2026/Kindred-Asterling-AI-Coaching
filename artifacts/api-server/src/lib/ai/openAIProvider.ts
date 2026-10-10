@@ -4,6 +4,9 @@ import { fetchWithDeadline } from "./http";
 
 export class OpenAIProvider implements AIProvider {
   readonly name = "openai" as const;
+  get modelName(): string {
+    return this.model;
+  }
   constructor(
     private readonly apiKey: string,
     private readonly model: string,
@@ -67,6 +70,8 @@ export class OpenAIProvider implements AIProvider {
       );
     }
     const raw = body as {
+      model?: unknown;
+      usage?: { prompt_tokens?: unknown; completion_tokens?: unknown };
       choices?: Array<{
         finish_reason?: unknown;
         message?: { content?: unknown; tool_calls?: unknown };
@@ -92,6 +97,15 @@ export class OpenAIProvider implements AIProvider {
       finishReason:
         typeof choice.finish_reason === "string"
           ? choice.finish_reason
+          : undefined,
+      model: typeof raw.model === "string" ? raw.model : undefined,
+      usage:
+        typeof raw.usage?.prompt_tokens === "number" &&
+        typeof raw.usage.completion_tokens === "number"
+          ? {
+              inputTokens: raw.usage.prompt_tokens,
+              outputTokens: raw.usage.completion_tokens,
+            }
           : undefined,
     };
   }

@@ -34,6 +34,10 @@ export class AnthropicProvider implements AIProvider {
   readonly name = "anthropic" as const;
   private readonly client: Anthropic;
 
+  get modelName(): string {
+    return this.model;
+  }
+
   constructor(
     apiKey: string,
     private readonly model: string = DEFAULT_ANTHROPIC_MODEL,
@@ -119,6 +123,19 @@ export class AnthropicProvider implements AIProvider {
       // Thinking blocks must be sent back unchanged when continuing a
       // tool-use turn, so keep the raw assistant content for the next call.
       providerContent: response.content,
+      model: response.model,
+      usage: response.usage
+        ? {
+            // Anthropic's input_tokens excludes cache tokens; report the total.
+            inputTokens:
+              (response.usage.input_tokens ?? 0) +
+              (response.usage.cache_read_input_tokens ?? 0) +
+              (response.usage.cache_creation_input_tokens ?? 0),
+            outputTokens: response.usage.output_tokens ?? 0,
+            cacheReadTokens: response.usage.cache_read_input_tokens ?? 0,
+            cacheCreationTokens: response.usage.cache_creation_input_tokens ?? 0,
+          }
+        : undefined,
     };
   }
 }
