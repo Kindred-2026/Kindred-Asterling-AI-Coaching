@@ -20,6 +20,8 @@ import {
   setAuthTokenGetter,
   useGetCurrentAuthUser,
   getGetCurrentAuthUserQueryKey,
+  useGetSubscriptionStatus,
+  getGetSubscriptionStatusQueryKey,
 } from "@workspace/api-client-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -141,6 +143,13 @@ function PrivateRoutes() {
       retry: false,
     },
   });
+  const access = useGetSubscriptionStatus({
+    query: {
+      queryKey: getGetSubscriptionStatusQueryKey(),
+      enabled: isLoaded && isSignedIn && tokenBridgeReady && account.isSuccess,
+      retry: false,
+    },
+  });
   const [location, setLocation] = useLocation();
   const search = useSearch();
 
@@ -190,12 +199,18 @@ function PrivateRoutes() {
       </main>
     );
   }
-  if (account.isLoading)
+  if (account.isLoading || access.isPending)
     return (
       <p role="status" className="p-8">
         Opening your account…
       </p>
     );
+
+  // Kindred's beta is invite-only: the API refuses product routes to accounts
+  // without an owner, beta or paid entitlement, so say why up front.
+  if (access.error || !access.data?.active) {
+    return <InviteOnlyNotice onSignOut={() => void signOut()} />;
+  }
 
   const canonical = LEGACY_PRIMARY_ROUTE_REDIRECTS[canonicalPathname(location)];
   if (canonical) {
@@ -227,6 +242,22 @@ function PrivateRoutes() {
         <Route component={NotFound} />
       </Switch>
     </AppLayout>
+  );
+}
+
+function InviteOnlyNotice({ onSignOut }: { onSignOut: () => void }) {
+  return (
+    <main className="mx-auto max-w-lg space-y-4 p-8" role="alert">
+      <h1 className="text-2xl font-serif">Kindred is invite-only right now</h1>
+      <p>
+        Your account is set up, but it doesn’t have beta access yet. If you were
+        invited, make sure you verified your email, then ask the Kindred team to
+        turn on access for the email you signed in with.
+      </p>
+      <button className="underline" onClick={onSignOut}>
+        Sign out
+      </button>
+    </main>
   );
 }
 

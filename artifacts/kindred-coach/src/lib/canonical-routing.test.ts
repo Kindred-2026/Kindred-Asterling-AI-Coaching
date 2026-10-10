@@ -12,6 +12,8 @@ const auth = vi.hoisted(() => {
     status: "active",
     getToken: vi.fn(),
     accountError: null as { status: number } | null,
+    accessActive: true,
+    signOut: vi.fn(),
   };
 });
 vi.mock("@/lib/auth", () => ({
@@ -19,7 +21,7 @@ vi.mock("@/lib/auth", () => ({
   useAuth: () => auth,
 }));
 
-vi.mock("@workspace/api-client-react", () => ({ setAuthTokenGetter: vi.fn(), getGetCurrentAuthUserQueryKey: () => ["auth-user"], useGetCurrentAuthUser: () => ({ error: auth.accountError, isLoading: false, refetch: vi.fn() }) }));
+vi.mock("@workspace/api-client-react", () => ({ setAuthTokenGetter: vi.fn(), getGetCurrentAuthUserQueryKey: () => ["auth-user"], useGetCurrentAuthUser: () => ({ error: auth.accountError, isLoading: false, isSuccess: !auth.accountError, refetch: vi.fn() }), getGetSubscriptionStatusQueryKey: () => ["subscription-status"], useGetSubscriptionStatus: () => ({ error: null, isPending: false, data: { active: auth.accessActive } }) }));
 vi.mock("@/hooks/use-theme", () => ({
   ThemeProvider: ({ children }: any) => children,
 }));
@@ -212,6 +214,15 @@ describe("canonical signed-in routing through App", () => {
     expect(container.querySelector("button")?.textContent).toBe("Sign out");
     expect(container.querySelector('[data-page="Today"]')).toBeNull();
     auth.accountError = null;
+  });
+
+  it("shows the invite-only notice instead of private pages without beta access", async () => {
+    auth.accessActive = false;
+    await renderAt("/today");
+    expect(container.textContent).toContain("Kindred is invite-only right now");
+    expect(container.querySelector("button")?.textContent).toBe("Sign out");
+    expect(container.querySelector('[data-page="Today"]')).toBeNull();
+    auth.accessActive = true;
   });
 
   it("waits for Auth0 readiness before mounting a page", async () => {
