@@ -22,6 +22,7 @@ import adminRouter from "./admin";
 import userRouter from "./user";
 import accountRouter from "./account";
 import { requireAuth } from "../middlewares/requireAuth";
+import { requireSubscription } from "../middlewares/requireSubscription";
 
 const router: IRouter = Router();
 
@@ -44,7 +45,13 @@ router.use(requireAuth);
 // Sensitive personal/wellness data must never be cached.
 router.use(noStore);
 
+// Export and deletion stay open to every signed-in user, invited or not.
 router.use(accountRouter);
+
+// Everything below needs access: an owner, an active beta grant, or a paid
+// subscription. Kindred's beta is invite-only, so uninvited accounts stop here.
+router.use(requireSubscription);
+
 router.use(morningLogsRouter);
 router.use(bodyScansRouter);
 router.use(eveningReportsRouter);
