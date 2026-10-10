@@ -1,3 +1,4 @@
+import { AccountData } from "@/components/account-data";
 import { AccountSecurity } from "@/components/account-security";
 import { Link } from "wouter";
 import { ShieldCheck } from "lucide-react";
@@ -12,7 +13,7 @@ export default function AccountPage() {
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Manage sign-in methods, including an authenticator app or phone
-            verification.
+            verification, and download or delete your data.
           </p>
         </div>
         <Link
@@ -25,6 +26,7 @@ export default function AccountPage() {
         </Link>
       </header>
       <AccountSecurity />
+      <AccountData />
     </div>
   );
 }

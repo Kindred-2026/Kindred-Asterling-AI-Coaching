@@ -54,6 +54,8 @@ export function validateRuntimeConfig(): void {
   }
 
   if (process.env.NODE_ENV === "production") {
+    // An unset AI_PROVIDER falls back to Ollama, which production never runs.
+    requireValue("AI_PROVIDER");
     requireValue("APP_PUBLIC_URL");
     requireValue("SUBSCRIPTION_OWNER_IDS");
     requireValue("RESEND_API_KEY");
