@@ -26,6 +26,7 @@ import {
   type AIMessage,
   type AIProvider,
 } from "../lib/ai";
+import { withChatSession } from "../lib/amplitude";
 import {
   crisisSupportResponse,
   detectCrisis,
@@ -403,10 +404,11 @@ router.post(
       return;
     }
 
-    let assistantText: string | null = null;
-    let failureReason:
-      AIProviderError["category"] | "empty_response" | "max_tool_iterations" =
-      "unknown";
+    let assistantText = null as string | null;
+    let failureReason = "unknown" as
+      | AIProviderError["category"]
+      | "empty_response"
+      | "max_tool_iterations";
     // Agentic tool loop: Gemma may ask to read the user's own data (habits,
     // medications, recent logs) before replying. We execute each requested tool
     // scoped to THIS user, feed results back, and re-call until it produces a
@@ -418,99 +420,141 @@ router.post(
       req.user!.firstName,
       formatKindredContextForPrompt(kindredContext),
     );
-    try {
-      const aiTools = chatTools.map((tool) => ({
-        name: tool.name,
-        description: tool.description,
-        inputSchema: tool.input_schema,
-      }));
-      const convo: AIMessage[] = chatMessages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-      const abortController = new AbortController();
-      const cancel = () => abortController.abort();
-      req.once("aborted", cancel);
-      res.once("close", cancel);
-      for (let iter = 0; iter < MAX_TOOL_ITERATIONS; iter++) {
-        const result = await requestWithRetry(provider, {
-          system,
-          messages: convo,
-          tools: aiTools,
-          signal: abortController.signal,
-        });
+    let callStart = 0;
+    await withChatSession(
+      { userId, conversationId: conv.id },
+      async (tracker) => {
+        tracker.userMessage(clipped);
+        try {
+          const aiTools = chatTools.map((tool) => ({
+            name: tool.name,
+            description: tool.description,
+            inputSchema: tool.input_schema,
+          }));
+          const convo: AIMessage[] = chatMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          }));
+          const abortController = new AbortController();
+          const cancel = () => abortController.abort();
+          req.once("aborted", cancel);
+          res.once("close", cancel);
+          for (let iter = 0; iter < MAX_TOOL_ITERATIONS; iter++) {
+            callStart = performance.now();
+            const result = await requestWithRetry(provider, {
+              system,
+              messages: convo,
+              tools: aiTools,
+              signal: abortController.signal,
+            });
 
-        if (result.toolCalls.length > 0) {
-          // Record the assistant's tool-use turn, run each tool, and hand the
-          // results back as a user turn for the next iteration.
-          convo.push({
-            role: "assistant",
-            content: result.content,
-            toolCalls: result.toolCalls,
-            providerContent: result.providerContent,
-          });
-          for (const block of result.toolCalls) {
-            let output: string;
-            try {
-              const raw = await runChatTool(
-                block.name,
-                block.arguments,
-                userId,
-              );
-              output =
-                raw.length > MAX_TOOL_OUTPUT_CHARS
-                  ? raw.slice(0, MAX_TOOL_OUTPUT_CHARS)
-                  : raw;
-            } catch (toolErr) {
-              req.log.error(
-                { err: toolErr, tool: block.name },
-                "chat tool execution failed",
-              );
-              output = JSON.stringify({ error: "tool_failed" });
+            tracker.aiMessage({
+              content:
+                result.content.trim() ||
+                (result.toolCalls.length > 0
+                  ? `[Tool call: ${result.toolCalls.map((c) => c.name).join(", ")}]`
+                  : "[Empty response]"),
+              model: result.model ?? provider.modelName ?? "unknown",
+              provider: provider.name,
+              latencyMs: performance.now() - callStart,
+              inputTokens: result.usage?.inputTokens,
+              outputTokens: result.usage?.outputTokens,
+              cacheReadTokens: result.usage?.cacheReadTokens,
+              cacheCreationTokens: result.usage?.cacheCreationTokens,
+              totalCostUsd: provider.name === "ollama" ? 0 : undefined,
+            });
+
+            if (result.toolCalls.length > 0) {
+              // Record the assistant's tool-use turn, run each tool, and hand the
+              // results back as a user turn for the next iteration.
+              convo.push({
+                role: "assistant",
+                content: result.content,
+                toolCalls: result.toolCalls,
+                providerContent: result.providerContent,
+              });
+              for (const block of result.toolCalls) {
+                let output: string;
+                const toolStart = performance.now();
+                let toolOk = true;
+                try {
+                  const raw = await runChatTool(
+                    block.name,
+                    block.arguments,
+                    userId,
+                  );
+                  output =
+                    raw.length > MAX_TOOL_OUTPUT_CHARS
+                      ? raw.slice(0, MAX_TOOL_OUTPUT_CHARS)
+                      : raw;
+                } catch (toolErr) {
+                  toolOk = false;
+                  req.log.error(
+                    { err: toolErr, tool: block.name },
+                    "chat tool execution failed",
+                  );
+                  output = JSON.stringify({ error: "tool_failed" });
+                }
+                tracker.toolCall(
+                  block.name,
+                  performance.now() - toolStart,
+                  toolOk,
+                );
+                convo.push({ role: "tool", content: output, toolCallId: block.id });
+              }
+              continue;
             }
-            convo.push({ role: "tool", content: output, toolCallId: block.id });
-          }
-          continue;
-        }
 
-        const textParts = result.content.trim();
-        if (textParts) {
-          assistantText = textParts;
-        } else {
-          failureReason = "empty_response";
-          req.log.warn(
-            { finishReason: result.finishReason },
-            "AI provider returned no text",
+            const textParts = result.content.trim();
+            if (textParts) {
+              assistantText = textParts;
+            } else {
+              failureReason = "empty_response";
+              req.log.warn(
+                { finishReason: result.finishReason },
+                "AI provider returned no text",
+              );
+            }
+            break;
+          }
+          if (!assistantText && failureReason === "unknown") {
+            failureReason = "max_tool_iterations";
+            req.log.warn(
+              { maxIterations: MAX_TOOL_ITERATIONS },
+              "AI provider did not finish within tool-iteration cap",
+            );
+          }
+        } catch (err) {
+          const providerError = normalizeProviderError(err);
+          failureReason = providerError.category;
+          if (callStart > 0 && failureReason !== "aborted") {
+            tracker.aiMessage({
+              content: "[Provider error]",
+              model: provider.modelName ?? "unknown",
+              provider: provider.name,
+              latencyMs: performance.now() - callStart,
+              totalCostUsd: provider.name === "ollama" ? 0 : undefined,
+              errorMessage: failureReason,
+            });
+          }
+          // The provider's own status and message (e.g. "invalid x-api-key",
+          // "credit balance is too low") are what an operator needs to fix it.
+          const cause = providerError.cause as
+            | { status?: unknown; message?: unknown }
+            | undefined;
+          req.log.error(
+            {
+              err,
+              category: failureReason,
+              providerStatus: typeof cause?.status === "number" ? cause.status : undefined,
+              providerMessage:
+                typeof cause?.message === "string" ? cause.message.slice(0, 500) : undefined,
+            },
+            "AI chat request failed",
           );
         }
-        break;
-      }
-      if (!assistantText && failureReason === "unknown") {
-        failureReason = "max_tool_iterations";
-        req.log.warn(
-          { maxIterations: MAX_TOOL_ITERATIONS },
-          "AI provider did not finish within tool-iteration cap",
-        );
-      }
-    } catch (err) {
-      const providerError = normalizeProviderError(err);
-      failureReason = providerError.category;
-      // The provider's own status and message (e.g. "invalid x-api-key",
-      // "credit balance is too low") are what an operator needs to fix it.
-      const cause = providerError.cause as
-        | { status?: unknown; message?: unknown }
-        | undefined;
-      req.log.error(
-        {
-          err,
-          category: failureReason,
-          providerStatus: typeof cause?.status === "number" ? cause.status : undefined,
-          providerMessage:
-            typeof cause?.message === "string" ? cause.message.slice(0, 500) : undefined,
-        },
-        "AI chat request failed",
-      );
-    }
+      },
+    );
 
     if (!assistantText) {
       await refundDailyQuota(userId);
