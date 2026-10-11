@@ -25,6 +25,7 @@ export const rehearsalColumns = {
     "timezone",
     "emailVerifiedAt",
     "onboardedAt",
+    "betaChecklist",
     "createdAt",
     "updatedAt",
   ],
@@ -143,7 +144,7 @@ const integers = new Set([
   "count",
   "effectiveness",
 ]);
-const arrays = new Set(["feelings", "times", "miniGoals"]);
+const arrays = new Set(["feelings", "times", "miniGoals", "betaChecklist"]);
 const timestamps = new Set([
   "clerkDeletedAt",
   "emailVerifiedAt",

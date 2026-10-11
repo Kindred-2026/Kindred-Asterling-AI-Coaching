@@ -21,6 +21,7 @@ import remindersRouter from "./reminders";
 import adminRouter from "./admin";
 import userRouter from "./user";
 import accountRouter from "./account";
+import betaChecklistRouter from "./betaChecklist";
 import { requireAuth } from "../middlewares/requireAuth";
 import { requireSubscription } from "../middlewares/requireSubscription";
 
@@ -64,5 +65,6 @@ router.use(medicationsRouter);
 router.use(weeklyReportRouter);
 router.use(voiceRouter);
 router.use(remindersRouter);
+router.use(betaChecklistRouter);
 
 export default router;

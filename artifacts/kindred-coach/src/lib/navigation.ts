@@ -14,6 +14,7 @@ import {
   Bell,
   UserRoundCog,
   Archive as ArchiveIcon,
+  ClipboardCheck,
 } from "lucide-react";
 
 /**
@@ -62,6 +63,7 @@ export const SECONDARY_NAV_ITEMS: NavigationItem[] = [
   { href: "/app/reminders", label: "Reminders", icon: Bell },
   { href: "/app/account", label: "Account security", icon: UserRoundCog },
   { href: "/app/archive", label: "Archive", icon: ArchiveIcon },
+  { href: "/app/beta-checklist", label: "Beta checklist", icon: ClipboardCheck },
 ];
 
 /**
@@ -81,6 +83,7 @@ export const ROUTE_TO_PRIMARY_AREA: Record<string, PrimaryArea> = {
   "/insights": "insights",
   "/you": "you",
   "/app/account": "you",
+  "/app/beta-checklist": "you",
 };
 
 /** Returns the primary area for a location path (falls back to `null`). */
