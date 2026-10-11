@@ -1,4 +1,5 @@
 import app from "./app";
+import { isAnalyticsConfigured } from "./lib/analytics";
 import { logger } from "./lib/logger";
 import { startReminderScheduler } from "./lib/reminderScheduler";
 import { stopReminderScheduler } from "./lib/reminderScheduler";
@@ -6,6 +7,9 @@ import { validateRuntimeConfig } from "./lib/validateConfig";
 import { closeDatabase, initializeDatabase } from "@workspace/db";
 
 validateRuntimeConfig();
+if (process.env.NODE_ENV === "production" && !isAnalyticsConfigured()) {
+  logger.warn("Product analytics are off: AMPLITUDE_API_KEY is not set");
+}
 const rawPort = process.env["PORT"];
 
 if (!rawPort) {

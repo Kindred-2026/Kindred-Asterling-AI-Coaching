@@ -125,6 +125,17 @@ describe("PostgreSQL runtime configuration", () => {
   });
 });
 
+describe("production AI provider", () => {
+  it("requires AI_PROVIDER to be set explicitly", () => {
+    baseEnv();
+    process.env.NODE_ENV = "production";
+    delete process.env.AI_PROVIDER;
+    process.env.OLLAMA_BASE_URL = "http://ollama:11434";
+    process.env.OLLAMA_MODEL = "model";
+    expect(validateRuntimeConfig).toThrow(/AI_PROVIDER/);
+  });
+});
+
 describe("Auth0 production configuration", () => {
   it("requires Auth0 issuer and API audience instead of Clerk credentials", () => {
     baseEnv();
