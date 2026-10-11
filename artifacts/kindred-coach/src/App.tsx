@@ -49,6 +49,7 @@ import Signup from "@/pages/public/signup";
 import Account from "@/pages/account";
 import AdminBeta from "@/pages/admin-beta";
 import BetaChecklist from "@/pages/beta-checklist";
+import { BetaJoin } from "@/components/beta-join";
 import { ThemeProvider } from "@/hooks/use-theme";
 import {
   canonicalPathname,
@@ -207,10 +208,15 @@ function PrivateRoutes() {
       </p>
     );
 
-  // Kindred's beta is invite-only: the API refuses product routes to accounts
-  // without an owner, beta or paid entitlement, so say why up front.
+  // The API refuses product routes to accounts without an owner, beta or paid
+  // entitlement. Kindred's beta is first come, first served, so offer a spot.
   if (access.error || !access.data?.active) {
-    return <InviteOnlyNotice onSignOut={() => void signOut()} />;
+    return (
+      <BetaJoin
+        onJoined={() => void access.refetch()}
+        onSignOut={() => void signOut()}
+      />
+    );
   }
 
   const canonical = LEGACY_PRIMARY_ROUTE_REDIRECTS[canonicalPathname(location)];
@@ -244,22 +250,6 @@ function PrivateRoutes() {
         <Route component={NotFound} />
       </Switch>
     </AppLayout>
-  );
-}
-
-function InviteOnlyNotice({ onSignOut }: { onSignOut: () => void }) {
-  return (
-    <main className="mx-auto max-w-lg space-y-4 p-8" role="alert">
-      <h1 className="text-2xl font-serif">Kindred is invite-only right now</h1>
-      <p>
-        Your account is set up, but it doesn’t have beta access yet. If you were
-        invited, make sure you verified your email, then ask the Kindred team to
-        turn on access for the email you signed in with.
-      </p>
-      <button className="underline" onClick={onSignOut}>
-        Sign out
-      </button>
-    </main>
   );
 }
 

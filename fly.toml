@@ -43,6 +43,13 @@ primary_region = 'yyz'
   TRUST_PROXY_HOPS = '2'
   DATABASE_PROVIDER = 'postgres'
   NODE_ENV = 'production'
+  # First-come, first-served beta: 20 spots, 5 of them reserved for friends
+  # that an owner grants from /app/admin/beta. Open spots unlock at midnight
+  # Toronto time on October 12; anyone signed in with a verified email can
+  # claim one until they run out.
+  BETA_CAPACITY = '20'
+  BETA_RESERVED_SPOTS = '5'
+  BETA_OPENS_AT = '2026-10-12T00:00:00-04:00'
   PORT = '8080'
 
 [http_service]

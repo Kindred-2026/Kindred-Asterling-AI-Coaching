@@ -1,4 +1,5 @@
 import { ANTHROPIC_EFFORTS } from "./ai/anthropicProvider";
+import { betaConfig } from "./betaSpots";
 
 export function validateRuntimeConfig(): void {
   const missing: string[] = [];
@@ -78,6 +79,10 @@ export function validateRuntimeConfig(): void {
       requireValue(name);
     }
   }
+
+  // Throws on malformed beta limits, so they fail at startup instead of on
+  // the first person trying to join.
+  betaConfig();
 
   if (missing.length > 0) {
     throw new Error(

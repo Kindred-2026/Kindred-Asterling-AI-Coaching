@@ -70,6 +70,10 @@ vi.mock("@/pages/account", () => ({
 vi.mock("@/pages/archive", () => ({
   default: () => createElement("div", { "data-page": "Archive" }, "Archive"),
 }));
+vi.mock("@/components/beta-join", () => ({
+  BetaJoin: () =>
+    createElement("div", { "data-page": "Beta join" }, "Beta join"),
+}));
 vi.mock("@/pages/admin-beta", () => ({
   default: () => createElement("div", { "data-page": "Admin" }, "Admin"),
 }));
@@ -216,11 +220,10 @@ describe("canonical signed-in routing through App", () => {
     auth.accountError = null;
   });
 
-  it("shows the invite-only notice instead of private pages without beta access", async () => {
+  it("offers a beta spot instead of private pages without beta access", async () => {
     auth.accessActive = false;
     await renderAt("/today");
-    expect(container.textContent).toContain("Kindred is invite-only right now");
-    expect(container.querySelector("button")?.textContent).toBe("Sign out");
+    expect(container.querySelector('[data-page="Beta join"]')).not.toBeNull();
     expect(container.querySelector('[data-page="Today"]')).toBeNull();
     auth.accessActive = true;
   });

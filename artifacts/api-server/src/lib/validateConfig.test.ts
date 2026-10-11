@@ -211,3 +211,24 @@ describe("OpenAI base URL validation", () => {
     expect(validateRuntimeConfig).not.toThrow();
   });
 });
+
+describe("beta spot configuration", () => {
+  it.each([
+    ["BETA_CAPACITY", "twenty", /BETA_CAPACITY must be a whole number/],
+    ["BETA_RESERVED_SPOTS", "-1", /BETA_RESERVED_SPOTS must be a whole number/],
+    ["BETA_RESERVED_SPOTS", "25", /cannot be more than BETA_CAPACITY/],
+    ["BETA_OPENS_AT", "tomorrow", /BETA_OPENS_AT must be a date and time/],
+  ])("rejects %s=%s", (name, value, message) => {
+    baseEnv();
+    process.env[name] = value;
+    expect(validateRuntimeConfig).toThrow(message);
+  });
+
+  it("accepts the launch settings", () => {
+    baseEnv();
+    process.env.BETA_CAPACITY = "20";
+    process.env.BETA_RESERVED_SPOTS = "5";
+    process.env.BETA_OPENS_AT = "2026-10-12T00:00:00-04:00";
+    expect(validateRuntimeConfig).not.toThrow();
+  });
+});

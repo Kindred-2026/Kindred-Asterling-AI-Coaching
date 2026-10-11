@@ -59,6 +59,20 @@ test("translates supported conditions and rejects forged or cross-table conditio
   } finally { await pool.end(); }
 });
 
+test("sends no parameter for IS NULL, which real PostgreSQL cannot type", async () => {
+  const sent: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const api = new PostgresDataApi({
+    query: async (sql: string, values?: readonly unknown[]) => {
+      sent.push({ sql, values });
+      return { rows: [], rowCount: 0 };
+    },
+  } as any);
+  await api.select().from(usersTable)
+    .where(and(isNull(usersTable.clerkUserId), eq(usersTable.id, "owner-a")));
+  assert.match(sent[0]!.sql, /IS NULL AND .* = \$1/);
+  assert.deepEqual(sent[0]!.values, ["owner-a"]);
+});
+
 test("preserves defaults, IDs, conflict targets, updates, deletes, count and cascades", async () => {
   const { api, pool } = await fixture();
   try {
