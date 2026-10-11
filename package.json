@@ -28,8 +28,8 @@
     "auth0:local": "node scripts/auth0-local.mjs"
   },
   "devDependencies": {
-    "mongodb-memory-server": "^10.4.3",
-    "prettier": "^3.8.3",
-    "typescript": "~5.9.3"
+    "mongodb-memory-server": "^11.3.0",
+    "prettier": "^3.9.9",
+    "typescript": "~7.0.2"
   }
 }
