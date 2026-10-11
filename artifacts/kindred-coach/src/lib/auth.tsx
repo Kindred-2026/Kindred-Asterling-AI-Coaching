@@ -62,7 +62,8 @@ function AuthBridge({ children }: { children: ReactNode }) {
   const auth = useAuth0();
   const [redirectError, setRedirectError] = useState<Error>();
   const getToken = useCallback(
-    async () => (auth.isAuthenticated ? auth.getAccessTokenSilently() : null),
+    async () =>
+      auth.isAuthenticated ? ((await auth.getAccessTokenSilently()) ?? null) : null,
     [auth.isAuthenticated, auth.getAccessTokenSilently],
   );
   const signOut = useCallback(
