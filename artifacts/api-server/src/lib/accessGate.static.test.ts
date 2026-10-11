@@ -8,7 +8,7 @@ const routes = readFileSync(path.resolve(here, "../routes/index.ts"), "utf8");
 
 // requireSubscription skips itself under NODE_ENV=test, so the HTTP suites
 // cannot prove it is mounted. This guards the wiring instead.
-describe("invite-only access gate", () => {
+describe("beta access gate", () => {
   it("mounts requireSubscription after requireAuth", () => {
     const auth = routes.indexOf("router.use(requireAuth)");
     const gate = routes.indexOf("router.use(requireSubscription)");
@@ -20,6 +20,12 @@ describe("invite-only access gate", () => {
     expect(routes.indexOf("router.use(accountRouter)")).toBeLessThan(
       routes.indexOf("router.use(requireSubscription)"),
     );
+  });
+
+  it("lets signed-in people join the beta before they have access", () => {
+    const join = routes.indexOf("router.use(betaRouter)");
+    expect(join).toBeGreaterThan(routes.indexOf("router.use(requireAuth)"));
+    expect(join).toBeLessThan(routes.indexOf("router.use(requireSubscription)"));
   });
 
   it("gates every product router", () => {

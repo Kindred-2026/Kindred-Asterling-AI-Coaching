@@ -95,8 +95,10 @@ function compile(value: Condition, table: Table, params: unknown[], qualify = fa
     if (!values.length) return "FALSE";
     return `${left} IN (${values.map((item) => { params.push(item); return `$${params.length}`; }).join(", ")})`;
   }
+  // Real PostgreSQL rejects a parameter the statement never uses.
+  if (expression.value === null) return `${left} IS NULL`;
   params.push(expression.value);
-  return expression.value === null ? `${left} IS NULL` : `${left} ${expression.operator} $${params.length}`;
+  return `${left} ${expression.operator} $${params.length}`;
 }
 function validateValue(value: unknown): void {
   if (value === undefined || typeof value === "function" || column(value)) throw new Error("Invalid PostgreSQL value");

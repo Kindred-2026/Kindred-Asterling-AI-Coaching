@@ -22,6 +22,18 @@ interface BetaGrant {
   grantedAt: string;
   expiresAt: string | null;
   revokedAt: string | null;
+  kind: "open" | "reserved";
+}
+
+interface BetaPool {
+  total: number;
+  taken: number;
+  left: number;
+}
+
+interface BetaSpots {
+  open: BetaPool;
+  reserved: BetaPool;
 }
 
 async function api<T>(
@@ -50,15 +62,20 @@ export default function AdminBeta() {
   const [query, setQuery] = useState("");
   const [users, setUsers] = useState<BetaUser[]>([]);
   const [grants, setGrants] = useState<BetaGrant[]>([]);
+  const [spots, setSpots] = useState<BetaSpots | null>(null);
+  const [opensAt, setOpensAt] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
 
   const loadGrants = useCallback(async () => {
-    const data = await api<{ grants: BetaGrant[] }>(
-      "/api/admin/beta/grants",
-      getToken,
-    );
+    const data = await api<{
+      grants: BetaGrant[];
+      spots: BetaSpots;
+      opensAt: string | null;
+    }>("/api/admin/beta/grants", getToken);
     setGrants(data.grants);
+    setSpots(data.spots);
+    setOpensAt(data.opensAt);
   }, [getToken]);
 
   useEffect(() => {
@@ -132,9 +149,40 @@ export default function AdminBeta() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Beta access</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Grant access only after the tester has verified their email.
+          Anyone with a verified email can claim an open spot. Granting access
+          here uses a spot reserved for friends, so grant it only after they
+          have verified their email.
         </p>
+        {opensAt && new Date(opensAt) > new Date() ? (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Open spots unlock{" "}
+            {new Date(opensAt).toLocaleString(undefined, {
+              dateStyle: "long",
+              timeStyle: "short",
+            })}
+            .
+          </p>
+        ) : null}
       </header>
+
+      {spots ? (
+        <dl className="grid grid-cols-2 gap-3">
+          <div className="rounded-md border px-4 py-3">
+            <dt className="text-xs text-muted-foreground">Open spots</dt>
+            <dd className="text-sm font-medium">
+              {spots.open.taken} of {spots.open.total} claimed
+            </dd>
+          </div>
+          <div className="rounded-md border px-4 py-3">
+            <dt className="text-xs text-muted-foreground">
+              Reserved for friends
+            </dt>
+            <dd className="text-sm font-medium">
+              {spots.reserved.taken} of {spots.reserved.total} used
+            </dd>
+          </div>
+        </dl>
+      ) : null}
 
       <form onSubmit={search} className="flex gap-2">
         <Input
@@ -210,6 +258,7 @@ export default function AdminBeta() {
                     {grant.email ?? grant.userId}
                   </p>
                   <span className="text-xs text-muted-foreground">
+                    {grant.kind === "reserved" ? "Reserved" : "Open spot"} ·{" "}
                     {grant.revokedAt
                       ? "Revoked"
                       : grant.expiresAt &&
