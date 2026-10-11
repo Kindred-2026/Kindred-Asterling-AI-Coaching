@@ -60,6 +60,7 @@ describe("navigation model", () => {
       "/talk",
       "/app/archive",
       "/app/reminders",
+      "/app/beta-checklist",
     ];
     expect(ALL_SIGNED_IN_ROUTES.sort()).toEqual(expected.sort());
 
@@ -136,6 +137,7 @@ describe("area destinations", () => {
     ]);
     expect(AREA_SECONDARY_ROUTES.you.map((i) => i.href)).toEqual([
       "/app/account",
+      "/app/beta-checklist",
     ]);
     expect(AREA_SECONDARY_ROUTES.insights).toEqual([]);
     expect(AREA_SECONDARY_ROUTES.today.map((i) => i.href)).toEqual([
@@ -154,6 +156,7 @@ describe("area destinations", () => {
     ]);
     expect(areaSecondaryDestinations("you").map((i) => i.href)).toEqual([
       "/app/account",
+      "/app/beta-checklist",
     ]);
     expect(areaSecondaryDestinations("insights")).toEqual([]);
   });
@@ -163,8 +166,10 @@ describe("area destinations", () => {
       areaSecondaryDestinations("talk", { excludeHref: "/app/archive" }),
     ).toEqual([]);
     expect(
-      areaSecondaryDestinations("you", { excludeHref: "/app/account" }),
-    ).toEqual([]);
+      areaSecondaryDestinations("you", { excludeHref: "/app/account" }).map(
+        (i) => i.href,
+      ),
+    ).toEqual(["/app/beta-checklist"]);
   });
 
   it("resolves the primary destination that anchors an area", () => {

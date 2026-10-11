@@ -48,6 +48,7 @@ import Login from "@/pages/public/login";
 import Signup from "@/pages/public/signup";
 import Account from "@/pages/account";
 import AdminBeta from "@/pages/admin-beta";
+import BetaChecklist from "@/pages/beta-checklist";
 import { ThemeProvider } from "@/hooks/use-theme";
 import {
   canonicalPathname,
@@ -237,6 +238,7 @@ function PrivateRoutes() {
         <Route path="/app/medications" component={Medications} />
         <Route path="/app/account" component={Account} />
         <Route path="/app/admin/beta" component={AdminBeta} />
+        <Route path="/app/beta-checklist" component={BetaChecklist} />
         <Route path="/app/archive" component={Archive} />
         <Route path="/app/reminders" component={Reminders} />
         <Route component={NotFound} />

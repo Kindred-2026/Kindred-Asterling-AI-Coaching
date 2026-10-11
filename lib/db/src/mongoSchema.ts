@@ -112,6 +112,8 @@ export interface User extends Record<string, unknown> {
   timezone: string | null;
   emailVerifiedAt: Date | null;
   onboardedAt: Date | null;
+  /** Beta tester checklist item ids the user has ticked off. */
+  betaChecklist: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -139,6 +141,7 @@ export const usersTable = table<User>(
     "timezone",
     "emailVerifiedAt",
     "onboardedAt",
+    "betaChecklist",
     "createdAt",
     "updatedAt",
   ],
@@ -166,6 +169,7 @@ export const usersTable = table<User>(
       timezone: null,
       emailVerifiedAt: null,
       onboardedAt: null,
+      betaChecklist: () => [],
       createdAt: () => new Date(),
       updatedAt: () => new Date(),
     },

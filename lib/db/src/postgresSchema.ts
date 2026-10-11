@@ -40,7 +40,7 @@ const integers = new Set([
   "medicationId",
   "conversationId",
 ]);
-const arrays = new Set(["feelings", "times", "miniGoals"]);
+const arrays = new Set(["feelings", "times", "miniGoals", "betaChecklist"]);
 const timestamps = new Set([
   "clerkDeletedAt",
   "emailVerifiedAt",

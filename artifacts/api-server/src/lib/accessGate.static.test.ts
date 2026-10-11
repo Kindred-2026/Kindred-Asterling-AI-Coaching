@@ -37,6 +37,7 @@ describe("invite-only access gate", () => {
       "weeklyReportRouter",
       "voiceRouter",
       "remindersRouter",
+      "betaChecklistRouter",
     ]) {
       expect(routes.indexOf(`router.use(${name})`)).toBeGreaterThan(gate);
     }
