@@ -25,7 +25,10 @@ On 2026-10-06 the app and the marketing site served builds of `main` at
 newer deploy served a build of `main` at `afc7f37` ([second public
 check](#public-read-only-check--2026-10-06-1305-utc)). On 2026-10-07 a deploy
 from 05:25 UTC served a build of `main` at `545199f` ([public
-check](#public-read-only-check--2026-10-07)).
+check](#public-read-only-check--2026-10-07)). Since PR #268 (merged after
+that check) the API answers a disallowed CORS origin with 403 instead of 500,
+so the `fly.dev`-origin 500 recorded in the checks below becomes 403 once a
+build containing it is deployed.
 Payments are not enabled. This is not full staging
 acceptance or a production cutover. The old server/MongoDB was not
 re-inspected; the cutover gates below are still open.
@@ -55,20 +58,31 @@ or MongoDB smoke database. Production still runs on the existing server/MongoDB.
    secret store. Never copy the production MongoDB URI into staging.
 3. For a new empty staging database only, apply every
    `lib/db/migrations-postgres/NNNN_*.sql` file in filename order (currently
-   `0001_rehearsal_core.sql` then `0002_drop_calendar_connections.sql`) in one
+   `0001_rehearsal_core.sql`, `0002_drop_calendar_connections.sql`, then
+   `0003_users_beta_checklist.sql`) in one
    transaction after `assertEmptyTarget` passes. Run `initializePostgresDatabase` before committing
    and verify the app writer can access every runtime table. Use schema-admin
    credentials only for this operator step. Do not rerun the schema on the
    initialized database. The already-initialized `fly-db` was created with the
    Calendar table; remove it with the one-off `drop:calendar-connections` job in
    `lib/db/migrations-postgres/README.md` (whether it has run on staging is not
-   recorded here). This staging schema remains subject to full application
+   recorded here). Since PR #276, startup schema validation also requires the
+   `users.beta_checklist` column, so a build of `main` from `b0ada65` on
+   refuses to start on `fly-db` until `0003_users_beta_checklist.sql` (an
+   idempotent `ADD COLUMN IF NOT EXISTS`) has been applied there with
+   schema-admin credentials. Whether it has been applied to `fly-db` is not
+   recorded here. This staging schema remains subject to full application
    acceptance and is not authorization for a production migration.
 4. Required runtime names are `POSTGRES_URL`, `AUTH0_DOMAIN`, `AUTH0_AUDIENCE`,
    `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `SUBSCRIPTION_OWNER_IDS`, plus
    `ANTHROPIC_API_KEY` while `fly.toml` sets `AI_PROVIDER = 'anthropic'`.
-   `NODE_ENV=production`, `PORT=8080`, `APP_PUBLIC_URL`, and
-   `MARKETING_SITE_URL` (step 9) come from `fly.toml`.
+   `NODE_ENV=production`, `PORT=8080`, `APP_PUBLIC_URL`,
+   `MARKETING_SITE_URL` (step 9), and the beta limits `BETA_CAPACITY`,
+   `BETA_RESERVED_SPOTS` and `BETA_OPENS_AT` (PR #278; malformed values stop
+   startup) come from `fly.toml`. Since PR #275 production startup also fails
+   when `AI_PROVIDER` is unset. Optional analytics secrets are
+   `AMPLITUDE_API_KEY` and `AMPLITUDE_ID_SALT` (PR #255; production logs a
+   warning while the key is unset) and `AMPLITUDE_AI_API_KEY` (PR #273).
    Store credentials only in Fly secrets; use standard input for imports.
 5. Supply public `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, and
    `VITE_AUTH0_AUDIENCE` separately as Docker build arguments.

@@ -9,9 +9,10 @@
 
 The React/Vite frontend and Express API use Auth0. Internal `users.id` values
 remain the owner keys for coaching records, subscriptions, reminders, and other
-application data. The old Clerk mapping fields and offline migration helpers
-remain for audit/rollback; the Clerk webhook is no longer mounted and the
-production packages no longer depend on Clerk.
+application data. The old Clerk mapping fields and the Auth0 identity-linking
+script remain for audit/rollback. PR #264 removed the unmounted Clerk webhook
+module, the Clerk identity sync/migration helpers and the `clerk:admin` script;
+the production packages no longer depend on Clerk.
 
 ## Current cutover preparation
 
@@ -99,7 +100,7 @@ same restore rehearsal and production approval process as for Clerk accounts.
 
 - Run frontend tests/typecheck, full workspace typecheck, production frontend/API builds, the disposable MongoDB API harness, and `git diff --check`.
 - Complete a real browser login → API → logout round trip and account-security operations with a test identity. Verify rejected JWTs and anonymous requests stay rejected.
-- Review the active hosting build configuration before rollout. **Use `docs/FLY_DEPLOYMENT.md` for the selected Fly.io target; the legacy Coolify record is retained only for the current rollback deployment.** The prepared Dockerfile uses `VITE_AUTH0_*`; build and runtime values must select the same tenant and API audience.
+- Review the active hosting build configuration before rollout. **Use `docs/FLY_DEPLOYMENT.md` for the selected Fly.io target.** PR #264 removed the legacy Coolify deployment record from the repository; recover it from history before `ecc8d45` if the rollback deployment needs it. The prepared Dockerfile uses `VITE_AUTH0_*`; build and runtime values must select the same tenant and API audience.
 - Register the final production callback, logout and web-origin URLs on the intended Auth0 application. Configure the approved production tenant and API variables in hosting. Do not mix tenants between frontend and backend.
 - Deploy only after explicit approval, then verify `/api/healthz`, `/api/healthz/db`, migrated signed-in flows, payments and reminders in production. A passing build or CI does not establish production readiness.
 
@@ -124,7 +125,7 @@ At the end of the originating integration task, the root Dockerfile still inject
 
 ## Clerk retirement boundary
 
-Keep the Clerk instance, credentials, user records, and legacy identity mappings available until the Auth0 identity reconciliation and rollback retention gates are verified in `docs/FINALIZATION_RECORD.md`. The `clerk:admin` inspection command is retained for authorized inventory and diagnosis; it is not a complete customer or credential export. Use the reviewed export/import and identity-linking process above. Committing or pushing this branch does not authorize deployment, production identity writes, deleting Clerk data, revoking keys, or cancelling the Clerk service.
+Keep the Clerk instance, credentials, user records, and legacy identity mappings available until the Auth0 identity reconciliation and rollback retention gates are verified in `docs/FINALIZATION_RECORD.md`. The `clerk:admin` inspection command was removed by PR #264 (recoverable from history before `ecc8d45`); it was never a complete customer or credential export. Use the reviewed export/import and identity-linking process above. Committing or pushing this branch does not authorize deployment, production identity writes, deleting Clerk data, revoking keys, or cancelling the Clerk service.
 
 This integration retained GitLab main's existing Calendar authentication boundary and Today progression fixes. The Calendar retirement page tests use the replacement auth adapter. Docker/container and external provider settings remained unchanged.
 
