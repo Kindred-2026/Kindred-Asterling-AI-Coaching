@@ -117,9 +117,9 @@ before creating anything, and record the first invoice in the cost baseline.
 
   For `ANTHROPIC_API_KEY` and `RESEND_API_KEY`, create **new** keys named for
   DigitalOcean in the Anthropic Console and Resend. Revoke the Fly keys in
-  step 8. If `fly secrets list` shows `AMPLITUDE_API_KEY` and
-  `AMPLITUDE_ID_SALT`, copy them too. Keep the salt identical, or analytics
-  user IDs change. Skip `POSTGRES_URL` (replaced by the database binding) and
+  step 8. If `fly secrets list` shows `AMPLITUDE_API_KEY`,
+  `AMPLITUDE_ID_SALT` or `AMPLITUDE_AI_API_KEY`, copy them too. Keep the salt
+  identical, or analytics user IDs change. Skip `POSTGRES_URL` (replaced by the database binding) and
   `OPENAI_API_KEY` (unused while `AI_PROVIDER` is `anthropic`).
 
 ## 1. Create the database
@@ -261,11 +261,16 @@ unavailable, and anything they type is lost.
    pg_restore --list kindred-cutover.dump | grep -v ' SCHEMA - public ' > kindred-cutover.list
    pg_restore --dbname="$DO_DB" --use-list=kindred-cutover.list --clean --if-exists \
      --exit-on-error --single-transaction --no-owner --no-acl --no-comments kindred-cutover.dump
+   psql "$DO_DB" -v ON_ERROR_STOP=1 -f lib/db/migrations-postgres/0003_users_beta_checklist.sql
    psql "$DO_DB" -v ON_ERROR_STOP=1 -f .do/grant-app-role.sql
    ```
 
    The list file skips the dump's `CREATE SCHEMA public`, because that schema
-   already exists in the new database.
+   already exists in the new database. The restore copies Fly's schema as it
+   is. It is not recorded whether Fly's database has the `0003` beta
+   checklist column, and the app refuses to start without it, so `0003` runs
+   again; it is safe to re-run. Do the same for any later migration that is
+   safe to re-run.
 
 5. **Compare row counts.** The two files must be identical:
 
