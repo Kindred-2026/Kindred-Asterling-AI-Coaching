@@ -1,5 +1,11 @@
 # Cloudflare setup (custom domain, firewall, AI Gateway)
 
+> **Moving to DigitalOcean:** after the cutover in the
+> [DigitalOcean runbook](DIGITALOCEAN_DEPLOYMENT.md), the app domain's records
+> are **DNS only** and point at App Platform, so section 1 and the proxy and
+> security settings in section 2 stop applying to the app. Section 3 (AI
+> Gateway) is unchanged.
+
 Kindred runs on Fly.io. Cloudflare sits in front of it for three things:
 
 1. **DNS + HTTPS** for the custom domain.

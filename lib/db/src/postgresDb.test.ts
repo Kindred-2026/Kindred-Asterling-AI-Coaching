@@ -12,6 +12,7 @@ import {
   isNull,
   initializePostgresDatabase,
   closePostgresDatabase,
+  postgresConnectionConfig,
   withDatabaseLease,
 } from "./postgresDb";
 import { affirmationsTable, conversations, messages, usersTable } from "./mongoSchema";
@@ -211,6 +212,32 @@ test("rejects malformed sort values and supports empty logical conditions", asyn
     assert.throws(() => api.select().from(conversations).orderBy({ sort: { nope: 1 } } as any), /Invalid database sort/);
     assert.equal(await api.count(conversations, and()), 0);
   } finally { await pool.end(); }
+});
+
+test("verifies TLS against a supplied CA instead of the URL's sslmode", () => {
+  const url = "postgresql://kindred_app:p%40ss%2Fword@db-host.example.test:25060/kindred?sslmode=require&application_name=kindred";
+  assert.deepEqual(postgresConnectionConfig(url, undefined), { connectionString: url });
+  assert.deepEqual(postgresConnectionConfig(url, "  "), { connectionString: url });
+
+  const ca = "-----BEGIN CERTIFICATE-----\nTEST\n-----END CERTIFICATE-----";
+  const config = postgresConnectionConfig(`${url}&sslrootcert=/tmp/ca.crt&uselibpqcompat=true`, `${ca}\n`);
+  assert.deepEqual(config.ssl, { ca, rejectUnauthorized: true });
+  const parsed = new URL(config.connectionString);
+  assert.deepEqual([...parsed.searchParams.keys()], ["application_name"]);
+  assert.equal(decodeURIComponent(parsed.password), "p@ss/word");
+  assert.equal(parsed.host, "db-host.example.test:25060");
+  assert.equal(parsed.pathname, "/kindred");
+
+  for (const disabled of ["sslmode=disable", "ssl=false", "ssl=0"]) {
+    assert.throws(
+      () => postgresConnectionConfig(`postgresql://u:secret@h/db?${disabled}`, ca),
+      (error: Error) => error.message === "POSTGRES_CA_CERT is set but POSTGRES_URL disables TLS",
+    );
+  }
+  assert.throws(
+    () => postgresConnectionConfig("postgresql://u:secret@[bad/db", ca),
+    (error: Error) => error.message === "POSTGRES_URL must be a PostgreSQL URL",
+  );
 });
 
 test("supports deterministic ping, close and reinitialization with an embedded pool", async () => {

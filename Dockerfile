@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.10
 FROM node:24-bookworm-slim AS build
 
 ENV PNPM_HOME=/pnpm \
@@ -20,8 +19,9 @@ COPY lib/api-spec/package.json lib/api-spec/package.json
 COPY lib/api-zod/package.json lib/api-zod/package.json
 COPY lib/db/package.json lib/db/package.json
 COPY scripts/package.json scripts/package.json
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile
+# Plain Dockerfile syntax only (no RUN --mount), so the image also builds
+# where BuildKit is unavailable, as reported for DigitalOcean App Platform.
+RUN pnpm install --frozen-lockfile
 
 COPY artifacts/api-server artifacts/api-server
 COPY artifacts/kindred-coach artifacts/kindred-coach
@@ -40,12 +40,9 @@ ENV VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN \
     VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID \
     VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE \
     VITE_MARKETING_SITE_URL=$VITE_MARKETING_SITE_URL
-# These identifiers are public. Accept build arguments or optional BuildKit
-# secret mounts; never pass a client secret to the browser build.
-RUN --mount=type=secret,id=VITE_AUTH0_DOMAIN,env=VITE_AUTH0_DOMAIN,required=false \
-    --mount=type=secret,id=VITE_AUTH0_CLIENT_ID,env=VITE_AUTH0_CLIENT_ID,required=false \
-    --mount=type=secret,id=VITE_AUTH0_AUDIENCE,env=VITE_AUTH0_AUDIENCE,required=false \
-    export NODE_ENV=production \
+# These identifiers are public build arguments (App Platform build-time
+# variables, or --build-arg); never pass a client secret to the browser build.
+RUN export NODE_ENV=production \
  && pnpm --filter @workspace/kindred-coach run build:deployment \
  && pnpm --filter @workspace/api-server run build \
  && pnpm --filter @workspace/api-server deploy --prod --legacy /app/runtime

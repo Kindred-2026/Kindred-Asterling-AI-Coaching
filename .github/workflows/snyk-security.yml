@@ -131,9 +131,9 @@ jobs:
           VITE_AUTH0_AUDIENCE: https://api.example.invalid
         run: >-
           docker build
-          --secret id=VITE_AUTH0_DOMAIN,env=VITE_AUTH0_DOMAIN
-          --secret id=VITE_AUTH0_CLIENT_ID,env=VITE_AUTH0_CLIENT_ID
-          --secret id=VITE_AUTH0_AUDIENCE,env=VITE_AUTH0_AUDIENCE
+          --build-arg VITE_AUTH0_DOMAIN
+          --build-arg VITE_AUTH0_CLIENT_ID
+          --build-arg VITE_AUTH0_AUDIENCE
           -t your/image-to-test .
         # Runs Snyk Container (Container and SCA) analysis and uploads result to Snyk.
       - name: Snyk Container monitor

@@ -1,5 +1,9 @@
 # Fly.io deployment and migration runbook
 
+> **Being replaced (2026-10-13):** Kindred is moving to DigitalOcean; see the
+> [DigitalOcean runbook](DIGITALOCEAN_DEPLOYMENT.md). Keep this Fly app and
+> database as the rollback until that cutover passes and Fly is retired.
+
 **Status (2026-09-26):** PostgreSQL staging is deployed and healthy at
 <https://kindred-asterling-ai-coaching.fly.dev/>. Release v1 uses reviewed source
 `29277d252f19daf489018fc0b14c1d74cab8d852`, with the explicit deployment override
@@ -40,7 +44,7 @@ On 2026-09-25 at 22:42 UTC, Fly Launch attempt `2083359` built commit
 frontend build stopped because `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, and
 `VITE_AUTH0_AUDIENCE` were not supplied. No image or app deployment resulted.
 At that failed build, the app had no saved configuration, machine, or runtime
-secrets. Use the CLI build-secret procedure below; the Fly Launch UI attempt did
+secrets. Use the CLI build-argument procedure below; the Fly Launch UI attempt did
 not pass these required build values.
 
 ## Staging deployment procedure
@@ -81,7 +85,7 @@ or MongoDB smoke database. Production still runs on the existing server/MongoDB.
    warning while the key is unset) and `AMPLITUDE_AI_API_KEY` (PR #273).
    Store credentials only in Fly secrets; use standard input for imports.
 5. Supply public `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, and
-   `VITE_AUTH0_AUDIENCE` separately to the existing Dockerfile's BuildKit mounts.
+   `VITE_AUTH0_AUDIENCE` separately as Docker build arguments.
    Runtime secrets do not automatically supply build values. Recover these
    public identifiers from the authorized application configuration; never
    supply a client secret to the browser build.
@@ -91,9 +95,9 @@ or MongoDB smoke database. Production still runs on the existing server/MongoDB.
    ```sh
    flyctl deploy --app kindred-asterling-ai-coaching --config fly.toml \
      --ha=false --remote-only \
-     --build-secret "VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN" \
-     --build-secret "VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID" \
-     --build-secret "VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE"
+     --build-arg "VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN" \
+     --build-arg "VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID" \
+     --build-arg "VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE"
    ```
 
    Read values interactively or from the authorized provider into process memory;

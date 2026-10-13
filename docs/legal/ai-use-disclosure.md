@@ -22,7 +22,7 @@ Kindred's context assembler selects source categories using the current interact
 
 ## Providers and data use
 
-The deployed configuration (`fly.toml`) selects Anthropic's Claude models through the Anthropic API, processed in the United States. Requests can optionally be routed through Cloudflare AI Gateway; when they are, Kindred sends `cf-aig-collect-log-payload: false` and `cf-aig-skip-cache: true`. The application also supports an OpenAI-compatible endpoint and local Ollama, which are not selected for the hosted service.
+The deployed configuration (`fly.toml`, and `.do/app.yaml` after the DigitalOcean move) selects Anthropic's Claude models through the Anthropic API, processed in the United States. Requests can optionally be routed through Cloudflare AI Gateway; when they are, Kindred sends `cf-aig-collect-log-payload: false` and `cf-aig-skip-cache: true`. The application also supports an OpenAI-compatible endpoint and local Ollama, which are not selected for the hosted service.
 
 > **Founder/legal confirmation required:** Before publication, confirm the live model vendor, model, processing regions, retention, abuse monitoring, training policy, human-review access, and opt-out or consent choices. Confirm the Gateway payload logging configuration and the upstream provider's controls.
 
