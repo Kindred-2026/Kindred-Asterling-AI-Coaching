@@ -19,6 +19,7 @@
     "test:verify": "node --test scripts/verify.test.mjs",
     "test:release-check": "node --test scripts/release-check.test.mjs",
     "test:auth0-local": "node --test scripts/auth0-local.test.mjs",
+    "test:digitalocean": "node --test scripts/digitalocean.test.mjs",
     "format": "node scripts/format-check.mjs --write",
     "format:check": "node scripts/format-check.mjs",
     "verify": "node scripts/verify.mjs",
