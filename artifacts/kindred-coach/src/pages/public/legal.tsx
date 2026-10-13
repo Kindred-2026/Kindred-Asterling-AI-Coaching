@@ -241,7 +241,7 @@ const privacySections: LegalSection[] = [
       ),
       list([
         "AI Processing: Anthropic (USA) - Claude models generate coaching replies through the Anthropic API. Where requests are routed through Cloudflare AI Gateway, request payload logging and response caching are turned off.",
-        "Cloud Hosting & Database: Fly.io (Toronto, ON, Canada) - application hosting and Managed Postgres database.",
+        "Cloud Hosting & Database: DigitalOcean (Toronto, ON, Canada) - application hosting and managed PostgreSQL database.",
         "Network & Security: Cloudflare (Global) - DNS, TLS, and network protection.",
         "Authentication & Identity: Auth0 (USA / Global) - secure session management.",
         "Payment Processing: Helcim (Calgary, AB, Canada) - PCI-DSS compliant checkout and subscription billing.",
@@ -581,7 +581,7 @@ const cookieSections: LegalSection[] = [
       ),
       list([
         "Auth0 Authentication: Session cookies and local storage tokens utilized to maintain authenticated user sessions, verify identity, and defend against cross-site request forgery (CSRF).",
-        "Hosting & Infrastructure Security: Technical routing, SSL termination, and DDoS protection headers set by our hosting and edge infrastructure (Fly.io / Cloudflare).",
+        "Hosting & Infrastructure Security: Technical routing, SSL termination, and DDoS protection headers set by our hosting and edge infrastructure (DigitalOcean / Cloudflare).",
       ]),
       subheading("B. Functional & Interface Preference Storage"),
       list([

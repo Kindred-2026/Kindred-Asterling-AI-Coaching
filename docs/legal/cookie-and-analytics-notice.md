@@ -12,7 +12,7 @@ Kindred may use:
 
 - Auth0 authentication and session technologies to keep users signed in and protect account requests.
 - Browser storage for interface preferences such as theme, where supported.
-- Security, load-balancing, or hosting cookies set by Fly.io or Cloudflare and identified in the final deployment inventory.
+- Security, load-balancing, or hosting cookies set by DigitalOcean or Cloudflare and identified in the final deployment inventory.
 
 ## Diagnostics and advertising
 
@@ -24,4 +24,4 @@ No Google Analytics, Meta Pixel, advertising network, or similar advertising tra
 
 Users can use browser controls to remove or block cookies, but blocking essential authentication storage may prevent sign-in or secure features from working.
 
-> **Founder/legal confirmation required:** Inspect production response headers and browser storage. Identify cookie names, providers, and lifetimes; confirm Auth0, Fly.io, and Cloudflare behavior; and determine whether a consent manager is required in each supported launch location.
+> **Founder/legal confirmation required:** Inspect production response headers and browser storage. Identify cookie names, providers, and lifetimes; confirm Auth0, DigitalOcean, and Cloudflare behavior; and determine whether a consent manager is required in each supported launch location.
