@@ -1,7 +1,9 @@
 # DigitalOcean deployment and cutover runbook
 
-**Status (2026-10-14):** the domain is served by DigitalOcean App Platform
-([public check](#public-read-only-check--2026-10-14)). Step 9's sign-in, chat
+**Status (2026-10-15):** the domain is served by DigitalOcean App Platform
+([public check](#public-read-only-check--2026-10-14)). A later deploy, made
+when `main` was at `23b0713`, was live on 2026-10-15
+([public check](#public-read-only-check--2026-10-15)). Step 9's sign-in, chat
 and log checks are not recorded here. `kindred-asterling-ai-coaching.fly.dev`
 no longer resolves, so the Fly rollback below may no longer be available.
 Check with `fly status` before relying on it. The DigitalOcean account is now operational, so this
@@ -372,3 +374,23 @@ request was made.
 | Auth and CORS | `/api/auth/user` and `/api/calendar/status` return 401 without a token. With origin `https://kindred-asterling-ai-coaching.com`, the 401 carries a matching `Access-Control-Allow-Origin`. With the `fly.dev` origin or an unknown origin, it returns 403 (PR #268). The calendar 404 criterion stays unverified because authentication runs first |
 | Security headers | The CSP from `securityHeaders.ts` (Auth0 tenant in `connect-src`/`frame-src`), HSTS `max-age=31536000; includeSubDomains`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-XSS-Protection: 0`, and `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy: same-origin`, matching Helmet with no edge rewrites |
 | TLS | Google Trust Services `WE1` certificate for `kindred-asterling-ai-coaching.com`, expiring 2027-01-11 (89 days). `*.fly.dev` could not be checked because the name does not resolve |
+
+## Public read-only check — 2026-10-15
+
+Unauthenticated `curl`/`dig`/`openssl` checks from 13:04 to 13:07 UTC against
+`https://kindred-asterling-ai-coaching.com` and
+`https://kindred-asterling-ai-coaching.fly.dev`. Access to the marketing
+domain and `www.` was requested but not granted during the run. No sign-in,
+form, or AI request was made.
+
+| Check | Observed result |
+| --- | --- |
+| Host | Responses carry `x-do-app-origin` and `x-do-orig-status`, so App Platform still serves the domain |
+| Health | `/api/healthz` returned 200 `{"status":"ok"}` and `/api/healthz/db` returned 200 `{"status":"ok","database":"connected"}` in under 0.4 s, at 13:04 and again at 13:06 UTC |
+| Fly staging | `kindred-asterling-ai-coaching.fly.dev` still returns NXDOMAIN from `ns1.flydns.net` |
+| Deployed build | This is a new deploy. Static files are dated 2026-10-15 06:40:39 UTC, when `main` was at `23b0713`. The frontend source there is the same as at `8e85acb`, because later commits only change docs and a root verification file. The served bundle `assets/index-DgOQNXdc.js` uses the public Auth0 tenant `dev-4c281gnuylq4hccq.ca.auth0.com` and audience `https://kindred-asterling-ai-coaching.com/api`. It embeds React `19.3.0`, the version in `pnpm-lock.yaml` on `main`. A local `build:deployment` gives a byte-identical `assets/index-D7RfiWZr.css` and `index.html`, apart from the bundle name. The JS bundle and `/pricing/` differ because this workspace's `node_modules` predates #282 (React `19.1.4`), and the offline store cannot install the current lockfile. So the served build is not byte-verified |
+| Public pages and domain split | `/`, `/login`, `/signup`, `/pricing/`, `/dashboard` and `/app/` return 200. `/about`, `/science`, `/legal/privacy`, `/legal/terms`, `/legal-documents/privacy-policy`, `/llms.txt` and `/sitemap.xml` return 301 to the same path on `https://kindred-asterling-ai.xyz`. `/robots.txt` returns `Disallow: /`. Whether the redirect targets load was not checked |
+| Auth and CORS | `/api/auth/user` and `/api/calendar/status` return 401 without a token. `/api/auth/user` returns 401 with origin `https://kindred-asterling-ai-coaching.com`, and 403 with the `fly.dev` origin or an unknown origin |
+| Security headers | Same as 2026-10-14: the `securityHeaders.ts` CSP with the Auth0 tenant in `connect-src`/`frame-src`, HSTS `max-age=31536000; includeSubDomains`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-XSS-Protection: 0`, and `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy: same-origin` |
+| TLS | Google Trust Services `WE1` certificate for `kindred-asterling-ai-coaching.com`, expiring 2027-01-11 17:57 UTC (88 days). `*.fly.dev` could not be checked because the name does not resolve |
+| `pnpm release:check` | On `23b0713`, it exits 13, as expected here: no local verify evidence (reported as `MALFORMED — evidence is not an object`), no local public Auth0 config, and CI/deploy/acceptance not verifiable remotely |
