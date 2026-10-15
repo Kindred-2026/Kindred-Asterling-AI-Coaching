@@ -84,11 +84,12 @@ services:
         scope: RUN_TIME
         value: https://kindred-asterling-ai.xyz
       # Proxy hops in front of the app, so rate limits see the real visitor
-      # IP. The workflow's client-IP check fails if this is wrong for App
-      # Platform; see the runbook before changing it.
+      # IP: App Platform's Cloudflare edge, then its load balancer. The
+      # workflow's client-IP check fails if this is wrong for App Platform;
+      # see the runbook before changing it.
       - key: TRUST_PROXY_HOPS
         scope: RUN_TIME
-        value: "1"
+        value: "2"
 
       # Claude via the Anthropic API. The app refuses to start without
       # ANTHROPIC_API_KEY while AI_PROVIDER is 'anthropic'.
