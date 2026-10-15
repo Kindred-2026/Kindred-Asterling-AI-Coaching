@@ -5,7 +5,9 @@
 > database as the rollback until that cutover passes and Fly is retired.
 > On 2026-10-14 the custom domain was served by DigitalOcean, and
 > `kindred-asterling-ai-coaching.fly.dev` no longer resolved
-> ([public check](DIGITALOCEAN_DEPLOYMENT.md#public-read-only-check--2026-10-14)).
+> ([public check](DIGITALOCEAN_DEPLOYMENT.md#public-read-only-check--2026-10-14)),
+> and it still did not resolve on 2026-10-15
+> ([public check](DIGITALOCEAN_DEPLOYMENT.md#public-read-only-check--2026-10-15)).
 > The staging checks below record the Fly app up to 2026-10-07.
 
 **Status (2026-09-26):** PostgreSQL staging is deployed and healthy at
