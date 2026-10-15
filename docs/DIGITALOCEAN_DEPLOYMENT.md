@@ -1,8 +1,10 @@
 # DigitalOcean deployment and cutover runbook
 
-**Status (2026-10-13):** prepared, not yet executed. Kindred still runs on
-Fly.io, and Fly stays the rollback until the cutover below passes and the
-rollback window closes. The DigitalOcean account is now operational, so this
+**Status (2026-10-14):** the domain is served by DigitalOcean App Platform
+([public check](#public-read-only-check--2026-10-14)). Step 9's sign-in, chat
+and log checks are not recorded here. `kindred-asterling-ai-coaching.fly.dev`
+no longer resolves, so the Fly rollback below may no longer be available.
+Check with `fly status` before relying on it. The DigitalOcean account is now operational, so this
 replaces the 2026-09 guides that were removed when DigitalOcean declined the
 payment methods available then.
 
@@ -351,3 +353,22 @@ the switch is not on Fly; ask for help before copying it back.
    `docs/FLY_DEPLOYMENT.md`, `docs/release-rollback.md`,
    `docs/DOMAIN_SPLIT.md`, `docs/COST_BASELINE.md` and `SECRET_INVENTORY.md`
    to match.
+
+## Public read-only check — 2026-10-14
+
+Unauthenticated `curl`/`dig`/`openssl` checks from 13:03 to 13:09 UTC against
+`https://kindred-asterling-ai-coaching.com` and
+`https://kindred-asterling-ai-coaching.fly.dev`. The marketing domain and
+`www.` were outside this run's network allowlist. No sign-in, form, or AI
+request was made.
+
+| Check | Observed result |
+| --- | --- |
+| Host | Responses carry `x-do-app-origin` and `x-do-orig-status`, and no `via: 1.1 fly.io`, so App Platform serves the domain |
+| Health | `/api/healthz` returned 200 `{"status":"ok"}` and `/api/healthz/db` returned 200 `{"status":"ok","database":"connected"}` in under 0.4 s, at 13:03 and again at 13:08 UTC |
+| Fly staging | `kindred-asterling-ai-coaching.fly.dev` returns NXDOMAIN from Fly's DNS (`ns1.flydns.net`). Fly keeps that name while an app is scaled to 0, so the app was probably deleted or its IPs released. This could not be confirmed without Fly access |
+| Deployed build | Static files are dated 2026-10-13 17:12:24 UTC, when `main` was at `7a9206b`. The served bundle `assets/index-BV4L0MRT.js` uses the public Auth0 tenant `dev-4c281gnuylq4hccq.ca.auth0.com` and audience `https://kindred-asterling-ai-coaching.com/api`. A local `build:deployment` of current `main` (`8e85acb`, which only adds the #282 dependency patch updates) gives a byte-identical `assets/index-D7RfiWZr.css` and `index.html`, apart from the bundle name. The JS bundle and `/pricing/` differ in dependency output. `7a9206b` could not be rebuilt offline, so the served build is not byte-verified |
+| Public pages and domain split | `/`, `/login`, `/signup`, `/pricing/`, `/dashboard` and `/app/` return 200. `/about`, `/science`, `/legal/*`, `/legal-documents/*`, `/llms.txt` and `/sitemap.xml` return 301 to the same path on `https://kindred-asterling-ai.xyz`. `/robots.txt` returns `Disallow: /`. The Cloudflare managed challenges and the injected challenge script recorded on Fly are gone |
+| Auth and CORS | `/api/auth/user` and `/api/calendar/status` return 401 without a token. With origin `https://kindred-asterling-ai-coaching.com`, the 401 carries a matching `Access-Control-Allow-Origin`. With the `fly.dev` origin or an unknown origin, it returns 403 (PR #268). The calendar 404 criterion stays unverified because authentication runs first |
+| Security headers | The CSP from `securityHeaders.ts` (Auth0 tenant in `connect-src`/`frame-src`), HSTS `max-age=31536000; includeSubDomains`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-XSS-Protection: 0`, and `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy: same-origin`, matching Helmet with no edge rewrites |
+| TLS | Google Trust Services `WE1` certificate for `kindred-asterling-ai-coaching.com`, expiring 2027-01-11 (89 days). `*.fly.dev` could not be checked because the name does not resolve |
