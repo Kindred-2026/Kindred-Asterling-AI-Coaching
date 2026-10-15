@@ -191,8 +191,10 @@ proxy and they all share one limit of 300 requests per 15 minutes, which
 would break the sign-in page under normal use. If it is too high, anyone can
 choose their own IP with a forged `X-Forwarded-For` header and dodge limits.
 
-How many hops App Platform adds is not documented, so `.do/app.yaml` starts
-at `1`. The workflow's last step tests it. It compares the rate limiter's
+How many hops App Platform adds is not documented. The first deploys ran with
+`1`, and the check showed the app keying on a Cloudflare edge address
+(App Platform's own edge, then its load balancer), so `.do/app.yaml` uses `2`.
+The workflow's last step tests it. It compares the rate limiter's
 hashed key with the runner's real IP, and it sends a forged header to see
 whether the app believes it. If the step fails, it says whether to raise or
 lower the value. Change `TRUST_PROXY_HOPS` in `.do/app.yaml`, merge, and
