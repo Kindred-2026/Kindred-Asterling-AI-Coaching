@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import path from "path";
 
 // PORT and BASE_PATH are set by the dev/preview workflow. A `vite build`
@@ -41,6 +42,25 @@ export default defineConfig(({ command, mode }) => {
   // Onboarding writes this package's Auth0 public configuration locally.
   // Other environment variables keep the existing workspace-root precedence.
   const auth0Env = loadEnv(mode, import.meta.dirname, "VITE_AUTH0_");
+
+  // Deployment builds with a Sentry auth token upload source maps so browser
+  // errors show the original code, then delete the maps so they are never
+  // served. Without the token (local, CI) no maps are made.
+  const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN?.trim();
+  const sentryPlugins = sentryAuthToken
+    ? [
+        sentryVitePlugin({
+          org: "kindred-asterling-ai",
+          project: "4512266373038080",
+          authToken: sentryAuthToken,
+          telemetry: false,
+          sourcemaps: {
+            filesToDeleteAfterUpload: ["./dist/public/**/*.map"],
+          },
+        }),
+      ]
+    : [];
+
   return {
     define: Object.fromEntries(
       Object.entries(auth0Env).map(([key, value]) => [
@@ -49,7 +69,7 @@ export default defineConfig(({ command, mode }) => {
       ]),
     ),
     base: resolvedBase,
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), ...sentryPlugins],
     resolve: {
       alias: {
         "@": path.resolve(import.meta.dirname, "src"),
@@ -69,7 +89,7 @@ export default defineConfig(({ command, mode }) => {
     root: path.resolve(import.meta.dirname),
     envDir: path.resolve(import.meta.dirname, "..", ".."),
     build: {
-      sourcemap: false,
+      sourcemap: sentryAuthToken ? "hidden" : false,
       outDir: path.resolve(import.meta.dirname, "dist/public"),
       emptyOutDir: true,
     },
