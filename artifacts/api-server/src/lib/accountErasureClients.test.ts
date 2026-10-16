@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   failThen,
+  fakeCredentials as fake,
   json,
   mockExternalProviders,
   setProviderEnv,
@@ -46,7 +47,7 @@ describe("cancelHelcimSubscription", () => {
       method: "DELETE",
       url: "https://api.helcim.com/v2/subscriptions/4321",
     });
-    expect(removal!.headers["api-token"]).toBe("test-helcim-key");
+    expect(removal!.headers["api-token"]).toBe(fake.helcimApiKey);
     expect(removal!.headers).not.toHaveProperty("authorization");
   });
 
@@ -112,8 +113,8 @@ describe("deleteAuth0User", () => {
       url: "https://kindred-test.ca.auth0.com/oauth/token",
       body: {
         grant_type: "client_credentials",
-        client_id: "mgmt-client",
-        client_secret: "mgmt-secret",
+        client_id: fake.mgmtClientId,
+        client_secret: fake.mgmtClientSecret,
         audience: "https://kindred-test.ca.auth0.com/api/v2/",
       },
     });
@@ -121,7 +122,7 @@ describe("deleteAuth0User", () => {
       method: "DELETE",
       url: "https://kindred-test.ca.auth0.com/api/v2/users/google-oauth2%7C123",
     });
-    expect(removal!.headers.authorization).toBe("Bearer mgmt-token");
+    expect(removal!.headers.authorization).toBe(`Bearer ${fake.mgmtToken}`);
   });
 
   it("reuses the cached token and refreshes it after a 401", async () => {
@@ -152,14 +153,14 @@ describe("Amplitude deletion", () => {
     expect(planAmplitudeDeletion("user-1")).toEqual([
       {
         project: "product",
-        apiKey: "product-key",
-        secretKey: "product-secret",
-        userIds: [pseudonymousUserId("user-1", "test-salt")],
+        apiKey: fake.productKey,
+        secretKey: fake.productSecret,
+        userIds: [pseudonymousUserId("user-1", fake.idSalt)],
       },
       {
         project: "agent",
-        apiKey: "agent-key",
-        secretKey: "agent-secret",
+        apiKey: fake.agentKey,
+        secretKey: fake.agentSecret,
         userIds: ["user-1"],
       },
     ]);
@@ -167,12 +168,12 @@ describe("Amplitude deletion", () => {
 
   it("sends one request when both trackers share a project", () => {
     restoreEnv();
-    restoreEnv = setProviderEnv({ AMPLITUDE_AI_API_KEY: "product-key" });
+    restoreEnv = setProviderEnv({ AMPLITUDE_AI_API_KEY: fake.productKey });
     const requests = planAmplitudeDeletion("user-1");
     expect(requests).toHaveLength(1);
     expect(requests[0]).toMatchObject({
       project: "product+agent",
-      userIds: [pseudonymousUserId("user-1", "test-salt"), "user-1"],
+      userIds: [pseudonymousUserId("user-1", fake.idSalt), "user-1"],
     });
   });
 
@@ -189,8 +190,8 @@ describe("Amplitude deletion", () => {
     providers = mockExternalProviders();
     await sendAmplitudeDeletion({
       project: "agent",
-      apiKey: "agent-key",
-      secretKey: "agent-secret",
+      apiKey: fake.agentKey,
+      secretKey: fake.agentSecret,
       userIds: ["user-1"],
     });
     const [call] = providers.of("amplitude");
@@ -204,7 +205,7 @@ describe("Amplitude deletion", () => {
       },
     });
     expect(call!.headers.authorization).toBe(
-      `Basic ${Buffer.from("agent-key:agent-secret").toString("base64")}`,
+      `Basic ${Buffer.from(`${fake.agentKey}:${fake.agentSecret}`).toString("base64")}`,
     );
   });
 });

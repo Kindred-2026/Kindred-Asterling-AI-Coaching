@@ -31,6 +31,7 @@ import {
 } from "./accountLifecycle";
 import {
   failThen,
+  fakeCredentials,
   mockExternalProviders,
   setProviderEnv,
   status,
@@ -309,7 +310,7 @@ describe("account deletion across Helcim, Auth0 and Amplitude", () => {
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          user_ids: [pseudonymousUserId(id, "test-salt")],
+          user_ids: [pseudonymousUserId(id, fakeCredentials.idSalt)],
         }),
         expect.objectContaining({ user_ids: [id] }),
       ]),

@@ -1,6 +1,24 @@
+import { randomBytes, randomUUID } from "node:crypto";
 import { vi } from "vitest";
 
 /** Test-only fakes for Helcim, the Auth0 Management API and Amplitude. */
+
+const fake = (label: string) => `test-${label}-${randomUUID()}`;
+
+/** Fake credentials, generated per run so no secret-like literal sits in source. */
+export const fakeCredentials = {
+  helcimApiKey: fake("helcim"),
+  helcimReferenceSecret: fake("reference"),
+  helcimWebhookSecret: randomBytes(32).toString("base64"),
+  mgmtClientId: fake("mgmt-client"),
+  mgmtClientSecret: fake("mgmt"),
+  mgmtToken: fake("mgmt-token"),
+  productKey: fake("product-key"),
+  productSecret: fake("product"),
+  idSalt: fake("salt"),
+  agentKey: fake("agent-key"),
+  agentSecret: fake("agent"),
+};
 
 export interface ProviderCall {
   provider: "helcim" | "auth0" | "amplitude";
@@ -97,7 +115,7 @@ export function mockExternalProviders(overrides: ProviderOverrides = {}) {
           overrides.auth0Token ??
           (() =>
             json({
-              access_token: "mgmt-token",
+              access_token: fakeCredentials.mgmtToken,
               token_type: "Bearer",
               expires_in: 86400,
             }))
@@ -114,19 +132,19 @@ export function mockExternalProviders(overrides: ProviderOverrides = {}) {
 }
 
 const PROVIDER_ENV = {
-  HELCIM_API_KEY: "test-helcim-key",
-  HELCIM_CUSTOMER_REFERENCE_SECRET: "test-reference-secret",
-  HELCIM_WEBHOOK_SECRET: Buffer.from("synthetic-fixture-only").toString("base64"),
+  HELCIM_API_KEY: fakeCredentials.helcimApiKey,
+  HELCIM_CUSTOMER_REFERENCE_SECRET: fakeCredentials.helcimReferenceSecret,
+  HELCIM_WEBHOOK_SECRET: fakeCredentials.helcimWebhookSecret,
   AUTH0_DOMAIN: "auth.kindred.example",
   AUTH0_MGMT_DOMAIN: "kindred-test.ca.auth0.com",
-  AUTH0_MGMT_CLIENT_ID: "mgmt-client",
-  AUTH0_MGMT_CLIENT_SECRET: "mgmt-secret",
-  AMPLITUDE_API_KEY: "product-key",
-  AMPLITUDE_SECRET_KEY: "product-secret",
-  AMPLITUDE_ID_SALT: "test-salt",
-  AMPLITUDE_AI_API_KEY: "agent-key",
-  AMPLITUDE_AI_SECRET_KEY: "agent-secret",
-} as const;
+  AUTH0_MGMT_CLIENT_ID: fakeCredentials.mgmtClientId,
+  AUTH0_MGMT_CLIENT_SECRET: fakeCredentials.mgmtClientSecret,
+  AMPLITUDE_API_KEY: fakeCredentials.productKey,
+  AMPLITUDE_SECRET_KEY: fakeCredentials.productSecret,
+  AMPLITUDE_ID_SALT: fakeCredentials.idSalt,
+  AMPLITUDE_AI_API_KEY: fakeCredentials.agentKey,
+  AMPLITUDE_AI_SECRET_KEY: fakeCredentials.agentSecret,
+};
 
 /** Sets every provider credential; returns a function restoring the old env. */
 export function setProviderEnv(
