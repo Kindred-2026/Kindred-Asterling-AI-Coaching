@@ -67,6 +67,9 @@ The tracked files are `.env.example`, `.env.dev.example`, and `auth0-deploy/.env
 | `ELEVENLABS_API_KEY` | S; voice API; optional | local secret | unverified | Fly secret if voice used | verify/rotate or remove |
 | `AMPLITUDE_API_KEY` | S; server-side product analytics; optional (unset = no events sent) | local secret | not set | Fly secret if analytics used | add when ready |
 | `AMPLITUDE_ID_SALT` | S; keeps scrambled Amplitude user IDs stable across key rotation; optional | local secret | not set | Fly secret if analytics used | add with key |
+| `SENTRY_DSN` | P; API server Sentry error reporting; optional (unset = off) | not used | not set | App Platform run-time value in `.do/app.yaml` | retain; DSN is a public identifier |
+| `VITE_SENTRY_DSN` | P; browser Sentry error reporting and performance sampling; optional (unset = off) | not used | not set | App Platform `BUILD_TIME` value in `.do/app.yaml` | retain; DSN is a public identifier |
+| `SENTRY_AUTH_TOKEN` | S; uploads frontend and API source maps to Sentry during the Docker build; optional (unset = no upload) | not used | not set | App Platform `BUILD_TIME` secret, synced from Doppler `prd`; build stage only, never in the runtime image | create an org token with source-map upload scope only; revoke/reissue on exposure |
 | `VITE_SOCIAL_WHATSAPP_URL` | P; browser social link; optional | local config | unverified | Fly build | verify/retain |
 | `VITE_SOCIAL_INSTAGRAM_URL` | P; browser social link; optional | local config | unverified | Fly build | verify/retain |
 | `VITE_SOCIAL_THREADS_URL` | P; browser social link; optional | local config | unverified | Fly build | verify/retain |

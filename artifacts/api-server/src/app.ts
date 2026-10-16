@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import express, { type Express } from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -138,5 +139,9 @@ if (process.env.NODE_ENV === "production") {
     res.sendFile(path.join(publicDir, "index.html"));
   });
 }
+
+// Reports unhandled route errors to Sentry, then passes them on to Express's
+// default handler. Does nothing unless instrument.ts initialised Sentry.
+Sentry.setupExpressErrorHandler(app);
 
 export default app;

@@ -55,11 +55,16 @@ services:
       - key: VITE_MARKETING_SITE_URL
         scope: BUILD_TIME
         value: https://kindred-asterling-ai.xyz
-      # Browser error monitoring. A DSN is a public client key, safe to commit.
-      # The server's SENTRY_DSN comes from Doppler prd.
+      # Sentry error monitoring. A DSN is a public client key, safe to commit.
+      # The browser and the server report to separate Sentry projects.
       - key: VITE_SENTRY_DSN
         scope: BUILD_TIME
-        value: https://78f9fdcad26393badd15505a47b4b3b6@o4512266363797504.ingest.us.sentry.io/4512266404429824
+        value: https://b6bbbdb7645800476978dc3d2577252d@o4512266363797504.ingest.us.sentry.io/4512266373038080
+      # Uploads source maps during the build. The encrypted value lives in
+      # App Platform (synced from Doppler prd); the deploy keeps it.
+      - key: SENTRY_AUTH_TOKEN
+        scope: BUILD_TIME
+        type: SECRET
 
       # Database: the managed PostgreSQL cluster below. App Platform fills in
       # the URL (with ?sslmode=require) and the cluster's private CA, which the
@@ -88,6 +93,9 @@ services:
       - key: MARKETING_SITE_URL
         scope: RUN_TIME
         value: https://kindred-asterling-ai.xyz
+      - key: SENTRY_DSN
+        scope: RUN_TIME
+        value: https://78f9fdcad26393badd15505a47b4b3b6@o4512266363797504.ingest.us.sentry.io/4512266404429824
       # Proxy hops in front of the app, so rate limits see the real visitor
       # IP: App Platform's Cloudflare edge, then its load balancer. The
       # workflow's client-IP check fails if this is wrong for App Platform;
