@@ -431,7 +431,7 @@ if (IS_MARKETING_BUILD) {
     "script-src-attr 'none'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https:",
-    "connect-src 'self'",
+    "connect-src 'self' https://*.ingest.us.sentry.io",
     "font-src 'self' https://fonts.gstatic.com",
     "object-src 'none'",
     "frame-ancestors 'none'",

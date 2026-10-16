@@ -2,32 +2,33 @@
 
 Claude Code plugin that bundles the MCP servers used for Kindred-Asterling infrastructure work.
 
+DigitalOcean, Slack, Linear, Figma and Cloudflare are not in this plugin: they are claude.ai organization connectors, which reach every Claude Code session in the org automatically. Auth0 is set up per person with one command. See [docs/claude-connectors.md](../../docs/claude-connectors.md) for the full setup.
+
 | Server       | Command                          | Auth                                                   |
 | ------------ | -------------------------------- | ------------------------------------------------------ |
 | `kubernetes` | `npx -y mcp-server-kubernetes@4.1.7` | Your default kubeconfig (`~/.kube/config` or `$KUBECONFIG`) |
 | `postgres`   | `uvx postgres-mcp==0.3.0` | `database_uri` plugin option (sensitive, see below) |
-| `fly`        | `fly mcp server` (via `scripts/fly-mcp.mjs`) | Your existing `fly auth login` session                 |
+| `github`     | HTTP: `https://api.githubcopilot.com/mcp/` | Your `gh auth login` session, read fresh on each connection (no token stored) |
 | `hello-coop` | HTTP: `https://admin-mcp.hello.coop/` | Hellō account OAuth via `/mcp` (1-hour tokens)    |
 
 ## Prerequisites
 
 - Node.js (for `npx`)
 - [uv](https://docs.astral.sh/uv/) (for `uvx`)
-- [flyctl](https://fly.io/docs/flyctl/install/), logged in with `fly auth login`
+- [GitHub CLI](https://cli.github.com/), logged in with `gh auth login --web`
 
-## Fly wrapper
+## GitHub
 
-`scripts/fly-mcp.mjs` runs `fly mcp server` but rejects the MCP `server/discover` probe. flyctl 0.4.108 advertises protocol 2026-07-28 yet never answers `tools/list` in that mode, so Claude Code timed out fetching its tools. Remove the wrapper once flyctl fixes this.
+The `github` server's `headersHelper` runs `gh auth token` each time Claude Code connects and sends it as the bearer token. Nothing is written to the repo or to Claude Code's settings, and `gh auth logout` cuts the server off. The server gets the same access as your `gh` login (`gh auth status` lists its scopes).
 
-## PostgreSQL through Fly
+## PostgreSQL on DigitalOcean
 
-The staging database is on Fly's private network. Keep a tunnel open while using the `postgres` server:
+The database is the DigitalOcean Managed PostgreSQL cluster `kindred-db` (Toronto). To reach it from your machine:
 
-```bash
-fly mpg proxy w76geop28dnrplk4
-```
+1. In the DigitalOcean dashboard, add your current IP under the cluster's **Trusted sources**.
+2. Use the connection URI of a read-only role, ending in `?sslmode=require`, as the `database_uri` option. Never use the app's own role or the `doadmin` user.
 
-and set the connection URI host to `127.0.0.1:16380`. 
+Remove your IP from Trusted sources when you no longer need access.
 
 ## Pinned versions
 

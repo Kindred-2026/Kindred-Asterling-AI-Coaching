@@ -7,7 +7,7 @@
     {
       "name": "kindred-mcp",
       "source": "./plugins/kindred-mcp",
-      "description": "MCP servers for Kindred-Asterling infrastructure: Kubernetes, PostgreSQL, Fly.io, and Hello.coop app admin."
+      "description": "MCP servers for Kindred-Asterling infrastructure: Kubernetes, PostgreSQL, GitHub, and Hello.coop app admin."
     }
   ]
 }

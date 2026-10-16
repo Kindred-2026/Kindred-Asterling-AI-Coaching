@@ -1,6 +1,6 @@
 # Privacy Policy
 
-> **Superseded working draft.** The published text is in `artifacts/kindred-coach/src/pages/public/legal.tsx` (version 1.2, effective October 17, 2026), with matching PDFs in `artifacts/kindred-coach/public/legal-documents/`. This file is kept for history; where it differs from the published text, the published text applies.
+> **Superseded working draft.** The published text is in `artifacts/kindred-coach/src/pages/public/legal.tsx` (version 1.3, effective October 17, 2026), with matching PDFs in `artifacts/kindred-coach/public/legal-documents/`. This file is kept for history; where it differs from the published text, the published text applies.
 
 **Status:** Approved — not legal advice
 **Last repository review:** October 5, 2026
