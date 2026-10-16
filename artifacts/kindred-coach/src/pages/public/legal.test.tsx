@@ -47,4 +47,16 @@ describe("approved legal documents", () => {
     const pdf = readFileSync(`${process.cwd()}/public/legal-documents/${filename}`);
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
   });
+
+  it("describes account deletion as cancelling Yearly billing", () => {
+    const privacy = renderToStaticMarkup(<PrivacyPolicy />);
+    const terms = renderToStaticMarkup(<TermsAndConditions />);
+
+    expect(privacy).toContain("we cancel any Yearly renewal with Helcim before anything is deleted");
+    expect(privacy).toContain("email our Privacy Officer and we will delete them within 30 days");
+    expect(terms).toContain("Deleting your Kindred account cancels renewal with Helcim automatically");
+    expect(`${privacy}${terms}`).not.toMatch(
+      /does not (by itself )?cancel (a Yearly subscription|renewal)/,
+    );
+  });
 });

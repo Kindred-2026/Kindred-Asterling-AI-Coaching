@@ -98,7 +98,9 @@ export function AccountData() {
           <p>
             Delete your Kindred account? Your check-ins, chats, habits,
             medications, reminders and reports are removed permanently and
-            cannot be recovered. Download your data first if you want a copy.
+            cannot be recovered. Any Yearly renewal is cancelled first, so you
+            won’t be charged again. Download your data first if you want a
+            copy.
           </p>
           <button
             className="mr-4 rounded-lg bg-destructive px-4 py-2 text-destructive-foreground"

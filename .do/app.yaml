@@ -131,6 +131,14 @@ services:
         scope: RUN_TIME
         value: "2026-10-12T00:00:00-04:00"
 
+      # Optional: only used if AUTH0_MGMT_CLIENT_ID/SECRET are added in the
+      # dashboard, so account deletion also removes the Auth0 user. The
+      # Management API answers on the tenant's canonical domain, not the custom
+      # sign-in domain in AUTH0_DOMAIN.
+      - key: AUTH0_MGMT_DOMAIN
+        scope: RUN_TIME
+        value: dev-4c281gnuylq4hccq.ca.auth0.com
+
       # Secrets: values are entered in the dashboard (Settings > web >
       # Environment Variables, with Encrypt ticked), never here.
       - key: ANTHROPIC_API_KEY

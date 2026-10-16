@@ -29,6 +29,9 @@ The tracked files are `.env.example`, `.env.dev.example`, and `auth0-deploy/.env
 | `TRUST_PROXY_HOPS` | N; Express proxy trust; optional, default 1; set 2 behind the proxied Cloudflare domain | local config | unverified | Fly config | verify/retain |
 | `AUTH0_DOMAIN` | P; API JWT issuer / CORS; required in production | local config | existing container runtime; presence verified 2026-09-26 | Fly secret; deployed staging 2026-09-26 | verify/retain |
 | `AUTH0_AUDIENCE` | P; API JWT audience; required in production | local config | existing container runtime; presence verified 2026-09-26 | Fly secret; deployed staging 2026-09-26 | verify/retain |
+| `AUTH0_MGMT_DOMAIN` | P; Auth0 tenant canonical domain for the Management API (account deletion); defaults to `AUTH0_DOMAIN`, which is the custom sign-in domain in production | local config | not set | App Platform plain value in `.do/app.yaml` | add |
+| `AUTH0_MGMT_CLIENT_ID` | P; Auth0 machine-to-machine application with `delete:users` only; optional; when set with the secret, account deletion also removes the Auth0 user | local config | not set | App Platform secret if used | optional |
+| `AUTH0_MGMT_CLIENT_SECRET` | S; secret for that application; optional | local secret | not set | App Platform secret if used | optional |
 | `VITE_AUTH0_DOMAIN` | P; browser Auth0 tenant; required by frontend build validator | local config | existing public build/runtime configuration verified | Fly secret store plus explicit public BuildKit input; staging build passed | verify/retain |
 | `VITE_AUTH0_CLIENT_ID` | P; browser Auth0 public client ID; required by frontend build validator | local config | existing public build/runtime configuration verified | Fly secret store plus explicit public BuildKit input; staging build passed | verify/retain |
 | `VITE_AUTH0_AUDIENCE` | P; browser API audience; required by frontend build validator | local config | existing public build/runtime configuration verified | Fly secret store plus explicit public BuildKit input; staging build passed | verify/retain |
@@ -67,6 +70,8 @@ The tracked files are `.env.example`, `.env.dev.example`, and `auth0-deploy/.env
 | `ELEVENLABS_API_KEY` | S; voice API; optional | local secret | unverified | Fly secret if voice used | verify/rotate or remove |
 | `AMPLITUDE_API_KEY` | S; server-side product analytics; optional (unset = no events sent) | local secret | not set | Fly secret if analytics used | add when ready |
 | `AMPLITUDE_ID_SALT` | S; keeps scrambled Amplitude user IDs stable across key rotation; optional | local secret | not set | Fly secret if analytics used | add with key |
+| `AMPLITUDE_SECRET_KEY` | S; product analytics project secret key for the User Privacy API (account deletion); optional | local secret | not set | App Platform secret if used | optional |
+| `AMPLITUDE_AI_SECRET_KEY` | S; Agent Analytics project secret key for the User Privacy API; optional, only when `AMPLITUDE_AI_API_KEY` names a different project | local secret | not set | App Platform secret if used | optional |
 | `SENTRY_DSN` | P; API server Sentry error reporting; optional (unset = off) | not used | not set | App Platform run-time value in `.do/app.yaml` | retain; DSN is a public identifier |
 | `VITE_SENTRY_DSN` | P; browser Sentry error reporting and performance sampling; optional (unset = off) | not used | not set | App Platform `BUILD_TIME` value in `.do/app.yaml` | retain; DSN is a public identifier |
 | `SENTRY_AUTH_TOKEN` | S; uploads frontend and API source maps to Sentry during the Docker build; optional (unset = no upload) | not used | not set | App Platform `BUILD_TIME` secret, synced from Doppler `prd`; build stage only, never in the runtime image | create an org token with source-map upload scope only; revoke/reissue on exposure |
@@ -92,7 +97,9 @@ cutover.
 | --- | --- | --- |
 | `MONGODB_URI` | Application database read/write on the Kindred database only; no cluster administration. Migration/restore jobs use separate source-read and target-write identities. | Proposed; verify provider grant |
 | `OPENAI_API_KEY` | Inference for the selected project/model only; no organization administration, billing, or key management. | Proposed; verify provider grant |
-| `HELCIM_API_KEY` | Only the checkout, customer, subscription, and portal operations exercised by the API; no account administration if Helcim supports narrower credentials. | Proposed; verify provider grant |
+| `HELCIM_API_KEY` | Only the checkout, customer, subscription (including subscription read and delete, used when an account is deleted), and portal operations exercised by the API; no account administration if Helcim supports narrower credentials. | Proposed; verify provider grant |
+| `AUTH0_MGMT_CLIENT_SECRET` | Management API `delete:users` only, on a dedicated machine-to-machine application. | Optional; create only if used |
+| `AMPLITUDE_SECRET_KEY`, `AMPLITUDE_AI_SECRET_KEY` | Project secret key; Amplitude has no narrower scope for the User Privacy API. Keep server-side only. | Provider limitation |
 | `HELCIM_WEBHOOK_SECRET` | Signature verification for Kindred's configured webhook endpoint only. | Endpoint-specific shared secret; verify rotation |
 | `HELCIM_CUSTOMER_REFERENCE_SECRET` | Local HMAC signing/verification for stable customer references; no provider API access. | App-only secret; verify rotation compatibility |
 | `RESEND_API_KEY` | Send email from the verified Kindred sender/domain only; no account, domain, or API-key administration. | Proposed; verify provider grant |

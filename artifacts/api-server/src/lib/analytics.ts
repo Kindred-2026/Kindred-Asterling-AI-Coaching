@@ -39,13 +39,19 @@ export function pseudonymousUserId(userId: string, salt: string): string {
   return createHmac("sha256", salt).update(userId).digest("hex").slice(0, 32);
 }
 
+/** The ID product events are sent under. Requires AMPLITUDE_API_KEY. */
+export function analyticsUserId(userId: string): string {
+  const apiKey = process.env.AMPLITUDE_API_KEY!.trim();
+  const salt = process.env.AMPLITUDE_ID_SALT?.trim() || apiKey;
+  return pseudonymousUserId(userId, salt);
+}
+
 async function send(
   userId: string,
   eventType: AnalyticsEvent,
   properties?: EventProperties,
 ): Promise<void> {
   const apiKey = process.env.AMPLITUDE_API_KEY!.trim();
-  const salt = process.env.AMPLITUDE_ID_SALT?.trim() || apiKey;
   try {
     const res = await fetch(API_URL, {
       method: "POST",
@@ -54,7 +60,7 @@ async function send(
         api_key: apiKey,
         events: [
           {
-            user_id: pseudonymousUserId(userId, salt),
+            user_id: analyticsUserId(userId),
             event_type: eventType,
             time: Date.now(),
             insert_id: randomUUID(),
