@@ -13,6 +13,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { CheckoutButton } from "@/components/checkout-button";
+import { marketingHref } from "@/lib/site";
 
 const YEARLY_FEATURES = [
   "Full access to Kindred, your AI companion",
@@ -24,14 +25,14 @@ const YEARLY_FEATURES = [
 
 const LIFETIME_FEATURES = [
   "Everything in the yearly plan",
-  "One payment, lifetime access",
-  "All future features included",
+  "One payment, access for the life of the service",
+  "Future core-plan features included",
   "Support the pilot directly",
 ];
 
 const TRUST = [
   { icon: Lock, label: "Private by design — your reflections stay yours" },
-  { icon: ShieldCheck, label: "Secure checkout with end-to-end encryption" },
+  { icon: ShieldCheck, label: "Secure checkout through Helcim" },
   { icon: HeartHandshake, label: "A companion to care, never a replacement" },
 ];
 
@@ -74,7 +75,7 @@ export default function Pricing() {
                 <span className="font-serif text-4xl font-medium text-foreground">
                   $49.99
                 </span>
-                <span className="text-muted-foreground">/ year</span>
+                <span className="text-muted-foreground">CAD / year</span>
               </div>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col px-7 pb-7">
@@ -103,12 +104,12 @@ export default function Pricing() {
             </div>
             <CardHeader className="p-7 pb-5">
               <CardTitle className="font-serif text-2xl">Lifetime</CardTitle>
-              <CardDescription>One payment. Forever.</CardDescription>
+              <CardDescription>One payment. No renewals.</CardDescription>
               <div className="mt-2 flex items-baseline gap-1">
                 <span className="font-serif text-4xl font-medium text-foreground">
                   $79.99
                 </span>
-                <span className="text-muted-foreground">once</span>
+                <span className="text-muted-foreground">CAD once</span>
               </div>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col px-7 pb-7">
@@ -129,6 +130,18 @@ export default function Pricing() {
             </CardContent>
           </Card>
         </div>
+        <p className="mx-auto mt-6 max-w-2xl text-center text-xs leading-relaxed text-muted-foreground">
+          Prices in Canadian dollars, plus applicable taxes. The Yearly plan
+          renews automatically each year until you cancel. Full refund on
+          request within 30 days of your first payment. See the{" "}
+          <a
+            href={marketingHref("/legal/terms")}
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            Terms
+          </a>{" "}
+          for what Lifetime Access covers.
+        </p>
       </section>
 
       <section className="bg-muted/55">
