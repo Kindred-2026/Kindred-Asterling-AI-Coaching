@@ -1,0 +1,26 @@
+{
+  "extraKnownMarketplaces": {
+    "composio": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/ComposioHQ/composio-plugin-cc.git"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "composio@composio": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/composio-setup.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
