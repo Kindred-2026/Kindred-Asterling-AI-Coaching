@@ -156,6 +156,40 @@ interface ConvWithMessages {
   messages: { role: string; content: string }[];
 }
 
+interface CrisisTurn extends ConvWithMessages {
+  crisisSupport: {
+    type: string;
+    message: string;
+    disclaimer: string;
+    resources: { id: string; contacts: { kind: string; href: string }[] }[];
+    falsePositive: { label: string; instruction: string };
+    reviewedConfigVersion: string;
+  };
+}
+
+function expectCrisisSupportShape(support: CrisisTurn["crisisSupport"]) {
+  expect(support.type).toBe("crisis_support");
+  expect(support.message).toContain("not medical care or an emergency service");
+  expect(support.disclaimer).toBeTypeOf("string");
+  expect(support.falsePositive.label).toBe("This doesn’t apply");
+  expect(support.reviewedConfigVersion).toBeTypeOf("string");
+  expect(support.resources.map((r) => r.id)).toEqual([
+    "emergency",
+    "ca-988",
+    "us-988",
+    "international",
+  ]);
+  const hrefs = support.resources.flatMap((r) => r.contacts.map((c) => c.href));
+  expect(hrefs).toEqual(
+    expect.arrayContaining([
+      "tel:911",
+      "tel:988",
+      "sms:988",
+      "https://findahelpline.com/",
+    ]),
+  );
+}
+
 async function quotaCount(userId: string): Promise<number> {
   const today = new Date().toISOString().split("T")[0];
   const [result] = await db
@@ -311,38 +345,64 @@ describe("GET /chat/active", () => {
 });
 
 describe("POST /chat/send", () => {
-  it("returns the fixed crisis response without calling the AI provider or spending quota", async () => {
+  it("stores the user turn and the crisis_support reply without calling the AI provider or spending quota", async () => {
+    const quotaBefore = await quotaCount(userAId);
     const res = await api("POST", "/chat/send", {
       token: tokenA,
       body: { content: "I want to kill myself" },
     });
     expect(res.status).toBe(200);
     expect(createMock).not.toHaveBeenCalled();
+    expect(await quotaCount(userAId)).toBe(quotaBefore);
 
-    const safety = res.body as {
-      type: string;
-      message: string;
-      falsePositive: { label: string };
-      regionSelector: { id: string }[];
+    const body = res.body as CrisisTurn;
+    expectCrisisSupportShape(body.crisisSupport);
+
+    // The response is the updated conversation: the user's message, then
+    // Kindred's crisis_support message carrying the same text.
+    expect(body.messages.map((m) => [m.role, m.content])).toEqual([
+      ["user", "I want to kill myself"],
+      ["crisis_support", body.crisisSupport.message],
+    ]);
+
+    // Both turns are persisted, owned by the caller, and come back on reload.
+    const stored = await messagesForUser(userAId);
+    expect(stored.map((m) => m.role).sort()).toEqual([
+      "crisis_support",
+      "user",
+    ]);
+    const active = (await api("GET", "/chat/active", { token: tokenA }))
+      .body as ConvWithMessages;
+    expect(active.messages.map((m) => m.role)).toEqual([
+      "user",
+      "crisis_support",
+    ]);
+  });
+
+  it("sends a stored crisis_support message to the model as Kindred's own turn", async () => {
+    await api("POST", "/chat/send", {
+      token: tokenA,
+      body: { content: "I want to kill myself" },
+    });
+    mockReplyOnce("Thank you for telling me.");
+    const res = await api("POST", "/chat/send", {
+      token: tokenA,
+      body: { content: "I called 988, thank you" },
+    });
+    expect(res.status).toBe(200);
+    expect((res.body as { crisisSupport?: unknown }).crisisSupport).toBe(
+      undefined,
+    );
+
+    const sent = createMock.mock.calls[0]?.[0] as {
+      messages: { role: string; content: string }[];
     };
-    expect(safety.type).toBe("crisis_support");
-    expect(safety.message).toContain("local emergency services");
-    expect(safety.message).toContain(
-      "not medical care or an emergency service",
-    );
-    expect(safety.falsePositive.label).toBe("This doesn’t apply");
-    expect(safety.regionSelector).toContainEqual(
-      expect.objectContaining({ id: "international" }),
-    );
-
-    const quotaRows = await db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.userId, userAId));
-    expect(quotaRows).toHaveLength(0);
-
-    const storedMessages = await messagesForUser(userAId);
-    expect(storedMessages).toHaveLength(0);
+    expect(sent.messages.map((m) => m.role)).toEqual([
+      "user",
+      "assistant",
+      "user",
+    ]);
+    expect(sent.messages[1].content).toContain("9-8-8");
   });
 
   it("persists the user turn and the assistant reply for the owner", async () => {
@@ -758,6 +818,45 @@ describe("POST /chat/append", () => {
       .from(conversations)
       .where(eq(conversations.id, conv.id));
     expect(row.userId).toBe(userAId);
+  });
+
+  it("screens onboarding answers and stores the crisis_support reply after them", async () => {
+    const res = await api("POST", "/chat/append", {
+      token: tokenA,
+      body: { role: "user", content: "honestly I think about suicide a lot" },
+    });
+    expect(res.status).toBe(200);
+    expect(createMock).not.toHaveBeenCalled();
+
+    const body = res.body as CrisisTurn;
+    expectCrisisSupportShape(body.crisisSupport);
+    expect(body.messages.map((m) => [m.role, m.content])).toEqual([
+      ["user", "honestly I think about suicide a lot"],
+      ["crisis_support", body.crisisSupport.message],
+    ]);
+    expect((await messagesForUser(userAId)).map((m) => m.role).sort()).toEqual(
+      ["crisis_support", "user"],
+    );
+  });
+
+  it("does not screen scripted assistant prompts or ordinary answers", async () => {
+    const prompt = await api("POST", "/chat/append", {
+      token: tokenA,
+      body: { role: "assistant", content: "If you ever feel suicidal, say so." },
+    });
+    const answer = await api("POST", "/chat/append", {
+      token: tokenA,
+      body: { role: "user", content: "I'm not suicidal, just tired" },
+    });
+    for (const res of [prompt, answer]) {
+      expect(res.status).toBe(200);
+      expect((res.body as { crisisSupport?: unknown }).crisisSupport).toBe(
+        undefined,
+      );
+    }
+    expect((await messagesForUser(userAId)).map((m) => m.role).sort()).toEqual(
+      ["assistant", "user"],
+    );
   });
 
   it("does not return a message with another owner even under the same conversation", async () => {

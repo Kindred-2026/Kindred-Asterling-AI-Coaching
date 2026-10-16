@@ -10,6 +10,7 @@ import {
   archiveActiveChat,
   updateProfile,
   type ChatMessage,
+  type ChatTurnResponse,
   type AuthUser,
 } from "@workspace/api-client-react";
 import { useGetCurrentAuthUser } from "@workspace/api-client-react";
@@ -18,6 +19,7 @@ import { Send, Archive, Loader2, History } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { SpeakButton } from "@/components/speak-button";
 import { QueryErrorState } from "@/components/query-error-state";
+import { CrisisSupportCard } from "@/components/crisis-support-card";
 
 const TEXTAREA_MAX_HEIGHT_PX = 160;
 
@@ -62,7 +64,30 @@ const ONBOARDING: OnboardingStep[] = [
   },
 ];
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+// The server stores a crisis_support message after a user turn that matched
+// its crisis detector; return its id so the card can be announced.
+function crisisMessageId(turn: ChatTurnResponse): number | null {
+  if (!turn.crisisSupport) return null;
+  const last = [...turn.messages]
+    .reverse()
+    .find((m) => m.role === "crisis_support");
+  return last?.id ?? null;
+}
+
+function MessageBubble({
+  message,
+  live,
+}: {
+  message: ChatMessage;
+  live: boolean;
+}) {
+  if (message.role === "crisis_support") {
+    return (
+      <div className="flex flex-col items-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <CrisisSupportCard live={live} />
+      </div>
+    );
+  }
   const isUser = message.role === "user";
   // Only offer "read aloud" on Kindred's real, persisted replies — skip the
   // virtual onboarding bubble (negative id) which has no server message yet.
@@ -119,6 +144,7 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [liveCrisisId, setLiveCrisisId] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const onboarded = !!authUser?.onboardedAt;
@@ -182,7 +208,9 @@ export default function Chat() {
         // can't leave the chat showing an answer that wasn't saved.
         const value = text;
         await updateProfile({ [currentStep.key]: value });
-        await appendChatMessage({ role: "user", content: text });
+        const answer = await appendChatMessage({ role: "user", content: text });
+        const crisisId = crisisMessageId(answer);
+        if (crisisId !== null) setLiveCrisisId(crisisId);
         // Determine next step from the updated profile
         const updatedUser: AuthUser = {
           ...(authUser as AuthUser),
@@ -207,7 +235,9 @@ export default function Chat() {
         await qc.invalidateQueries({ queryKey: getGetActiveChatQueryKey() });
       } else {
         try {
-          await sendChatMessage({ content: text });
+          const turn = await sendChatMessage({ content: text });
+          const crisisId = crisisMessageId(turn);
+          if (crisisId !== null) setLiveCrisisId(crisisId);
         } catch (err: unknown) {
           // Server didn't persist the user message? It did — /chat/send
           // saves the user turn before calling Ollama, so refetch so the
@@ -301,7 +331,7 @@ export default function Chat() {
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 pr-1">
         {messages.map((m) => (
-          <MessageBubble key={m.id} message={m} />
+          <MessageBubble key={m.id} message={m} live={m.id === liveCrisisId} />
         ))}
         {sending && (
           <div className="flex justify-start">

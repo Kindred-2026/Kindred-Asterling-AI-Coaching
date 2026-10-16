@@ -29,14 +29,15 @@ import type {
   ChatConversation,
   ChatConversationWithMessages,
   ChatSendInput,
+  ChatTurnResponse,
   CheckoutLink,
   CreateCheckoutInput,
   EveningReport,
   EveningReportInput,
   GetMedicationWeeklyReportParams,
-  GetTodaySummaryParams,
-  GetStreaksParams,
   GetMoodTrendParams,
+  GetStreaksParams,
+  GetTodaySummaryParams,
   Habit,
   HabitEntry,
   HabitEntryInput,
@@ -1888,11 +1889,12 @@ export const getSendChatMessageUrl = () => {
 }
 
 /**
+ * When the crisis detector matches the message, the AI is not called and no daily quota is used. The user message and a fixed `crisis_support` message are stored, and the response carries `crisisSupport`.
  * @summary Append a user message and get the AI response
  */
-export const sendChatMessage = async (chatSendInput: ChatSendInput, options?: Parameters<typeof customFetch>[1]): Promise<ChatConversationWithMessages> => {
+export const sendChatMessage = async (chatSendInput: ChatSendInput, options?: Parameters<typeof customFetch>[1]): Promise<ChatTurnResponse> => {
 
-  return customFetch<ChatConversationWithMessages>(getSendChatMessageUrl(),
+  return customFetch<ChatTurnResponse>(getSendChatMessageUrl(),
   {
     ...options,
     method: 'POST',
@@ -1959,11 +1961,12 @@ export const getAppendChatMessageUrl = () => {
 }
 
 /**
+ * User messages are screened by the same crisis detector as /chat/send. On a match a fixed `crisis_support` message is stored after the user message and the response carries `crisisSupport`.
  * @summary Append a pre-composed message without invoking the AI (used by onboarding script)
  */
-export const appendChatMessage = async (chatAppendInput: ChatAppendInput, options?: Parameters<typeof customFetch>[1]): Promise<ChatConversationWithMessages> => {
+export const appendChatMessage = async (chatAppendInput: ChatAppendInput, options?: Parameters<typeof customFetch>[1]): Promise<ChatTurnResponse> => {
 
-  return customFetch<ChatConversationWithMessages>(getAppendChatMessageUrl(),
+  return customFetch<ChatTurnResponse>(getAppendChatMessageUrl(),
   {
     ...options,
     method: 'POST',
