@@ -83,6 +83,8 @@ release. See [docs/release-rollback.md](docs/release-rollback.md).
 
 ## Documentation
 
+- [docs/claude-connectors.md](docs/claude-connectors.md) — connecting Claude to
+  DigitalOcean, GitHub, Auth0 and the team's other services (per-person checklist)
 - [docs/devin-workspaces.md](docs/devin-workspaces.md) — local (Devin CLI/Desktop)
   and cloud Devin workspace profiles; `pnpm workspace:check` smoke test
 - [docs/local-development.md](docs/local-development.md) — first-run setup, env

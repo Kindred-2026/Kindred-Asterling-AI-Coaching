@@ -16,9 +16,10 @@
         "DATABASE_URI": "${user_config.database_uri}"
       }
     },
-    "fly": {
-      "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/fly-mcp.mjs"]
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headersHelper": "printf '{\"Authorization\":\"Bearer %s\"}' \"$(gh auth token)\""
     },
     "hello-coop": {
       "type": "http",
