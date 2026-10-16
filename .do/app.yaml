@@ -55,6 +55,11 @@ services:
       - key: VITE_MARKETING_SITE_URL
         scope: BUILD_TIME
         value: https://kindred-asterling-ai.xyz
+      # Browser error monitoring. A DSN is a public client key, safe to commit.
+      # The server's SENTRY_DSN comes from Doppler prd.
+      - key: VITE_SENTRY_DSN
+        scope: BUILD_TIME
+        value: https://78f9fdcad26393badd15505a47b4b3b6@o4512266363797504.ingest.us.sentry.io/4512266404429824
 
       # Database: the managed PostgreSQL cluster below. App Platform fills in
       # the URL (with ?sslmode=require) and the cluster's private CA, which the
