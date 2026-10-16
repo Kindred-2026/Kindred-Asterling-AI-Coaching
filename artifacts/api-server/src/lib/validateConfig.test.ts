@@ -152,6 +152,48 @@ describe("Auth0 production configuration", () => {
   });
 });
 
+describe("account deletion production configuration", () => {
+  function productionEnv(): void {
+    baseEnv();
+    process.env.NODE_ENV = "production";
+    process.env.APP_PUBLIC_URL = "https://app.example.com";
+    process.env.SUBSCRIPTION_OWNER_IDS = "owner1";
+    process.env.RESEND_API_KEY = "re_test";
+    process.env.RESEND_FROM_EMAIL = "test@example.com";
+    process.env.AUTH0_DOMAIN = "auth.example.com";
+    process.env.AUTH0_AUDIENCE = "https://api.example.com";
+    process.env.AUTH0_MGMT_CLIENT_ID = "mgmt-client";
+    process.env.AUTH0_MGMT_CLIENT_SECRET = "mgmt-secret";
+    for (const name of [
+      "AMPLITUDE_API_KEY",
+      "AMPLITUDE_SECRET_KEY",
+      "AMPLITUDE_AI_API_KEY",
+      "AMPLITUDE_AI_SECRET_KEY",
+    ]) {
+      delete process.env[name];
+    }
+  }
+
+  it("requires Auth0 Management API credentials to delete Auth0 users", () => {
+    productionEnv();
+    expect(validateRuntimeConfig).not.toThrow();
+    delete process.env.AUTH0_MGMT_CLIENT_SECRET;
+    expect(validateRuntimeConfig).toThrow(/AUTH0_MGMT_CLIENT_SECRET/);
+  });
+
+  it("requires a secret key for each Amplitude project that receives data", () => {
+    productionEnv();
+    process.env.AMPLITUDE_API_KEY = "product-key";
+    process.env.AMPLITUDE_AI_API_KEY = "agent-key";
+    expect(validateRuntimeConfig).toThrow(
+      /AMPLITUDE_SECRET_KEY, AMPLITUDE_AI_SECRET_KEY/,
+    );
+    process.env.AMPLITUDE_SECRET_KEY = "product-secret";
+    process.env.AMPLITUDE_AI_API_KEY = "product-key";
+    expect(validateRuntimeConfig).not.toThrow();
+  });
+});
+
 describe("OpenAI base URL validation", () => {
   function openaiBaseEnv(): void {
     baseEnv();
@@ -169,6 +211,8 @@ describe("OpenAI base URL validation", () => {
     process.env.RESEND_FROM_EMAIL = "test@example.com";
     process.env.AUTH0_DOMAIN = "auth.example.com";
     process.env.AUTH0_AUDIENCE = "https://api.example.com";
+    process.env.AUTH0_MGMT_CLIENT_ID = "mgmt-client";
+    process.env.AUTH0_MGMT_CLIENT_SECRET = "mgmt-secret";
   }
 
   it("rejects invalid URL format for OPENAI_BASE_URL", () => {

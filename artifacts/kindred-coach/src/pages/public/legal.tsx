@@ -101,8 +101,8 @@ function renderLegacyContent(content: ReactNode | LegalBlock): ReactNode {
 }
 
 /** Bump both whenever any published legal text changes. */
-export const LEGAL_VERSION = "1.1";
-export const LEGAL_EFFECTIVE_DATE = "October 16, 2026";
+export const LEGAL_VERSION = "1.2";
+export const LEGAL_EFFECTIVE_DATE = "October 17, 2026";
 
 function LegalPage({
   published = false,
@@ -303,11 +303,11 @@ const privacySections: LegalSection[] = [
       list([
         "Download a copy of your data at any time with \"Download my data\" in the app, or ask us for access to the personal information we hold about you and how it has been used and disclosed.",
         "Correct your information in the app, or ask us to correct it.",
-        "Delete your account in the app. This immediately deletes your account and everything stored with it from our live database.",
+        "Delete your account in the app. This cancels any Yearly renewal, immediately deletes your account and everything stored with it from our live database, and removes your records at Auth0 and Amplitude, as described below.",
         "Withdraw consent to optional processing, such as text-message reminders or voice features, by turning them off in the app.",
       ]),
       callout(
-        `Before you delete your account: deleting your account does not cancel a Yearly subscription with Helcim. Cancel renewal first from the billing link in your Profile, or email ${SUPPORT_EMAIL}. Deleting your account also does not automatically remove your sign-in record at Auth0 or analytics records at Amplitude; email our Privacy Officer and we will delete them within 30 days.`,
+        `When you delete your account:\nBilling stops first. We cancel any Yearly renewal with Helcim before anything is deleted, so you will not be charged again. If we cannot reach Helcim to cancel it, nothing is deleted and the app asks you to try again; you can also email ${SUPPORT_EMAIL}.\n\nYour sign-in record at Auth0 is deleted, and we send Amplitude a request to delete the analytics linked to you. If Auth0 or Amplitude cannot be reached, we retry automatically and otherwise complete the removal ourselves, within 30 days either way.\n\nDeleting your account ends your access right away. It does not by itself refund a payment (see Refunds in our Terms), and Helcim keeps payment and transaction records as described in section 6.`,
       ),
       paragraph(
         `To make a request, email our Privacy Officer at ${PRIVACY_EMAIL}. We will confirm your identity and respond within 30 days. If you are not satisfied with our response, you can complain to the Office of the Information and Privacy Commissioner of Alberta (oipc.ab.ca) or, where federal law applies, the Office of the Privacy Commissioner of Canada (priv.gc.ca).`,
@@ -383,7 +383,7 @@ const termsSections: LegalSection[] = [
         "A Yearly plan renews automatically every year and is charged to your saved payment method at the start of each renewal year, until you cancel.",
         "If the yearly price changes, we will email you at least 30 days before the renewal that the new price applies to.",
         `You can cancel renewal at any time from the billing link in your Profile, or by emailing ${SUPPORT_EMAIL}. Cancelling stops future renewals; you keep access until the end of the year you paid for.`,
-        "Deleting your Kindred account does not by itself cancel renewal with Helcim. Cancel renewal first.",
+        `Deleting your Kindred account cancels renewal with Helcim automatically before anything is deleted, so you will not be charged again, and ends your access right away. If the cancellation cannot be completed, your account is not deleted; try again, or email ${SUPPORT_EMAIL}.`,
       ]),
       subheading("C. 30-Day Refund"),
       paragraph(

@@ -19,6 +19,15 @@ environment variables documented in `.env.example`:
 - `AUTH0_DOMAIN`
 - `AUTH0_AUDIENCE`
 
+The API server also needs the **Kindred Account Deletion** machine-to-machine
+application declared in `local/tenant.yaml`. Its only grant is the Management
+API `delete:users` scope, which account deletion uses to remove the user's
+Auth0 record. After importing, copy its client ID and secret into the runtime
+`AUTH0_MGMT_CLIENT_ID` and `AUTH0_MGMT_CLIENT_SECRET`, and set
+`AUTH0_MGMT_DOMAIN` to the tenant's canonical domain
+(`dev-4c281gnuylq4hccq.ca.auth0.com`), because the Management API does not
+answer on the custom sign-in domain.
+
 The API audience configured by this export is
 `https://kindred-asterling-ai-coaching.com/api`.
 

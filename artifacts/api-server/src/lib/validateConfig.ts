@@ -63,6 +63,17 @@ export function validateRuntimeConfig(): void {
     requireValue("RESEND_FROM_EMAIL");
     requireValue("AUTH0_DOMAIN");
     requireValue("AUTH0_AUDIENCE");
+    // Account deletion removes the Auth0 user and the user's Amplitude data,
+    // as the Privacy Policy promises; it cannot without these credentials.
+    requireValue("AUTH0_MGMT_CLIENT_ID");
+    requireValue("AUTH0_MGMT_CLIENT_SECRET");
+    if (process.env.AMPLITUDE_API_KEY?.trim()) {
+      requireValue("AMPLITUDE_SECRET_KEY");
+    }
+    const agentKey = process.env.AMPLITUDE_AI_API_KEY?.trim();
+    if (agentKey && agentKey !== process.env.AMPLITUDE_API_KEY?.trim()) {
+      requireValue("AMPLITUDE_AI_SECRET_KEY");
+    }
   }
 
   if (process.env.HELCIM_PAYMENTS_ENABLED === "true") {

@@ -29,6 +29,9 @@ The tracked files are `.env.example`, `.env.dev.example`, and `auth0-deploy/.env
 | `TRUST_PROXY_HOPS` | N; Express proxy trust; optional, default 1; set 2 behind the proxied Cloudflare domain | local config | unverified | Fly config | verify/retain |
 | `AUTH0_DOMAIN` | P; API JWT issuer / CORS; required in production | local config | existing container runtime; presence verified 2026-09-26 | Fly secret; deployed staging 2026-09-26 | verify/retain |
 | `AUTH0_AUDIENCE` | P; API JWT audience; required in production | local config | existing container runtime; presence verified 2026-09-26 | Fly secret; deployed staging 2026-09-26 | verify/retain |
+| `AUTH0_MGMT_DOMAIN` | P; Auth0 tenant canonical domain for the Management API (account deletion); defaults to `AUTH0_DOMAIN`, which is the custom sign-in domain in production | local config | not set | App Platform plain value in `.do/app.yaml` | add |
+| `AUTH0_MGMT_CLIENT_ID` | P; "Kindred Account Deletion" Auth0 machine-to-machine application; required in production (account deletion removes the Auth0 user) | local config | not set | App Platform secret | add before deploying account-deletion change |
+| `AUTH0_MGMT_CLIENT_SECRET` | S; secret for that application; required in production | local secret | not set | App Platform secret | add before deploying account-deletion change |
 | `VITE_AUTH0_DOMAIN` | P; browser Auth0 tenant; required by frontend build validator | local config | existing public build/runtime configuration verified | Fly secret store plus explicit public BuildKit input; staging build passed | verify/retain |
 | `VITE_AUTH0_CLIENT_ID` | P; browser Auth0 public client ID; required by frontend build validator | local config | existing public build/runtime configuration verified | Fly secret store plus explicit public BuildKit input; staging build passed | verify/retain |
 | `VITE_AUTH0_AUDIENCE` | P; browser API audience; required by frontend build validator | local config | existing public build/runtime configuration verified | Fly secret store plus explicit public BuildKit input; staging build passed | verify/retain |
@@ -67,6 +70,8 @@ The tracked files are `.env.example`, `.env.dev.example`, and `auth0-deploy/.env
 | `ELEVENLABS_API_KEY` | S; voice API; optional | local secret | unverified | Fly secret if voice used | verify/rotate or remove |
 | `AMPLITUDE_API_KEY` | S; server-side product analytics; optional (unset = no events sent) | local secret | not set | Fly secret if analytics used | add when ready |
 | `AMPLITUDE_ID_SALT` | S; keeps scrambled Amplitude user IDs stable across key rotation; optional | local secret | not set | Fly secret if analytics used | add with key |
+| `AMPLITUDE_SECRET_KEY` | S; product analytics project secret key for the User Privacy API (account deletion); required in production when `AMPLITUDE_API_KEY` is set | local secret | not set | App Platform secret with the key | add with key |
+| `AMPLITUDE_AI_SECRET_KEY` | S; Agent Analytics project secret key for the User Privacy API; required in production when `AMPLITUDE_AI_API_KEY` names a different project | local secret | not set | App Platform secret with the key | add with key |
 | `VITE_SOCIAL_WHATSAPP_URL` | P; browser social link; optional | local config | unverified | Fly build | verify/retain |
 | `VITE_SOCIAL_INSTAGRAM_URL` | P; browser social link; optional | local config | unverified | Fly build | verify/retain |
 | `VITE_SOCIAL_THREADS_URL` | P; browser social link; optional | local config | unverified | Fly build | verify/retain |
@@ -89,7 +94,9 @@ cutover.
 | --- | --- | --- |
 | `MONGODB_URI` | Application database read/write on the Kindred database only; no cluster administration. Migration/restore jobs use separate source-read and target-write identities. | Proposed; verify provider grant |
 | `OPENAI_API_KEY` | Inference for the selected project/model only; no organization administration, billing, or key management. | Proposed; verify provider grant |
-| `HELCIM_API_KEY` | Only the checkout, customer, subscription, and portal operations exercised by the API; no account administration if Helcim supports narrower credentials. | Proposed; verify provider grant |
+| `HELCIM_API_KEY` | Only the checkout, customer, subscription (including subscription read and delete, used when an account is deleted), and portal operations exercised by the API; no account administration if Helcim supports narrower credentials. | Proposed; verify provider grant |
+| `AUTH0_MGMT_CLIENT_SECRET` | Management API `delete:users` only, on the dedicated "Kindred Account Deletion" application declared in `auth0-deploy/local/tenant.yaml`. | Declared in tenant config; verify after import |
+| `AMPLITUDE_SECRET_KEY`, `AMPLITUDE_AI_SECRET_KEY` | Project secret key; Amplitude has no narrower scope for the User Privacy API. Keep server-side only. | Provider limitation |
 | `HELCIM_WEBHOOK_SECRET` | Signature verification for Kindred's configured webhook endpoint only. | Endpoint-specific shared secret; verify rotation |
 | `HELCIM_CUSTOMER_REFERENCE_SECRET` | Local HMAC signing/verification for stable customer references; no provider API access. | App-only secret; verify rotation compatibility |
 | `RESEND_API_KEY` | Send email from the verified Kindred sender/domain only; no account, domain, or API-key administration. | Proposed; verify provider grant |

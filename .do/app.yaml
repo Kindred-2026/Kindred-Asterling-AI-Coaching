@@ -118,6 +118,12 @@ services:
         scope: RUN_TIME
         value: "2026-10-12T00:00:00-04:00"
 
+      # The Auth0 Management API answers on the tenant's canonical domain,
+      # not the custom sign-in domain in AUTH0_DOMAIN.
+      - key: AUTH0_MGMT_DOMAIN
+        scope: RUN_TIME
+        value: dev-4c281gnuylq4hccq.ca.auth0.com
+
       # Secrets: values are entered in the dashboard (Settings > web >
       # Environment Variables, with Encrypt ticked), never here.
       - key: ANTHROPIC_API_KEY
@@ -127,6 +133,14 @@ services:
         scope: RUN_TIME
         type: SECRET
       - key: AUTH0_AUDIENCE
+        scope: RUN_TIME
+        type: SECRET
+      # Account deletion: the "Kindred Account Deletion" Auth0 application
+      # (delete:users only). Production refuses to start without both.
+      - key: AUTH0_MGMT_CLIENT_ID
+        scope: RUN_TIME
+        type: SECRET
+      - key: AUTH0_MGMT_CLIENT_SECRET
         scope: RUN_TIME
         type: SECRET
       - key: RESEND_API_KEY
