@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { logger } from "./logger";
+import { ProviderRequestError, providerHttpError } from "./retry";
 
 const API_ROOT = "https://api.helcim.com/v2";
 
@@ -206,4 +207,66 @@ export async function getHelcimCustomerEmail(
     logger.error({ err }, "Helcim customer lookup failed");
     return null;
   }
+}
+
+export type HelcimCancellationOutcome =
+  | "cancelled"
+  | "already_gone"
+  | "not_customer_subscription";
+
+function helcimRequestHeaders(): Record<string, string> {
+  return { "api-token": apiKey(), Accept: "application/json" };
+}
+
+/**
+ * Stops a customer's recurring billing by deleting the Helcim subscription.
+ * The stored ID can come from a webhook's generic `data.id`, so it is first
+ * confirmed to be a subscription belonging to `customerCode`; another
+ * customer's subscription is never deleted. A missing one is already stopped.
+ */
+export async function cancelHelcimSubscription(
+  subscriptionId: string,
+  customerCode: string | null,
+): Promise<HelcimCancellationOutcome> {
+  if (!/^[A-Za-z0-9_.-]{1,64}$/.test(subscriptionId)) {
+    throw new ProviderRequestError(
+      "Helcim subscription ID is malformed",
+      null,
+      false,
+    );
+  }
+  const url = `${API_ROOT}/subscriptions/${encodeURIComponent(subscriptionId)}`;
+  const lookup = await fetch(url, {
+    headers: helcimRequestHeaders(),
+    signal: AbortSignal.timeout(20_000),
+  });
+  if (lookup.status === 404) return "already_gone";
+  if (!lookup.ok)
+    throw providerHttpError("Helcim subscription lookup", lookup.status);
+  const json = (await lookup.json().catch(() => ({}))) as Record<
+    string,
+    unknown
+  >;
+  const body = json.data ?? json;
+  const subscription = (Array.isArray(body) ? (body[0] ?? {}) : body) as Record<
+    string,
+    unknown
+  >;
+  const owners = [subscription.customerCode, subscription.customerId]
+    .filter((value) => typeof value === "string" || typeof value === "number")
+    .map(String);
+  // If Helcim does not say who owns it, cancel anyway: leaving a user billed
+  // after they deleted their account is the worse failure.
+  if (customerCode && owners.length > 0 && !owners.includes(customerCode)) {
+    return "not_customer_subscription";
+  }
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: helcimRequestHeaders(),
+    signal: AbortSignal.timeout(20_000),
+  });
+  if (response.status === 404) return "already_gone";
+  if (!response.ok)
+    throw providerHttpError("Helcim subscription cancellation", response.status);
+  return "cancelled";
 }
