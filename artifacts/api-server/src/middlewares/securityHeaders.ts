@@ -14,7 +14,8 @@ export function securityHeaders(auth0Origins: string[] = []) {
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", ...auth0Origins],
+        // Sentry error reports and replays from the browser.
+        connectSrc: ["'self'", ...auth0Origins, "https://*.ingest.us.sentry.io"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         objectSrc: ["'none'"],
         frameAncestors: ["'none'"],

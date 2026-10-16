@@ -100,6 +100,10 @@ function renderLegacyContent(content: ReactNode | LegalBlock): ReactNode {
   return content;
 }
 
+/** Bump both whenever any published legal text changes. */
+export const LEGAL_VERSION = "1.2";
+export const LEGAL_EFFECTIVE_DATE = "October 16, 2026";
+
 function LegalPage({
   published = false,
   title,
@@ -109,8 +113,11 @@ function LegalPage({
   sections,
 }: LegalPageProps) {
   const metadata = [
-    ["Version", published ? "1.0" : "1.0 (Final Review Draft)"],
-    ["Date", "August 24, 2026"],
+    [
+      "Version",
+      published ? LEGAL_VERSION : `${LEGAL_VERSION} (Final Review Draft)`,
+    ],
+    ["Effective date", LEGAL_EFFECTIVE_DATE],
     ...(governingLaw ? [["Governing law", governingLaw]] : []),
     ["Sole proprietor", "Landon Syroid d/b/a Kindred Asterling AI Coaching"],
     [
@@ -180,122 +187,154 @@ function LegalPage({
   );
 }
 
+const PRIVACY_EMAIL = "kindredaicoach@gmail.com";
+const SUPPORT_EMAIL = "kindred_support@kindred-asterling-ai-coaching.com";
+const MAILING_ADDRESS =
+  "202 - 10249 119 ST NW, Edmonton, AB T5K 2Y6, Canada";
+
+const contactList = list([
+  `Privacy Officer (privacy questions, access and deletion requests): Landon Syroid, ${PRIVACY_EMAIL}`,
+  `Customer and account support, billing and refunds: ${SUPPORT_EMAIL}`,
+  `Mailing address: ${MAILING_ADDRESS}`,
+]);
+
 const privacySections: LegalSection[] = [
   {
-    heading: "1. Organization & Privacy Officer",
+    heading: "1. Who We Are & How to Reach Our Privacy Officer",
     blocks: [
       paragraph(
-        'Kindred Asterling AI Coaching ("Kindred", "we", "us", or "our") is an Alberta sole proprietorship owned and operated by Landon Syroid, located in Edmonton, Alberta, Canada.',
+        'Kindred Asterling AI Coaching ("Kindred", "we", "us", or "our") is an Alberta sole proprietorship owned and operated by Landon Syroid in Edmonton, Alberta, Canada. Landon Syroid is our Privacy Officer and is responsible for how we handle personal information.',
       ),
       paragraph(
-        "We are dedicated to safeguarding your personal privacy and adhering strictly to the Alberta Personal Information Protection Act (PIPA, SA 2003, c P-6.5), the Canadian federal Personal Information Protection and Electronic Documents Act (PIPEDA, SC 2000, c 5), and international data protection standards.",
+        "We handle personal information under the Alberta Personal Information Protection Act (PIPA, SA 2003, c P-6.5) and, where it applies, the federal Personal Information Protection and Electronic Documents Act (PIPEDA, SC 2000, c 5). This policy applies to the Kindred web app at kindred-asterling-ai-coaching.com and to our website at kindred-asterling-ai.xyz.",
       ),
-      subheading("Designated Privacy Officer Contact:"),
-      list([
-        "Privacy Inquiries & Access Requests: kindredaicoach@gmail.com",
-        "Customer & Account Support: kindred_support@kindred-asterling-ai-coaching.com",
-        "Mailing Address: 202 - 10249 119 ST NW, Edmonton, AB T5K 2Y6, Canada",
-      ]),
+      contactList,
     ],
   },
   {
     heading: "2. Personal Information We Collect",
     blocks: [
       paragraph(
-        "We collect and process only the personal information strictly necessary to provide and operate the Service:",
+        "We collect the information you give us and a small amount of technical information needed to run the Service:",
       ),
       list(
         [
-          "Account & Authentication Data: Email address, user identification tokens, account verification status, and name provided through our authentication partner, Auth0.",
-          "Wellness, Reflection & Coaching Data: Self-submitted morning check-ins, evening reflections, mood scores, body scan notes, habit records, medication logs, personal goals, and chat interactions with the coaching AI.",
-          "Former Calendar Integration: Kindred no longer connects to Google Calendar or retrieves event information. Encrypted connection tokens saved before the integration was removed can no longer be decrypted or used, are deleted with your account, and will be deleted from all accounts.",
-          "Subscription & Transaction Data: Payment references, plan tiers (Yearly or Lifetime Access), and transaction IDs processed securely through Helcim. We do not store or process raw credit card numbers.",
-          "Operational & Security Telemetry: Server access logs, security events, quota tracking, and application error logs.",
+          "Account information: your email address, name, email verification status, and sign-in identifiers from our sign-in provider, Auth0. If you sign in with Google, Google shares your name, email address and profile picture with us.",
+          "Profile and onboarding information: your preferred name and, if you choose to give them, your birthday, a short bio, and what you share about your struggles, strengths and interests.",
+          "Wellness and coaching information: morning check-ins, evening reflections, mood scores, body scan notes, habits, medication names, doses, schedules and notes, personal goals, journal entries, and your conversations with the AI coach. Some of this is health information, which we treat as sensitive.",
+          "Voice recordings: if you use voice features, the audio you record is sent for transcription and the coach's reply may be turned into speech. We do not keep the audio after it is transcribed.",
+          "Reminder settings: the reminders you set up, your timezone, and, if you turn on text-message reminders, your mobile phone number. We keep a record of reminders sent.",
+          "Subscription and beta information: your plan (Yearly or Lifetime Access), payment references and transaction IDs from our payment processor, Helcim, and, if you joined the beta, your beta access record. We never see or store your full card number.",
+          "Usage and technical information: a daily count of chat messages (to apply the daily message limit), security events, error logs, and error reports and performance samples sent to our error-monitoring provider. Your IP address is used briefly to limit abusive traffic; our application logs do not record your IP address or the content of your entries.",
         ],
         true,
       ),
-    ],
-  },
-  {
-    heading: "3. Purposes for Processing Personal Information",
-    blocks: [
       paragraph(
-        "We collect and process your personal information strictly for the following purposes:",
-      ),
-      list([
-        "Delivering automated coaching dialogue, reflection prompts, and habit summaries.",
-        "Personalizing conversational coaching pacing using interaction-scoped context minimization.",
-        "Processing subscription payments, managing accounts, and preventing abuse or security breaches.",
-        "Complying with Canadian accounting, tax, and statutory requirements.",
-      ]),
-      paragraph(
-        "AI Training Exclusion: We do not sell your personal information. Personal wellness data, reflection logs, and coaching interactions are never used to train public or foundational machine learning models.",
+        "You choose what wellness information to enter. Most profile and wellness fields are optional, and you can edit or delete them at any time.",
       ),
     ],
   },
   {
-    heading: "4. Third-Party Service Providers & Cross-Border Data Transfers",
+    heading: "3. Why We Use Your Information",
     blocks: [
-      paragraph(
-        "To deliver our secure cloud platform, personal information may be transferred to and processed by vetted third-party service providers. In accordance with Section 13.1 of Alberta PIPA, please note that personal data transferred across provincial or international borders may be accessible to foreign regulatory or law enforcement authorities under lawful orders in the jurisdictions where those facilities are located:",
-      ),
       list([
-        "AI Processing: Anthropic (USA) - Claude models generate coaching replies through the Anthropic API. Where requests are routed through Cloudflare AI Gateway, request payload logging and response caching are turned off.",
-        "Cloud Hosting & Database: DigitalOcean (Toronto, ON, Canada) - application hosting and managed PostgreSQL database.",
-        "Network & Security: Cloudflare (Global) - DNS, TLS, and network protection.",
-        "Authentication & Identity: Auth0 (USA / Global) - secure session management.",
-        "Payment Processing: Helcim (Calgary, AB, Canada) - PCI-DSS compliant checkout and subscription billing.",
-        "Communications: Resend (transactional email), Twilio (SMS reminders, where enabled), and ElevenLabs (voice synthesis, where enabled).",
-        "Product Analytics: Amplitude (USA) - receives the names of actions you take in the app, such as completing a morning check-in, sent from our servers under a scrambled identifier. It never receives your name, email, notes, chat messages, medication details or other health information.",
-      ]),
-    ],
-  },
-  {
-    heading: "5. Google API Services User Data Policy & Limited Use",
-    blocks: [
-      paragraph(
-        "Kindred's use and transfer to any other app of information received from Google APIs adheres strictly to the Google API Services User Data Policy, including the Limited Use requirements:",
-      ),
-      list([
-        "Integration Removed: Kindred no longer connects to Google Calendar, retrieves events, or supplies calendar information to coaching.",
-        "No Secondary Marketing or AI Training: Google user data is never sold, transferred to data brokers, used for advertising, or used to train general-purpose AI models.",
-        "Removing Access: You can remove Kindred from the third-party connections in your Google Account at any time.",
-      ]),
-    ],
-  },
-  {
-    heading: "6. Retention Schedules, Access & Deletion Rights",
-    blocks: [
-      subheading("A. Retention Periods"),
-      list([
-        "Active Account & Coaching Records: Retained for the duration of your active account lifecycle.",
-        "Server Backups: Automated encrypted backups are retained on a rolling 35-day cycle.",
-        "Administrative & Security Logs: Retained for up to 12 months for security auditing.",
-        "Billing & Transaction Records: Retained for up to 7 years to satisfy Canada Revenue Agency (CRA) tax obligations.",
-      ]),
-      subheading("B. Individual Rights Under Alberta PIPA"),
-      paragraph(
-        "Under Alberta PIPA and Canadian privacy legislation, you have the right to:",
-      ),
-      list([
-        "Access and inspect the personal information we hold about you.",
-        "Request corrections to inaccurate or incomplete personal records.",
-        "Request account deletion and complete erasure of your coaching history.",
-        "Withdraw consent for optional processing (e.g., SMS reminders, marketing emails).",
+        "To provide the coaching chat, check-ins, reflections, habit and medication tracking, and progress views you ask for.",
+        "To personalize coaching replies using the parts of your history that relate to what you are talking about (see our AI Use Disclosure).",
+        "To send the reminders you set up by email or text message.",
+        "To manage your account, beta access and subscription, and to process payments and refunds.",
+        "To keep the Service secure, prevent abuse, and fix problems.",
+        "To understand how features are used so we can improve them (see Product Analytics in section 4).",
+        "To meet our legal, tax and accounting obligations.",
       ]),
       paragraph(
-        "To exercise any of these rights, submit a written request to our Privacy Officer at kindredaicoach@gmail.com. We respond to verified requests within thirty (30) days in compliance with statutory timelines.",
+        "We do not sell your personal information, and we do not use it for advertising. We do not use your wellness information or conversations to train AI models. Under Anthropic's commercial terms, Anthropic does not use requests sent through its API to train its models.",
       ),
     ],
   },
   {
-    heading: "7. Security Measures & Breach Notification",
+    heading: "4. Service Providers & Storage Outside Canada",
     blocks: [
       paragraph(
-        "We employ industry-standard administrative, physical, and technical safeguards, including TLS 1.3 encryption in transit, AES-256 encryption at rest for OAuth tokens, role-based access restrictions, and automated vulnerability monitoring.",
+        "We use the service providers below. Each receives only the information it needs for its task. Some are located outside Canada, mainly in the United States. Information stored or processed outside Canada is subject to the laws of that country and may be accessed by its courts, law enforcement and national security authorities.",
+      ),
+      list([
+        "Hosting and database - DigitalOcean (Toronto, Ontario, Canada): runs the Kindred app and stores your account in a managed PostgreSQL database.",
+        "AI coaching - Anthropic (United States): Claude models generate coaching replies. The message you send, recent conversation history and the related wellness information described in our AI Use Disclosure are sent to Anthropic for each reply. Anthropic's commercial API terms govern how long it keeps these requests.",
+        "Sign-in - Auth0 by Okta (Canadian region): account sign-in and session security.",
+        "Payments - Helcim (Calgary, Alberta, Canada): checkout, subscription billing and refunds.",
+        "Email - Resend (United States): account emails and email reminders.",
+        "Text messages - Twilio (United States): text-message reminders, only if you turn them on.",
+        "Voice - ElevenLabs (United States): speech-to-text and text-to-speech, only when you use voice features.",
+        "Website and network - Cloudflare (global network): DNS for the app domain, and hosting of our website at kindred-asterling-ai.xyz, including request logs for that website.",
+        "Web fonts - Google Fonts (United States): pages load fonts from Google, which receives your IP address and browser details when a page loads.",
+        "Error monitoring - Sentry (United States): when something goes wrong in the app or on our servers, Sentry receives an error report, and a sample of performance data: the error message and where in our code it happened, the page or API route involved, your browser, operating system and device type, and timing information. We configure Sentry not to store IP addresses, the content of your entries or chat messages, or request bodies, and error reports are not linked to your name or email address.",
+        "Product analytics - Amplitude (United States): our servers report actions such as \"Morning Check-in Completed\" or \"Habit Logged\" under a scrambled identifier, with no name, email or entry content. Where our coaching-chat analytics are switched on, Amplitude also receives the text of chat messages and coaching replies, with automated redaction of personal identifiers, and the names of the information the coach looked up (for example, medication status), linked to your account ID.",
+      ]),
+      paragraph(
+        `You can ask our Privacy Officer at ${PRIVACY_EMAIL} for written information about how we use service providers outside Canada, or any question about them.`,
+      ),
+    ],
+  },
+  {
+    heading: "5. Google Sign-In & Former Google Calendar Integration",
+    blocks: [
+      list([
+        "Google sign-in: if you sign in with Google, we receive only your basic profile (name, email address, profile picture). Our use of information received from Google APIs follows the Google API Services User Data Policy, including its Limited Use requirements. It is never sold, used for advertising, or used to train AI models.",
+        "Calendar removed: Kindred no longer connects to Google Calendar. Connection tokens saved before the integration was removed can no longer be decrypted or used, and they are deleted.",
+        "You can remove Kindred from the third-party connections in your Google Account at any time.",
+      ]),
+    ],
+  },
+  {
+    heading: "6. How Long We Keep Information",
+    blocks: [
+      list([
+        "Account, profile, wellness and coaching information: until you delete it or delete your account.",
+        "Reminder delivery records and daily message counts: while your account is open.",
+        "Database backups: kept by our hosting provider for no more than 35 days. Deleted information may remain in a backup until that backup expires; we do not restore deleted accounts from backups.",
+        "Server and security logs: no more than 12 months.",
+        "Error reports and performance data held by Sentry: no more than 90 days.",
+        "Payment and transaction records held by Helcim: as long as tax and accounting law requires, up to 7 years.",
+      ]),
+    ],
+  },
+  {
+    heading: "7. Your Rights: Access, Correction, Export & Deletion",
+    blocks: [
+      paragraph("You can:"),
+      list([
+        "Download a copy of your data at any time with \"Download my data\" in the app, or ask us for access to the personal information we hold about you and how it has been used and disclosed.",
+        "Correct your information in the app, or ask us to correct it.",
+        "Delete your account in the app. This immediately deletes your account and everything stored with it from our live database.",
+        "Withdraw consent to optional processing, such as text-message reminders or voice features, by turning them off in the app.",
+      ]),
+      callout(
+        `Before you delete your account: deleting your account does not cancel a Yearly subscription with Helcim. Cancel renewal first from the billing link in your Profile, or email ${SUPPORT_EMAIL}. Deleting your account also does not automatically remove your sign-in record at Auth0 or analytics records at Amplitude; email our Privacy Officer and we will delete them within 30 days.`,
       ),
       paragraph(
-        "In the event of a security incident involving personal information that poses a real risk of significant harm, we will promptly notify affected individuals and the Office of the Information and Privacy Commissioner of Alberta (OIPC) in compliance with Section 34.1 of Alberta PIPA.",
+        `To make a request, email our Privacy Officer at ${PRIVACY_EMAIL}. We will confirm your identity and respond within 30 days. If you are not satisfied with our response, you can complain to the Office of the Information and Privacy Commissioner of Alberta (oipc.ab.ca) or, where federal law applies, the Office of the Privacy Commissioner of Canada (priv.gc.ca).`,
+      ),
+    ],
+  },
+  {
+    heading: "8. Security & Breach Notification",
+    blocks: [
+      paragraph(
+        "We protect information with encryption in transit (HTTPS), a managed database that our hosting provider encrypts at rest, access to production data limited to the proprietor, and automated scanning of our software dependencies for known vulnerabilities. No system is perfectly secure.",
+      ),
+      paragraph(
+        "If a loss of or unauthorized access to personal information creates a real risk of significant harm, we will notify the Information and Privacy Commissioner of Alberta without unreasonable delay, as section 34.1 of PIPA requires, and we will notify the people affected.",
+      ),
+    ],
+  },
+  {
+    heading: "9. Age & Changes to This Policy",
+    blocks: [
+      paragraph(
+        "Kindred is only for adults aged 18 and older. We do not knowingly collect personal information from anyone under 18; if we learn we have, we delete it.",
+      ),
+      paragraph(
+        "When we change this policy, we update the version and effective date at the top of this page. If a change materially affects how we use information we already hold, we will tell you by email or in the app before it takes effect.",
       ),
     ],
   },
@@ -306,181 +345,205 @@ const termsSections: LegalSection[] = [
     heading: "1. Agreement to Terms & Eligibility",
     blocks: [
       paragraph(
-        'These Terms and Conditions ("Terms") constitute a legally binding agreement between you ("User", "you", or "your") and Landon Syroid, operating as Kindred Asterling AI Coaching ("Kindred", "we", "us", or "our"), governing your access to and use of the Kindred web application and associated services (the "Service").',
+        'These Terms and Conditions ("Terms") are an agreement between you and Landon Syroid, operating as Kindred Asterling AI Coaching ("Kindred", "we", "us", or "our"), for the Kindred web app and related services (the "Service").',
       ),
       paragraph(
-        "By registering an account, accessing, or using the Service, you acknowledge that you have read, understood, and agree to be bound by these Terms and our Privacy Policy. If you do not agree to these Terms, you must not access or use the Service.",
+        "By creating an account or using the Service, you agree to these Terms. Our Privacy Policy explains how we handle your personal information. If you do not agree, do not use the Service.",
       ),
       paragraph(
-        "Age Requirement (Adults 18+ Only): You must be at least eighteen (18) years of age to create an account or use the Service. By accessing the Service, you represent and warrant that you are at least 18 years old. Minors are strictly prohibited from creating accounts or using the Service.",
+        "You must be at least 18 years old to create an account or use the Service.",
       ),
     ],
   },
   {
-    heading: "2. Service Description & Non-Clinical Coaching",
+    heading: "2. What Kindred Is & Is Not",
     blocks: [
       paragraph(
-        "Kindred provides automated, artificial intelligence-assisted personal coaching, daily reflection journaling, habit tracking, and progress visualization tools.",
+        "Kindred provides AI-assisted personal coaching, reflection journaling, habit and medication tracking, reminders, and progress views. Coaching replies are written by an AI system, not a person.",
       ),
       callout(
-        "IMPORTANT NOTICE - NO PROFESSIONAL ADVICE: THE SERVICE IS AN INFORMATIONAL WELLNESS AND PERSONAL DEVELOPMENT TOOL ONLY. KINDRED IS NOT A HEALTHCARE PROVIDER, MENTAL HEALTH CLINIC, PSYCHIATRIC FACILITY, OR FINANCIAL ADVISOR. CONTENT AND OUTPUTS GENERATED BY THE SERVICE DO NOT CONSTITUTE MEDICAL, PSYCHOLOGICAL, LEGAL, OR FINANCIAL ADVICE, AND ARE NOT A SUBSTITUTE FOR EVALUATION BY A LICENSED PROFESSIONAL.",
+        "IMPORTANT: KINDRED IS A WELLNESS AND PERSONAL DEVELOPMENT TOOL. IT IS NOT A HEALTHCARE PROVIDER, THERAPIST, CRISIS SERVICE, OR FINANCIAL ADVISOR, AND IT DOES NOT PROVIDE MEDICAL, PSYCHOLOGICAL, LEGAL, OR FINANCIAL ADVICE. IF YOU ARE IN CRISIS OR DANGER, CALL 911, OR CALL OR TEXT 9-8-8 IN CANADA OR THE UNITED STATES. SEE OUR HEALTH INFORMATION DISCLAIMER.",
       ),
-    ],
-  },
-  {
-    heading: "3. Subscriptions, Pricing, Lifetime Access & Refunds",
-    blocks: [
-      subheading("A. Pricing & Billing"),
       list([
-        "Payment Processing: All subscription fees (e.g., $49.99 CAD/year) and one-time fees (e.g., $79.99 CAD Lifetime Access) are processed securely through Helcim. All fees are denominated in Canadian Dollars (CAD) unless otherwise indicated, plus applicable sales taxes (e.g., GST).",
-        "Annual Subscriptions: Annual plans renew automatically at the end of each billing cycle unless cancelled prior to the renewal date.",
+        "AI output can be wrong, incomplete or inappropriate. Use your own judgment and check important information with a qualified professional.",
+        "Daily message limit: to keep the Service available for everyone, coaching chat is limited to a number of messages per day (currently 100). We may change this limit.",
+        "Beta access: during our beta, some accounts receive free access. Beta access may change, be limited to a set number of people, or end, and beta features may be incomplete.",
       ]),
-      subheading("B. 30-Day Cancellation & Refund Policy"),
+    ],
+  },
+  {
+    heading: "3. Plans, Billing, Cancellation & Refunds",
+    blocks: [
+      subheading("A. Prices & Payment"),
+      list([
+        "Plans: Yearly ($49.99 CAD per year) and Lifetime Access ($79.99 CAD, one payment). Prices are in Canadian dollars and do not include applicable sales taxes, which are added at checkout.",
+        "Payments are processed by Helcim. We never see or store your full card number.",
+        "The price, taxes and plan terms shown at checkout apply to your purchase. After you buy, you will receive a receipt by email.",
+      ]),
+      subheading("B. Yearly Plans Renew Automatically"),
+      list([
+        "A Yearly plan renews automatically every year and is charged to your saved payment method at the start of each renewal year, until you cancel.",
+        "If the yearly price changes, we will email you at least 30 days before the renewal that the new price applies to.",
+        `You can cancel renewal at any time from the billing link in your Profile, or by emailing ${SUPPORT_EMAIL}. Cancelling stops future renewals; you keep access until the end of the year you paid for.`,
+        "Deleting your Kindred account does not by itself cancel renewal with Helcim. Cancel renewal first.",
+      ]),
+      subheading("C. 30-Day Refund"),
       paragraph(
-        "You may cancel your initial subscription purchase within thirty (30) calendar days of purchase to receive a full refund. Refund requests should be submitted to kindred_support@kindred-asterling-ai-coaching.com.",
+        `If you are not satisfied, you can ask for a full refund within 30 days of your first Yearly payment or your Lifetime Access payment. Email ${SUPPORT_EMAIL}. We refund to your original payment method within 15 days of approving the request. This does not limit any refund or cancellation right you have under the consumer protection law where you live.`,
       ),
-      subheading('C. Definition of "Lifetime Access"'),
+      subheading('D. What "Lifetime Access" Means'),
       paragraph(
-        '"Lifetime Access" refers to access to the core features of the Kindred platform for the commercial operational lifespan of the software service. It does not guarantee perpetual operation in perpetuity. In the event of planned service discontinuation or platform retirement, Kindred will provide registered Lifetime Access holders with at least sixty (60) calendar days\' advance written notice via email.',
+        '"Lifetime Access" means access to Kindred\'s core features, including features we add to the core plan later, for as long as we operate the Service. It is tied to the life of the Service, not your lifetime. If we decide to shut down the Service, we will email Lifetime Access holders at least 60 days before it closes, and you will be able to download your data before then.',
       ),
     ],
   },
   {
-    heading: "4. Acceptable Use Policy",
+    heading: "4. Acceptable Use",
     blocks: [
       paragraph("You agree not to:"),
       list([
-        "Use the Service for any unlawful, harassing, defamatory, fraudulent, or harmful purpose.",
-        "Reverse-engineer, decompile, crawl, or attempt to extract source code or underlying AI models.",
-        "Interfere with or disrupt the integrity, security, or performance of our cloud infrastructure.",
-        "Input confidential or personal health data belonging to third parties without lawful authorization.",
-        "Rely upon AI-generated outputs for emergency, medical, psychiatric, or life-critical decisions.",
+        "Use the Service for anything unlawful, harassing, defamatory, fraudulent or harmful.",
+        "Reverse-engineer, decompile, scrape or crawl the Service, or try to extract its source code or prompts.",
+        "Interfere with the security or performance of the Service, or get around the daily message limit or other limits.",
+        "Enter another person's health or confidential information without their permission.",
+        "Share your account with someone else.",
+        "Rely on AI output for emergency, medical, psychiatric or other life-critical decisions.",
       ]),
     ],
   },
   {
-    heading: "5. Intellectual Property Rights",
+    heading: "5. Your Content & Our Intellectual Property",
     blocks: [
       list([
-        "Platform Ownership: Kindred, its software, branding, user interfaces, documentation, and algorithms are the proprietary property of Landon Syroid and are protected by Canadian and international intellectual property laws.",
-        "User Inputs & Data: You retain full ownership of the text, journal entries, and personal data you input into the Service. You grant Kindred a limited, non-exclusive, royalty-free license solely to host, process, and display such data as technically necessary to operate and deliver the Service.",
+        "Your content: you own what you enter into the Service. You give Kindred a limited, non-exclusive, royalty-free licence to host, process and display it only as needed to run the Service for you and as described in our Privacy Policy. This licence ends when you delete the content or your account, except for copies that remain in backups until they expire.",
+        "AI replies: you may use the coaching replies you receive for your own personal purposes.",
+        "Kindred: the software, design, branding and documentation of the Service belong to Landon Syroid and are protected by intellectual property laws.",
       ]),
     ],
   },
   {
-    heading: "6. Disclaimer of Warranties",
+    heading: "6. Suspension & Ending the Agreement",
     blocks: [
-      callout(
-        'TO THE MAXIMUM EXTENT PERMITTED UNDER THE LAWS OF THE PROVINCE OF ALBERTA AND APPLICABLE CANADIAN LAW, THE SERVICE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE. KINDRED EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, SECURE, OR ACCURATE.',
-      ),
-    ],
-  },
-  {
-    heading: "7. Limitation of Liability",
-    blocks: [
-      callout(
-        "TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL KINDRED, ITS PROPRIETOR, CONTRACTORS, OR SUPPLIERS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES (INCLUDING LOSS OF PROFITS, DATA, GOODWILL, OR PERSONAL INJURY) ARISING OUT OF OR IN CONNECTION WITH YOUR USE OF OR INABILITY TO USE THE SERVICE.",
-      ),
-      paragraph(
-        "OUR TOTAL AGGREGATE LIABILITY ARISING OUT OF OR RELATING TO THESE TERMS OR THE SERVICE SHALL NOT EXCEED THE GREATER OF:",
-      ),
-      list(
-        [
-          "THE TOTAL AMOUNT ACTUALLY PAID BY YOU TO KINDRED IN THE TWELVE (12) MONTHS IMMEDIATELY PRECEDING THE EVENT GIVING RISE TO LIABILITY; OR",
-          "FIFTY CANADIAN DOLLARS ($50.00 CAD).",
-        ],
-        true,
-      ),
-      paragraph(
-        "NOTHING IN THESE TERMS EXCLUDES OR LIMITS ANY MANDATORY CONSUMER RIGHTS THAT CANNOT BE CONTRACTUALLY WAIVED UNDER THE ALBERTA CONSUMER PROTECTION ACT (RSA 2000, c C-26.3).",
-      ),
-    ],
-  },
-  {
-    heading: "8. Dispute Resolution & Governing Law",
-    blocks: [
-      subheading("A. Mandatory Informal Resolution"),
-      paragraph(
-        "Before initiating any formal legal claim, you agree to contact us at kindred_support@kindred-asterling-ai-coaching.com and attempt in good faith to resolve the dispute informally for at least thirty (30) days.",
-      ),
-      subheading("B. Governing Law & Forum Selection"),
-      paragraph(
-        "These Terms, your use of the Service, and any disputes arising hereunder shall be governed by and construed in accordance with the laws of the Province of Alberta and the federal laws of Canada applicable therein, without regard to conflict of law principles.",
-      ),
-      paragraph(
-        "Subject to mandatory consumer protection laws, you irrevocably submit to the exclusive personal and subject-matter jurisdiction of the Courts of the Judicial District of Edmonton in the Province of Alberta, Canada.",
-      ),
-    ],
-  },
-  {
-    heading: "9. Contact Information",
-    blocks: [
-      paragraph("For inquiries regarding these Terms:"),
       list([
-        "Legal & Support Email: kindred_support@kindred-asterling-ai-coaching.com",
-        "Privacy Officer Email: kindredaicoach@gmail.com",
-        "Mailing Address: 202 - 10249 119 ST NW, Edmonton, AB T5K 2Y6, Canada",
+        "You can stop using the Service at any time and delete your account from the app.",
+        "We may suspend or close an account that seriously or repeatedly breaks these Terms, or where needed to protect people or the Service. Where reasonable, we will tell you first and give you a chance to fix the problem and download your data.",
+        "If we close a paid account without cause, we will refund the unused part of a Yearly plan, or a fair share of a Lifetime Access payment.",
       ]),
     ],
+  },
+  {
+    heading: "7. Disclaimer of Warranties",
+    blocks: [
+      callout(
+        'TO THE EXTENT THE LAW ALLOWS, THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. WE DO NOT PROMISE THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE OR ACCURATE. SOME LAWS, INCLUDING CONSUMER PROTECTION LAWS, DO NOT ALLOW THESE WARRANTIES TO BE EXCLUDED; WHERE THEY APPLY, THIS SECTION DOES NOT.',
+      ),
+    ],
+  },
+  {
+    heading: "8. Limitation of Liability",
+    blocks: [
+      callout(
+        "TO THE EXTENT THE LAW ALLOWS, KINDRED, ITS PROPRIETOR, CONTRACTORS AND SUPPLIERS ARE NOT LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY OR PUNITIVE DAMAGES, OR FOR LOST PROFITS, DATA OR GOODWILL, ARISING FROM YOUR USE OF OR INABILITY TO USE THE SERVICE.",
+      ),
+      paragraph(
+        "TO THE EXTENT THE LAW ALLOWS, OUR TOTAL LIABILITY FOR ALL CLAIMS RELATING TO THE SERVICE OR THESE TERMS IS LIMITED TO THE GREATER OF (1) THE AMOUNT YOU PAID US IN THE 12 MONTHS BEFORE THE EVENT THAT GAVE RISE TO THE CLAIM, OR (2) FIFTY CANADIAN DOLLARS ($50.00 CAD).",
+      ),
+      paragraph(
+        "NOTHING IN THESE TERMS LIMITS OR EXCLUDES LIABILITY FOR DEATH OR PERSONAL INJURY CAUSED BY NEGLIGENCE, FOR FRAUD OR WILFUL MISCONDUCT, OR ANY RIGHT YOU HAVE UNDER CONSUMER PROTECTION LAW THAT CANNOT BE WAIVED, INCLUDING UNDER THE ALBERTA CONSUMER PROTECTION ACT (RSA 2000, c C-26.3).",
+      ),
+    ],
+  },
+  {
+    heading: "9. Disputes & Governing Law",
+    blocks: [
+      subheading("A. Talk to Us First"),
+      paragraph(
+        `Before starting a legal claim, please contact us at ${SUPPORT_EMAIL} and give us 30 days to try to resolve the problem. This does not stop you from contacting a consumer protection agency, and it does not apply to urgent claims or limitation deadlines.`,
+      ),
+      subheading("B. Governing Law & Courts"),
+      paragraph(
+        "These Terms are governed by the laws of the Province of Alberta and the federal laws of Canada that apply there. Disputes will be heard by the courts of Alberta sitting in Edmonton, including the Alberta Court of Justice for smaller claims.",
+      ),
+      paragraph(
+        "If you are a consumer and the law where you live gives you the right to have that law apply or to bring a claim in your local courts, these Terms do not take that right away.",
+      ),
+    ],
+  },
+  {
+    heading: "10. Changes to These Terms & General",
+    blocks: [
+      list([
+        "We may update these Terms. We will post the new version with a new effective date and, for changes that materially affect you, email you at least 30 days before they take effect. If you do not agree, you can cancel and stop using the Service before the change takes effect; if you are within a paid period, you can ask for a refund of the unused part of a Yearly plan.",
+        "If any part of these Terms is found unenforceable, the rest still applies.",
+        "These Terms, the Privacy Policy and the documents they refer to are the whole agreement between you and Kindred about the Service.",
+        "You may not transfer your account or these Terms. We may transfer them to a business that takes over the Service, and we will tell you if we do.",
+      ]),
+    ],
+  },
+  {
+    heading: "11. Contact",
+    blocks: [contactList],
   },
 ];
 
 const healthSections: LegalSection[] = [
   {
-    heading: "1. Non-Medical and Non-Clinical Nature of the Service",
+    heading: "1. Kindred Is Not Medical or Clinical Care",
     blocks: [
       paragraph(
-        'Kindred Asterling AI Coaching ("Kindred", "we", "us", or "our"), operated by Landon Syroid in Edmonton, Alberta, Canada, is an automated informational wellness coaching and personal reflection platform.',
+        'Kindred Asterling AI Coaching ("Kindred", "we", "us", or "our"), operated by Landon Syroid in Edmonton, Alberta, Canada, is an AI-assisted wellness coaching and personal reflection app. Coaching replies are written by an AI system, not a person.',
       ),
       callout(
-        "KINDRED IS NOT A LICENSED HEALTHCARE PROVIDER, MEDICAL CLINIC, CRISIS INTERVENTION CENTER, OR PSYCHIATRIC FACILITY.",
+        "KINDRED IS NOT A LICENSED HEALTHCARE PROVIDER, THERAPIST, MEDICAL CLINIC, CRISIS SERVICE, OR PSYCHIATRIC FACILITY.",
       ),
       list([
-        "No Medical or Therapeutic Advice: All content, AI dialogue, morning/evening reflection prompts, body scan logs and generated progress summaries are provided exclusively for personal informational and educational purposes.",
-        "No Clinical Diagnosis or Treatment: Kindred does not diagnose, treat, prevent, mitigate, or cure any physical, mental, psychiatric, or psychological illness, condition, or disorder. The Service is not a substitute for clinical judgment, medical examinations, or psychotherapy provided by a licensed physician, psychiatrist, registered psychologist, or healthcare professional.",
+        "No medical or therapeutic advice: AI coaching replies, reflection prompts, body scan notes and progress views are for personal reflection and general information only.",
+        "No diagnosis or treatment: Kindred does not diagnose, treat, prevent or cure any physical or mental health condition. It does not replace a physician, psychiatrist, psychologist, counsellor or other healthcare professional.",
+        "Using Kindred alongside care: you may use Kindred to organize your thoughts, including before appointments, but decisions about your health belong with you and your care providers.",
       ]),
     ],
   },
   {
-    heading: "2. Medication & Habit Tracking Boundaries",
+    heading: "2. Medication & Habit Tracking",
     blocks: [
       paragraph(
-        "Medication tracking, schedule reminders, and habit check-in features within Kindred function solely as a self-directed personal organizational log.",
+        "Medication tracking and reminders are a personal log you set up yourself.",
       ),
       list([
-        "No Pharmaceutical Evaluation: Kindred does not prescribe, modify, evaluate, or adjust medications, dosages, or schedules.",
-        "No Drug Interaction or Safety Checks: Kindred does not evaluate contraindications, drug interactions, side effects, or clinical efficacy.",
-        "Mandatory Professional Consultation: Any decision to initiate, alter, taper, or discontinue prescription medications, over-the-counter drugs, or dietary supplements must be made under the direct supervision of a licensed physician or pharmacist.",
+        "Kindred does not prescribe, review, adjust or check medications, doses or schedules.",
+        "Kindred does not check for drug interactions, side effects or whether a medication is right for you.",
+        "Reminders can be delayed or fail. Do not rely on Kindred as your only reminder for doses that matter to your health.",
+        "Talk to your doctor or pharmacist before starting, changing or stopping any medication or supplement.",
       ]),
     ],
   },
   {
-    heading: "3. Emergency & Crisis Protocols",
+    heading: "3. Emergencies & Crisis Support",
     blocks: [
       paragraph(
-        "Kindred is an automated system and is not monitored for emergencies, acute mental health crises, or medical urgency.",
+        "Kindred is not monitored by people and cannot respond to emergencies. The AI may not recognize that you are in crisis.",
       ),
-      paragraph(
-        "If you need urgent help, contact emergency services in your location or go to the nearest emergency department. In Canada and the United States, call 911 for immediate danger; crisis support is also available by calling or texting 988. In other jurisdictions, contact the local emergency service or national crisis support line.",
+      callout(
+        "If you are in danger or thinking about harming yourself, get help now:\n- Call 911, or go to the nearest emergency department.\n- In Canada or the United States, call or text 9-8-8 for the Suicide Crisis Helpline (Canada) or the 988 Suicide & Crisis Lifeline (United States).\n- Elsewhere, contact your local emergency number or crisis line (findahelpline.com lists services by country).",
       ),
     ],
   },
   {
-    heading: "4. Limitation on Outcomes & User Responsibility",
+    heading: "4. No Guaranteed Outcomes",
     blocks: [
       paragraph(
-        "Kindred makes no guarantees, representations, or warranties regarding specific personal, psychological, educational, career, or physical outcomes resulting from using the platform.",
+        "We do not promise any particular personal, psychological, career or physical result from using Kindred.",
       ),
       paragraph(
-        "Users maintain sole responsibility for verifying all information and applying independent judgment before acting on any coaching output.",
+        "AI output can be wrong. Check important information and use your own judgment before acting on any coaching reply.",
       ),
     ],
   },
   {
-    heading: "5. Age Restriction (Adults 18+ Only)",
+    heading: "5. Adults Only",
     blocks: [
       paragraph(
-        "The Service is strictly designed and offered to individuals who are at least eighteen (18) years of age. Kindred is not directed to or intended for use by minors.",
+        "Kindred is only for adults aged 18 and older and is not directed to anyone under 18.",
       ),
     ],
   },
@@ -491,70 +554,70 @@ const transparencySections: LegalSection[] = [
     heading: "1. Scope & Purpose",
     blocks: [
       paragraph(
-        'Kindred Asterling AI Coaching ("Kindred", "we", "us", or "our"), operated by Landon Syroid as an Alberta sole proprietorship based in Edmonton, Alberta, Canada, integrates generative artificial intelligence to deliver conversational coaching, guided self-reflections, habit tracking, and structured personal summaries.',
+        'Kindred Asterling AI Coaching ("Kindred", "we", "us", or "our"), an Alberta sole proprietorship operated by Landon Syroid in Edmonton, Alberta, Canada, uses generative AI to write coaching replies. This disclosure explains where AI is used, what information it receives, who provides it, and its limits.',
       ),
       paragraph(
-        "This Disclosure outlines where and how artificial intelligence operates within the Kindred platform, the technical and contextual boundaries enforced, and our strict adherence to Canadian privacy principles and consumer transparency standards.",
+        "When you chat with Kindred, you are talking to an AI system, not a person.",
       ),
     ],
   },
   {
     heading: "2. Where AI Is Used",
     blocks: [
-      paragraph(
-        "Artificial intelligence is utilized within the Kindred platform strictly for the following functions:",
-      ),
       list([
-        "Conversational Coaching Dialogue: Generating interactive coaching prompts, reflective inquiries, and conversational responses based on user-initiated messages.",
-        "Self-Assessment Summaries: Synthesizing user-submitted morning check-ins, evening reflections, body scans, and goal tracking into periodic progress overviews.",
+        "Coaching chat: AI writes the coach's replies to the messages you send. Onboarding questions are pre-written, but your onboarding answers become part of the conversation history the AI sees.",
+        "Voice (when you use it): your recording is transcribed to text by ElevenLabs before it is sent to the coach, and the coach's reply may be read aloud using an AI voice.",
+      ]),
+      paragraph(
+        "AI does not make decisions about your account, access, billing or eligibility.",
+      ),
+    ],
+  },
+  {
+    heading: "3. What Information the AI Receives",
+    blocks: [
+      paragraph("For each coaching reply, the AI provider receives:"),
+      list([
+        "The message you just sent and recent conversation history (up to the last 24 messages).",
+        "Your preferred name and any profile details you chose to give: birthday, bio, struggles, strengths and interests.",
+        "When relevant to what you are discussing, recent records from your account: morning check-ins, evening reflections, body scans, habits and streaks, and today's medications, including names, doses, status and notes.",
+      ]),
+      paragraph(
+        "Kindred selects only the categories that relate to your current message, from your own account only, and limits how many records and characters are sent. It does not send your whole history with every message.",
+      ),
+    ],
+  },
+  {
+    heading: "4. AI Providers & Data Use",
+    blocks: [
+      list([
+        "AI model: coaching replies are generated by Anthropic's Claude models through the Anthropic API, processed in the United States. Anthropic's commercial API terms govern how long it keeps requests. Under those terms, Anthropic does not use API requests to train its models.",
+        "Kindred does not use your conversations or wellness information to train AI models.",
+        "Analytics: where our coaching-chat analytics are switched on, Amplitude (United States) receives the text of chat messages and replies, with automated redaction of personal identifiers. See section 4 of our Privacy Policy.",
+        "Your control: you can download your conversations with \"Download my data\" and delete them by deleting your account.",
       ]),
     ],
   },
   {
-    heading: "3. Context Minimization & Privacy Architecture",
+    heading: "5. Limits of AI",
     blocks: [
-      paragraph(
-        "Kindred enforces strict technical constraints to ensure user data minimization:",
-      ),
       list([
-        "Interaction-Scoped Context: The context assembly engine retrieves only data categories relevant to the immediate user prompt rather than injecting complete historical archives into each AI prompt.",
-        "User-Isolated Tenancy: All retrieval operations are strictly bounded to the authenticated user's account and governed by character and item limits.",
-        "Provider Data Use: Personal reflections, journal logs, habit metrics, and chat conversations may be sent to the AI provider configured for the service, currently Anthropic. The applicable model provider's retention and training terms must be verified and disclosed before production use.",
+        "AI output is probabilistic. Replies can be inaccurate, incomplete, inconsistent or inappropriate.",
+        "The AI has no feelings, professional credentials or clinical training, and it does not know facts about you beyond what is described in section 3.",
+        "Do not rely on AI replies as the only basis for health, legal, financial or other important decisions, and never in an emergency. See our Health Information Disclaimer.",
       ]),
     ],
   },
   {
-    heading: "4. Inherent Limitations & Operational Boundaries",
+    heading: "6. Canadian Privacy Principles for Generative AI",
     blocks: [
       paragraph(
-        "Users acknowledge and agree to the following inherent limitations of automated AI systems:",
+        "This disclosure follows the Principles for responsible, trustworthy and privacy-protective generative AI technologies issued in December 2023 by Canada's federal, provincial and territorial privacy commissioners, including the Office of the Privacy Commissioner of Canada and the Office of the Information and Privacy Commissioner of Alberta. In particular, we:",
       ),
       list([
-        "Probabilistic Output: Generative AI produces probabilistic text. Outputs may occasionally be incomplete, inaccurate, or inconsistent with prior outputs.",
-        "No Human Knowledge or Professional Credentials: Kindred is an automated software application. It possesses no human emotion, sentience, independent real-world knowledge, or professional certifications.",
-        "Non-Consequential & Non-Clinical Utility: Kindred outputs are intended solely for personal reflection and organizational wellness. They must not be relied upon as the sole basis for consequential personal, legal, financial, or medical decisions.",
-      ]),
-    ],
-  },
-  {
-    heading: "5. Technical Infrastructure & Providers",
-    blocks: [
-      list([
-        "AI Inference: Coaching replies are generated by Anthropic's Claude models through the Anthropic API, processed in the United States. Anthropic's commercial API terms govern how long it retains these requests.",
-        "Cloudflare AI Gateway: Where requests are routed through Cloudflare AI Gateway, Kindred turns off request payload logging and response caching. Gateway usage metadata may still be retained.",
-      ]),
-    ],
-  },
-  {
-    heading: "6. Canadian Privacy & Generative AI Standards",
-    blocks: [
-      paragraph(
-        "This disclosure is structured to align with the Joint Principles for Generative AI Technologies issued by Canadian Federal, Provincial, and Territorial Privacy Authorities (including the Office of the Privacy Commissioner of Canada - OPC and the Office of the Information and Privacy Commissioner of Alberta - OIPC), upholding the principles of:",
-      ),
-      list([
-        "Meaningful Consent & Transparency: Clear notification prior to user interaction with automated systems.",
-        "Appropriate & Proportional Purpose: Restricting AI processing strictly to legitimate wellness coaching features.",
-        "Individual Access & Rectification: Enabling users to inspect, export, and delete AI-generated summaries and chat histories upon request.",
+        "Tell you that you are interacting with AI and what information it receives.",
+        "Limit AI use to the coaching features you ask for.",
+        "Let you access, download and delete your conversations.",
       ]),
     ],
   },
@@ -562,137 +625,101 @@ const transparencySections: LegalSection[] = [
 
 const cookieSections: LegalSection[] = [
   {
-    heading: "1. Scope & Commitment",
+    heading: "1. Scope",
     blocks: [
       paragraph(
-        'Kindred Asterling AI Coaching ("Kindred", "we", "us", or "our"), operated by Landon Syroid in Edmonton, Alberta, Canada, is committed to transparent and minimal data collection. This Notice explains the essential browser storage technologies, security cookies, and diagnostic tools used on the Kindred web application.',
+        'This notice explains the cookies, browser storage and other technologies used by the Kindred app (kindred-asterling-ai-coaching.com) and website (kindred-asterling-ai.xyz), operated by Landon Syroid as Kindred Asterling AI Coaching ("Kindred", "we", "us", or "our") in Edmonton, Alberta, Canada.',
       ),
       paragraph(
-        "We do not engage in third-party behavioral advertising, cross-site tracking, or data brokering.",
+        "We do not use advertising cookies, cross-site tracking or data brokers.",
       ),
     ],
   },
   {
-    heading: "2. Categories of Technologies We Use",
+    heading: "2. What We Use",
     blocks: [
-      subheading("A. Strictly Necessary & Authentication Technologies"),
-      paragraph(
-        "These technologies are essential for the operation, integrity, and security of the platform. The platform cannot function securely without them.",
-      ),
+      subheading("A. Strictly Necessary"),
       list([
-        "Auth0 Authentication: Session cookies and local storage tokens utilized to maintain authenticated user sessions, verify identity, and defend against cross-site request forgery (CSRF).",
-        "Hosting & Infrastructure Security: Technical routing, SSL termination, and DDoS protection headers set by our hosting and edge infrastructure (DigitalOcean / Cloudflare).",
+        "Sign-in (Auth0): Auth0 sets cookies on its sign-in pages to keep you signed in and protect against forged requests. The app keeps your sign-in tokens in memory rather than in browser storage.",
+        "Security and delivery (DigitalOcean and Cloudflare): our hosting and network providers may set security cookies, such as bot-protection cookies, and use request information to route traffic and block attacks.",
       ]),
-      subheading("B. Functional & Interface Preference Storage"),
+      subheading("B. Preferences"),
       list([
-        "Browser LocalStorage: Stores client-side visual preferences, such as light/dark interface mode or user-selected view toggles, directly on your local device.",
+        "Browser local storage: remembers your colour theme (kindred-theme) and whether the sidebar is collapsed (kindred:sidebar-collapsed). This stays on your device.",
       ]),
-      subheading("C. Technical Diagnostics & Error Monitoring"),
+      subheading("C. Third-Party Resources"),
       list([
-        "Application and Hosting Logs: Technical server and infrastructure logs may be used to operate, secure, and troubleshoot the service.",
-        "No Third-Party Browser Diagnostics: Kindred does not load a third-party browser analytics or error-reporting SDK.",
-        "Server-Side Product Analytics: Our servers tell Amplitude when an action is completed, such as a morning check-in, under a scrambled identifier. No cookies or tracking scripts are placed in your browser for this, and no health details are sent.",
+        "Google Fonts: our pages load fonts from Google, which receives your IP address and browser details when a page loads.",
+        "Checkout: payment pages are hosted by Helcim on its own site, under Helcim's own cookie and privacy policies.",
+      ]),
+      subheading("D. Logs & Analytics"),
+      list([
+        "Server logs: our servers and hosting providers keep technical logs to run and secure the Service. App logs do not record your IP address or the content of your entries.",
+        "Website logs: Cloudflare keeps request logs for our website at kindred-asterling-ai.xyz.",
+        "Error monitoring: if an error happens in your browser, the app sends an error report and performance timing to Sentry, as described in section 4 of our Privacy Policy. The monitoring code is part of the app itself, not a separate tracking script, and it does not set cookies.",
+        "Product analytics: our servers send usage events to Amplitude, as described in section 4 of our Privacy Policy. No analytics cookies or tracking scripts are placed in your browser.",
+        "We do not use Google Analytics, Meta (Facebook) Pixel, TikTok Pixel or other advertising trackers. Links to other sites are plain links with no tracking scripts.",
       ]),
     ],
   },
   {
-    heading: "3. Explicit Exclusion of Advertising Trackers",
+    heading: "3. Your Choices",
     blocks: [
       list([
-        "No Advertising Networks: We do not deploy Google Analytics, Meta (Facebook) Pixels, TikTok pixels, or advertising tracking beacons.",
-        "No Third-Party Social Widgets: Outbound links to external platforms in our site footer are standard hyperlinks and do not execute third-party tracking scripts or tracking beacons.",
+        "You can block or delete cookies and local storage in your browser settings.",
+        "If you block the strictly necessary cookies, you will not be able to sign in.",
       ]),
     ],
   },
   {
-    heading: "4. User Controls & Managing Storage",
-    blocks: [
-      paragraph(
-        "You can adjust your cookie and storage preferences at any time through your web browser settings:",
-      ),
-      list([
-        "Disabling Storage: You can configure your browser to reject cookies or purge local storage caches.",
-        "Impact on Core Services: Please note that disabling strictly necessary cookies and local storage will prevent you from signing in or maintaining an active coaching session.",
-      ]),
-    ],
-  },
-  {
-    heading: "5. Inquiries",
-    blocks: [
-      paragraph(
-        "For questions regarding our use of cookies and storage technologies, contact our Privacy Officer:",
-      ),
-      list([
-        "Email: kindredaicoach@gmail.com",
-        "Support: kindred_support@kindred-asterling-ai-coaching.com",
-        "Mailing Address: 202 - 10249 119 ST NW, Edmonton, AB T5K 2Y6, Canada",
-      ]),
-    ],
+    heading: "4. Contact",
+    blocks: [contactList],
   },
 ];
 
 const marketingSections: LegalSection[] = [
   {
-    heading: "1. Statutory Background & Standards",
+    heading: "1. Messages We Send Today",
     blocks: [
       paragraph(
-        "Under Canada's Anti-Spam Legislation (CASL, SC 2010, c 23, s 10), the Canadian Radio-television and Telecommunications Commission (CRTC) regulations, and Innovation, Science and Economic Development Canada (ISED) guidelines, sending Commercial Electronic Messages (CEMs) requires:",
-      ),
-      list(
-        [
-          "Express, opt-in consent obtained prior to sending.",
-          "Complete sender identification including physical mailing address and electronic contact.",
-          "A functional, no-cost unsubscribe mechanism operational for at least 60 days post-transmission and executed without delay within 10 business days.",
-        ],
-        true,
-      ),
-    ],
-  },
-  {
-    heading: "2. Recommended Front-End Opt-In UI Language",
-    blocks: [
-      paragraph(
-        "To be implemented on registration and settings forms as an unchecked by default checkbox:",
-      ),
-      callout(
-        "[ ] Yes, I would like to receive product announcements, coaching insights, and special promotional offers from Kindred Asterling AI Coaching by email. You may withdraw your consent and unsubscribe at any time using the link in any promotional email. Sender: Landon Syroid, operating as Kindred Asterling AI Coaching, 202 - 10249 119 ST NW, Edmonton, AB T5K 2Y6, Canada. Contact: kindred_support@kindred-asterling-ai-coaching.com.",
-      ),
-    ],
-  },
-  {
-    heading: "3. Mandatory Email Footer Template",
-    blocks: [
-      paragraph(
-        "All promotional and marketing emails dispatched by or on behalf of Kindred must include the following footer block:",
-      ),
-      callout(
-        "You received this email because you opted in to receive news and offers from Kindred Asterling AI Coaching.\n\nSender Identification:\nLandon Syroid d/b/a Kindred Asterling AI Coaching\n202 - 10249 119 ST NW, Edmonton, AB T5K 2Y6, Canada\nSupport Email: kindred_support@kindred-asterling-ai-coaching.com\nTo stop receiving promotional emails, click here to unsubscribe: [Unsubscribe Link]\nUnsubscribe requests are processed immediately and within 10 business days at no cost.",
-      ),
-    ],
-  },
-  {
-    heading: "4. Technical Record-Keeping & Proof of Consent",
-    blocks: [
-      paragraph(
-        "To satisfy CASL evidentiary requirements, the database must capture an immutable audit log for every consent event:",
+        "Kindred currently sends only messages you need or ask for:",
       ),
       list([
-        "Identifier: Verified user email address and account ID.",
-        "Timestamp: ISO 8601 UTC timestamp of affirmative opt-in.",
-        "Source Form & URL: Registration screen, checkout modal, or profile preference page.",
-        "Exact Policy Version: Text and version identifier of the consent clause displayed.",
-        "IP Address & User Agent: Network telemetry recorded at the time of submission.",
-        "Withdrawal Tracking: Date, time, and method of unsubscribe requests, with automatic suppression across all integrated email delivery services (e.g., Resend).",
+        "Account messages: sign-in, verification and security emails, and payment receipts from Helcim.",
+        "Reminders you set up: check-in, habit and medication reminders, by email or, if you turn it on, by text message. Reminder text such as \"Time for your medication dose\" may appear on your lock screen.",
+      ]),
+      paragraph(
+        "We do not currently send promotional emails or texts, and we do not sell or share your email address or phone number for marketing.",
+      ),
+    ],
+  },
+  {
+    heading: "2. Stopping Reminders",
+    blocks: [
+      list([
+        "Turn reminders, email reminders or text-message reminders off at any time on the Reminders page in the app.",
+        "Reply STOP to any Kindred text message to stop text messages.",
+        "Account and security messages are part of the Service and continue while you have an account.",
       ]),
     ],
   },
   {
-    heading: "5. Separation of Transactional vs. Marketing Communications",
+    heading: "3. If We Send Promotional Messages",
     blocks: [
       paragraph(
-        "Service-related communications (such as password resets, billing receipts from Helcim, mandatory security alerts, and direct coaching notifications requested by the user) are transactional messages and must not be bundled with promotional opt-ins or suppressed upon marketing unsubscribe.",
+        "If we start sending promotional messages, we will follow Canada's Anti-Spam Legislation (CASL, SC 2010, c 23):",
       ),
+      list([
+        "We will only send them to people who choose to receive them, using an opt-in that is unchecked by default and separate from accepting our Terms.",
+        "Every promotional message will identify Landon Syroid, operating as Kindred Asterling AI Coaching, with our mailing address and contact email.",
+        "Every promotional message will include a free unsubscribe link that works for at least 60 days. We will act on unsubscribe requests within 10 business days.",
+        "Unsubscribing from promotions will not stop account messages or reminders you set up.",
+      ]),
     ],
+  },
+  {
+    heading: "4. Contact",
+    blocks: [contactList],
   },
 ];
 
@@ -739,7 +766,7 @@ export function AIUseDisclosure() {
     <LegalPage
       published
       title="AI Use Disclosure"
-      summary="This disclosure explains where Kindred uses AI, what context may be supplied, and the limitations of AI-generated output."
+      summary="This disclosure explains where Kindred uses AI, what information the AI receives, who provides it, and the limits of AI-generated replies."
       pdfHref="/legal-documents/ai-use-and-transparency-disclosure.pdf"
       sections={transparencySections}
     />
@@ -751,7 +778,7 @@ export function CookieNotice() {
     <LegalPage
       published
       title="Cookie and Analytics Notice"
-      summary="This notice explains the essential browser storage technologies, security cookies, and diagnostic tools used by Kindred."
+      summary="This notice explains the cookies, browser storage, third-party resources and analytics used by the Kindred app and website."
       pdfHref="/legal-documents/cookie-and-tracking-technologies-notice.pdf"
       sections={cookieSections}
     />
@@ -762,8 +789,8 @@ export function MarketingConsent() {
   return (
     <LegalPage
       published
-      title="Marketing Consent Language"
-      summary="This document explains optional marketing consent, unsubscribe choices, and Kindred's commercial email requirements."
+      title="Email, Text & Marketing Messages"
+      summary="This notice explains the emails and text messages Kindred sends, how to stop them, and how we handle consent for any promotional messages."
       pdfHref="/legal-documents/marketing-consent-and-casl-compliance-protocol.pdf"
       sections={marketingSections}
     />
