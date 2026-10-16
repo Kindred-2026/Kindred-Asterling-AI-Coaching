@@ -288,7 +288,7 @@ describe("public legal navigation", () => {
     ["health-disclaimer", "Health Information Disclaimer"],
     ["ai-disclosure", "AI Use Disclosure"],
     ["cookies", "Cookie and Analytics Notice"],
-    ["marketing-consent", "Marketing Consent Language"],
+    ["marketing-consent", "Email, Text & Marketing Messages"],
   ])("opens %s through client navigation and returns home", async (slug, title) => {
     auth.isSignedIn = false;
     await renderAt("/");

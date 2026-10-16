@@ -123,7 +123,7 @@ export default function About() {
               Explore the pilot
             </h2>
             <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
-              See the plans and start a free trial whenever you're ready.
+              See the plans whenever you're ready.
             </p>
             <div className="mt-7 flex justify-center">
               <Button asChild size="lg">
