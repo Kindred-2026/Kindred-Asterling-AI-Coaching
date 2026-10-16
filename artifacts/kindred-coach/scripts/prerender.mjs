@@ -140,9 +140,9 @@ const ROUTES = [
           "@type": "Offer",
           name: "Yearly Plan",
           price: "49.99",
-          priceCurrency: "USD",
+          priceCurrency: "CAD",
           description:
-            "Full access to Kindred AI coaching — daily rhythm, medication & behavior tracking, self-assessments, journal, and progress view. Billed annually.",
+            "Full access to Kindred AI coaching — daily rhythm, medication & behavior tracking, self-assessments, journal, and progress view. Billed annually and renews automatically until cancelled.",
           eligibleDuration: "P1Y",
           url: `${SITE_ORIGIN}/pricing`,
         },
@@ -150,9 +150,9 @@ const ROUTES = [
           "@type": "Offer",
           name: "Lifetime Plan",
           price: "79.99",
-          priceCurrency: "USD",
+          priceCurrency: "CAD",
           description:
-            "One payment for lifetime access to Kindred AI coaching — all current features and all future updates included.",
+            "One payment for access to Kindred AI coaching for as long as the service operates, including future core-plan features.",
           url: `${SITE_ORIGIN}/pricing`,
         },
       ],
@@ -178,17 +178,17 @@ const ROUTES = [
     [
       "ai-disclosure",
       "AI Use Disclosure",
-      "How Kindred uses AI and relevant user context.",
+      "Where Kindred uses AI, what information it receives, and its limits.",
     ],
     [
       "cookies",
       "Cookie and Analytics Notice",
-      "Essential browser technologies used by Kindred.",
+      "Cookies, browser storage and analytics used by Kindred.",
     ],
     [
       "marketing-consent",
-      "Marketing Consent Language",
-      "Marketing consent and unsubscribe information for Kindred communications.",
+      "Email, Text & Marketing Messages",
+      "The emails and texts Kindred sends and how to stop them.",
     ],
   ].map(([slug, label, description]) => ({
     path: `/legal/${slug}`,
