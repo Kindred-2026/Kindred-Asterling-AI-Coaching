@@ -123,10 +123,7 @@ before creating anything, and record the first invoice in the cost baseline.
   DigitalOcean in the Anthropic Console and Resend. Revoke the Fly keys in
   step 8. If `fly secrets list` shows `AMPLITUDE_API_KEY`,
   `AMPLITUDE_ID_SALT` or `AMPLITUDE_AI_API_KEY`, copy them too. Keep the salt
-  identical, or analytics user IDs change. Production also needs each
-  project's secret key (`AMPLITUDE_SECRET_KEY`, and `AMPLITUDE_AI_SECRET_KEY`
-  if Agent Analytics uses another project), from Amplitude's project settings,
-  so account deletion can request deletion of the user's data. Skip `POSTGRES_URL` (replaced by the database binding) and
+  identical, or analytics user IDs change. Skip `POSTGRES_URL` (replaced by the database binding) and
   `OPENAI_API_KEY` (unused while `AI_PROVIDER` is `anthropic`).
 
 ## 1. Create the database
@@ -179,12 +176,8 @@ continuing; the user has more rights than the app needs.
    run warns which secrets are empty.
 2. In DigitalOcean, open the app → **Settings → web → Environment
    Variables → Edit**. Fill in `ANTHROPIC_API_KEY`, `AUTH0_DOMAIN`,
-   `AUTH0_AUDIENCE`, `AUTH0_MGMT_CLIENT_ID`, `AUTH0_MGMT_CLIENT_SECRET`,
-   `RESEND_API_KEY`, `RESEND_FROM_EMAIL` and `SUBSCRIPTION_OWNER_IDS` with
-   **Encrypt** ticked. The two `AUTH0_MGMT_*` values are the client ID and
-   secret of the **Kindred Account Deletion** application in Auth0 (Management
-   API, `delete:users` only); account deletion uses it to remove the user's
-   Auth0 record. Add any optional ones
+   `AUTH0_AUDIENCE`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL` and
+   `SUBSCRIPTION_OWNER_IDS` with **Encrypt** ticked. Add any optional ones
    from step 0 the same way. Save; App Platform redeploys.
 3. Check **Settings → Trusted Sources** on the database lists the app. App
    Platform normally adds it when it attaches the database; add it if not.

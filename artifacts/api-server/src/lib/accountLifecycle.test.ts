@@ -317,6 +317,26 @@ describe("account deletion across Helcim, Auth0 and Amplitude", () => {
     expect(providers.of("amplitude")).toHaveLength(2);
   });
 
+  it("needs only the Helcim key: Auth0 and Amplitude are skipped when not configured", async () => {
+    const { id, customerCode } = await seedYearlySubscriber();
+    restoreEnv();
+    restoreEnv = setProviderEnv({
+      AUTH0_MGMT_CLIENT_ID: undefined,
+      AUTH0_MGMT_CLIENT_SECRET: undefined,
+      AMPLITUDE_SECRET_KEY: undefined,
+      AMPLITUDE_AI_SECRET_KEY: undefined,
+    });
+    providers = mockExternalProviders({ helcimCustomerCode: customerCode });
+
+    await expect(deleteAccount(id)).resolves.toBe(true);
+    expect(await userExists(id)).toBe(false);
+    expect(
+      providers.of("helcim").filter((call) => call.method === "DELETE"),
+    ).toHaveLength(1);
+    expect(providers.of("auth0")).toHaveLength(0);
+    expect(providers.of("amplitude")).toHaveLength(0);
+  });
+
   it("deletes nothing and reports the block when Helcim cannot cancel", async () => {
     const { id, customerCode } = await seedYearlySubscriber();
     providers = mockExternalProviders({

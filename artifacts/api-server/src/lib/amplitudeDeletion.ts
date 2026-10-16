@@ -17,48 +17,39 @@ export interface AmplitudeDeletionRequest {
   userIds: string[];
 }
 
-export interface AmplitudeDeletionPlan {
-  requests: AmplitudeDeletionRequest[];
-  /** Projects that receive data but have no secret key to delete it with. */
-  missingSecrets: string[];
-}
-
-export function planAmplitudeDeletion(userId: string): AmplitudeDeletionPlan {
-  const plan: AmplitudeDeletionPlan = { requests: [], missingSecrets: [] };
+/** One request per project that has both its API key and secret key set. */
+export function planAmplitudeDeletion(userId: string): AmplitudeDeletionRequest[] {
+  const requests: AmplitudeDeletionRequest[] = [];
   const productKey = process.env.AMPLITUDE_API_KEY?.trim();
   const productSecret = process.env.AMPLITUDE_SECRET_KEY?.trim();
   const agentKey = process.env.AMPLITUDE_AI_API_KEY?.trim();
   const agentSecret = process.env.AMPLITUDE_AI_SECRET_KEY?.trim();
 
   if (productKey && productSecret) {
-    plan.requests.push({
+    requests.push({
       project: "product",
       apiKey: productKey,
       secretKey: productSecret,
       userIds: [analyticsUserId(userId)],
     });
-  } else if (productKey) {
-    plan.missingSecrets.push("AMPLITUDE_SECRET_KEY");
   }
 
   if (agentKey) {
-    const shared = plan.requests.find((request) => request.apiKey === agentKey);
+    const shared = requests.find((request) => request.apiKey === agentKey);
     if (shared) {
       // Both trackers write to one project: one request covers both IDs.
       shared.project = "product+agent";
       shared.userIds.push(userId);
     } else if (agentSecret) {
-      plan.requests.push({
+      requests.push({
         project: "agent",
         apiKey: agentKey,
         secretKey: agentSecret,
         userIds: [userId],
       });
-    } else {
-      plan.missingSecrets.push("AMPLITUDE_AI_SECRET_KEY");
     }
   }
-  return plan;
+  return requests;
 }
 
 /** Queues the deletion. Amplitude finishes deletion jobs asynchronously. */

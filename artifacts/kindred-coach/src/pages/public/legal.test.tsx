@@ -48,16 +48,15 @@ describe("approved legal documents", () => {
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
   });
 
-  it("describes account deletion as cancelling billing and removing Auth0 and Amplitude records", () => {
+  it("describes account deletion as cancelling Yearly billing", () => {
     const privacy = renderToStaticMarkup(<PrivacyPolicy />);
     const terms = renderToStaticMarkup(<TermsAndConditions />);
 
-    expect(privacy).toContain("We cancel any Yearly renewal with Helcim before anything is deleted");
-    expect(privacy).toContain("Your sign-in record at Auth0 is deleted");
-    expect(privacy).toContain("send Amplitude a request to delete the analytics linked to you");
+    expect(privacy).toContain("we cancel any Yearly renewal with Helcim before anything is deleted");
+    expect(privacy).toContain("email our Privacy Officer and we will delete them within 30 days");
     expect(terms).toContain("Deleting your Kindred account cancels renewal with Helcim automatically");
     expect(`${privacy}${terms}`).not.toMatch(
-      /does not (by itself )?cancel (a Yearly subscription|renewal)|does not automatically remove your sign-in record/,
+      /does not (by itself )?cancel (a Yearly subscription|renewal)/,
     );
   });
 });

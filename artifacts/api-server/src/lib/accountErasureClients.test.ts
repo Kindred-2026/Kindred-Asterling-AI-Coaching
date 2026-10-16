@@ -149,9 +149,7 @@ describe("deleteAuth0User", () => {
 
 describe("Amplitude deletion", () => {
   it("asks each project to delete the ID it received", () => {
-    const plan = planAmplitudeDeletion("user-1");
-    expect(plan.missingSecrets).toEqual([]);
-    expect(plan.requests).toEqual([
+    expect(planAmplitudeDeletion("user-1")).toEqual([
       {
         project: "product",
         apiKey: "product-key",
@@ -170,24 +168,21 @@ describe("Amplitude deletion", () => {
   it("sends one request when both trackers share a project", () => {
     restoreEnv();
     restoreEnv = setProviderEnv({ AMPLITUDE_AI_API_KEY: "product-key" });
-    const plan = planAmplitudeDeletion("user-1");
-    expect(plan.requests).toHaveLength(1);
-    expect(plan.requests[0]).toMatchObject({
+    const requests = planAmplitudeDeletion("user-1");
+    expect(requests).toHaveLength(1);
+    expect(requests[0]).toMatchObject({
       project: "product+agent",
       userIds: [pseudonymousUserId("user-1", "test-salt"), "user-1"],
     });
   });
 
-  it("reports projects it cannot delete from and skips unused ones", () => {
+  it("skips a project without its secret key", () => {
     restoreEnv();
     restoreEnv = setProviderEnv({
       AMPLITUDE_SECRET_KEY: undefined,
-      AMPLITUDE_AI_API_KEY: undefined,
+      AMPLITUDE_AI_SECRET_KEY: undefined,
     });
-    expect(planAmplitudeDeletion("user-1")).toEqual({
-      requests: [],
-      missingSecrets: ["AMPLITUDE_SECRET_KEY"],
-    });
+    expect(planAmplitudeDeletion("user-1")).toEqual([]);
   });
 
   it("posts to the User Privacy API with Basic auth", async () => {

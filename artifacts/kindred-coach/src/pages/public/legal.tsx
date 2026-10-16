@@ -303,11 +303,11 @@ const privacySections: LegalSection[] = [
       list([
         "Download a copy of your data at any time with \"Download my data\" in the app, or ask us for access to the personal information we hold about you and how it has been used and disclosed.",
         "Correct your information in the app, or ask us to correct it.",
-        "Delete your account in the app. This cancels any Yearly renewal, immediately deletes your account and everything stored with it from our live database, and removes your records at Auth0 and Amplitude, as described below.",
+        "Delete your account in the app. This cancels any Yearly renewal and immediately deletes your account and everything stored with it from our live database.",
         "Withdraw consent to optional processing, such as text-message reminders or voice features, by turning them off in the app.",
       ]),
       callout(
-        `When you delete your account:\nBilling stops first. We cancel any Yearly renewal with Helcim before anything is deleted, so you will not be charged again. If we cannot reach Helcim to cancel it, nothing is deleted and the app asks you to try again; you can also email ${SUPPORT_EMAIL}.\n\nYour sign-in record at Auth0 is deleted, and we send Amplitude a request to delete the analytics linked to you. If Auth0 or Amplitude cannot be reached, we retry automatically and otherwise complete the removal ourselves, within 30 days either way.\n\nDeleting your account ends your access right away. It does not by itself refund a payment (see Refunds in our Terms), and Helcim keeps payment and transaction records as described in section 6.`,
+        `When you delete your account, we cancel any Yearly renewal with Helcim before anything is deleted, so you will not be charged again. If we cannot reach Helcim to cancel it, nothing is deleted and the app asks you to try again; you can also email ${SUPPORT_EMAIL}.\n\nTo also have your sign-in record at Auth0 and analytics records at Amplitude deleted, email our Privacy Officer and we will delete them within 30 days.`,
       ),
       paragraph(
         `To make a request, email our Privacy Officer at ${PRIVACY_EMAIL}. We will confirm your identity and respond within 30 days. If you are not satisfied with our response, you can complain to the Office of the Information and Privacy Commissioner of Alberta (oipc.ab.ca) or, where federal law applies, the Office of the Privacy Commissioner of Canada (priv.gc.ca).`,

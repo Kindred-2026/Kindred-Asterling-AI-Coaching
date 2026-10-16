@@ -245,24 +245,18 @@ async function stopRecurringBilling(userId: string): Promise<void> {
 }
 
 /**
- * Best-effort erasure at Auth0 and Amplitude once the account is gone. Never
- * throws: a provider that still fails after retries is logged for manual
- * follow-up, which the Privacy Policy commits to within 30 days.
+ * Optional erasure at Auth0 and Amplitude once the account is gone. Each runs
+ * only when its credentials are set and is skipped otherwise; the Privacy
+ * Policy covers removal on request. Never throws: a configured provider that
+ * still fails after retries is logged for manual follow-up.
  */
 async function eraseExternalRecords(user: {
   id: string;
   auth0UserId: string | null;
 }): Promise<void> {
-  const followUp = "manual follow-up required within 30 days";
+  const followUp = "manual follow-up required";
   const auth0 = async () => {
-    if (!user.auth0UserId) return;
-    if (!isAuth0ManagementConfigured()) {
-      logger.error(
-        { userId: user.id, auth0UserId: user.auth0UserId },
-        `Account deletion: Auth0 Management API is not configured; ${followUp}`,
-      );
-      return;
-    }
+    if (!user.auth0UserId || !isAuth0ManagementConfigured()) return;
     try {
       const outcome = await withRetries(
         () => deleteAuth0User(user.auth0UserId!),
@@ -278,15 +272,8 @@ async function eraseExternalRecords(user: {
     }
   };
   const amplitude = async () => {
-    const plan = planAmplitudeDeletion(user.id);
-    if (plan.missingSecrets.length > 0) {
-      logger.error(
-        { userId: user.id, missing: plan.missingSecrets },
-        `Account deletion: Amplitude secret key not set; ${followUp}`,
-      );
-    }
     await Promise.all(
-      plan.requests.map(async (request) => {
+      planAmplitudeDeletion(user.id).map(async (request) => {
         try {
           await withRetries(
             () => sendAmplitudeDeletion(request),
@@ -310,9 +297,9 @@ async function eraseExternalRecords(user: {
 }
 
 /**
- * Deletes the account everywhere it lives. Order matters: recurring billing
- * is cancelled first and blocks deletion if it fails (AccountDeletionBlockedError);
- * then the database rows go; then Auth0 and Amplitude, best-effort.
+ * Deletes the account. Order matters: recurring billing is cancelled first and
+ * blocks deletion if it fails (AccountDeletionBlockedError); then the database
+ * rows go; then Auth0 and Amplitude, when configured.
  */
 export async function deleteAccount(userId: string): Promise<boolean> {
   const [user] = await db
