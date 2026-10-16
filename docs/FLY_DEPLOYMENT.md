@@ -7,7 +7,9 @@
 > `kindred-asterling-ai-coaching.fly.dev` no longer resolved
 > ([public check](DIGITALOCEAN_DEPLOYMENT.md#public-read-only-check--2026-10-14)),
 > and it still did not resolve on 2026-10-15
-> ([public check](DIGITALOCEAN_DEPLOYMENT.md#public-read-only-check--2026-10-15)).
+> ([public check](DIGITALOCEAN_DEPLOYMENT.md#public-read-only-check--2026-10-15))
+> or 2026-10-16
+> ([public check](DIGITALOCEAN_DEPLOYMENT.md#public-read-only-check--2026-10-16)).
 > The staging checks below record the Fly app up to 2026-10-07.
 
 **Status (2026-09-26):** PostgreSQL staging is deployed and healthy at
