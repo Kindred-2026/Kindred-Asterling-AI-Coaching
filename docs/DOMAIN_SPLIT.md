@@ -26,7 +26,7 @@ Two build/runtime settings, both off by default so a plain build is unchanged.
 | Setting | Where | Effect |
 | --- | --- | --- |
 | `VITE_MARKETING_SITE_URL` | Frontend build for the app domain | `/` renders the sign-in page and is prerendered as a `noindex` shell. `/about`, `/science` and `/legal/*` send the browser to the marketing domain. Header and footer links point there. `/pricing` (checkout) and `/payment-success` (Helcim return) stay on the app |
-| `MARKETING_SITE_URL` | Fly runtime env for the API server | Server-side 301 for `/about`, `/science`, `/legal/*`, `/legal-documents/*`, `sitemap.xml` and `llms.txt` to the marketing domain; `robots.txt` disallows everything |
+| `MARKETING_SITE_URL` | Runtime env for the API server (`.do/app.yaml`) | Server-side 301 for `/about`, `/science`, `/legal/*`, `/legal-documents/*`, `sitemap.xml` and `llms.txt` to the marketing domain; `robots.txt` disallows everything |
 | `VITE_APP_URL` | Frontend build for the marketing domain | No Auth0 on this site. Sign in, checkout, `/login`, `/signup`, `/payment-success` and every signed-in page go to the app domain. Pricing stays as an information page whose checkout buttons go to the app's sign-in and return to the app's `/pricing` |
 
 Either split setting also points the prerendered canonical links (marketing
@@ -60,12 +60,12 @@ domain. The marketing domain never signs anyone in and is not added to Auth0.
    prerendered page get the SPA shell.
 3. Check the marketing site end to end (pages, legal PDFs, Sign in and
    checkout handing off to the app).
-4. Rebuild and deploy the Fly app. `fly.toml` sets `VITE_MARKETING_SITE_URL`
-   (`[build.args]`) and `MARKETING_SITE_URL` (`[env]`) to
-   `https://kindred-asterling-ai.xyz`, so either the "Deploy to Fly.io"
-   workflow or a plain `fly deploy` picks them up.
+4. Rebuild and deploy the app. `.do/app.yaml` sets `VITE_MARKETING_SITE_URL`
+   (`BUILD_TIME`) and `MARKETING_SITE_URL` (`RUN_TIME`) to
+   `https://kindred-asterling-ai.xyz`, so the "Deploy to DigitalOcean"
+   workflow picks them up.
 5. In Google Search Console, add the new domain and file a change of address
    from the old one.
 
-Rollback: remove both settings from `fly.toml` and redeploy the Fly app; the
+Rollback: remove both settings from `.do/app.yaml` and redeploy the app; the
 old single-site behaviour returns. The marketing deploy can stay up.
