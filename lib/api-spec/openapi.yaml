@@ -441,6 +441,10 @@ paths:
       operationId: sendChatMessage
       tags: [chat]
       summary: Append a user message and get the AI response
+      description: >
+        When the crisis detector matches the message, the AI is not called and
+        no daily quota is used. The user message and a fixed `crisis_support`
+        message are stored, and the response carries `crisisSupport`.
       requestBody:
         required: true
         content:
@@ -453,13 +457,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ChatConversationWithMessages"
+                $ref: "#/components/schemas/ChatTurnResponse"
 
   /chat/append:
     post:
       operationId: appendChatMessage
       tags: [chat]
       summary: Append a pre-composed message without invoking the AI (used by onboarding script)
+      description: >
+        User messages are screened by the same crisis detector as /chat/send.
+        On a match a fixed `crisis_support` message is stored after the user
+        message and the response carries `crisisSupport`.
       requestBody:
         required: true
         content:
@@ -472,7 +480,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ChatConversationWithMessages"
+                $ref: "#/components/schemas/ChatTurnResponse"
 
   /chat/archive:
     post:
@@ -1278,6 +1286,11 @@ components:
           type: integer
         role:
           type: string
+          enum: [user, assistant, crisis_support]
+          description: >
+            `crisis_support` is the fixed safety message the server stores after
+            a user message that matched the crisis detector. Show it as
+            Kindred's reply, rendered as the crisis-resources card.
         content:
           type: string
         createdAt:
@@ -1319,6 +1332,72 @@ components:
                 at most 500. The server never materialises the full transcript.
               items:
                 $ref: "#/components/schemas/ChatMessage"
+
+    ChatTurnResponse:
+      allOf:
+        - $ref: "#/components/schemas/ChatConversationWithMessages"
+        - type: object
+          properties:
+            crisisSupport:
+              $ref: "#/components/schemas/CrisisSupport"
+
+    CrisisSupport:
+      type: object
+      description: Present only when this turn matched the crisis detector.
+      required:
+        [type, message, disclaimer, resources, falsePositive, reviewedConfigVersion]
+      properties:
+        type:
+          type: string
+          enum: [crisis_support]
+        message:
+          type: string
+          description: The same text stored as the `crisis_support` message.
+        disclaimer:
+          type: string
+        resources:
+          type: array
+          items:
+            $ref: "#/components/schemas/CrisisResource"
+        falsePositive:
+          type: object
+          required: [label, instruction]
+          properties:
+            label:
+              type: string
+            instruction:
+              type: string
+        reviewedConfigVersion:
+          type: string
+
+    CrisisResource:
+      type: object
+      required: [id, region, name, description, contacts]
+      properties:
+        id:
+          type: string
+        region:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        contacts:
+          type: array
+          items:
+            $ref: "#/components/schemas/CrisisResourceContact"
+
+    CrisisResourceContact:
+      type: object
+      required: [kind, label, href]
+      properties:
+        kind:
+          type: string
+          enum: [call, text, web]
+        label:
+          type: string
+        href:
+          type: string
 
     ChatSendInput:
       type: object

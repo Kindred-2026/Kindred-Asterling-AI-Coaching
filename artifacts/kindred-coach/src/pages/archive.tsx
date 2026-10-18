@@ -51,7 +51,7 @@ h1{font-size:24px;margin-bottom:4px}
 .msg{margin-bottom:18px}
 .meta{font-size:12px;color:#888;margin-bottom:4px}
 .msg.user .content{background:#f0e8ff;padding:10px 14px;border-radius:10px;display:inline-block}
-.msg.assistant .content{background:#f4f4f4;padding:10px 14px;border-radius:10px;display:inline-block}
+.msg.assistant .content,.msg.crisis_support .content{background:#f4f4f4;padding:10px 14px;border-radius:10px;display:inline-block}
 @media print{body{margin:0}}
 </style></head><body>
 <h1>${escape(conv.title)}</h1>

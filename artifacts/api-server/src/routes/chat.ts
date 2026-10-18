@@ -28,6 +28,7 @@ import {
 } from "../lib/ai";
 import { withChatSession } from "../lib/amplitude";
 import {
+  CRISIS_SUPPORT_ROLE,
   crisisSupportResponse,
   detectCrisis,
   emitSafetySignalEvent,
@@ -173,6 +174,37 @@ async function loadWithMessages(
   return { ...conv, messages: msgs };
 }
 
+// Store the user's turn, then Kindred's fixed crisis-resources message, so both
+// stay in the conversation history. No model call and no daily quota: this
+// reply must work even when the provider is down or the user is out of quota.
+async function respondWithCrisisSupport(
+  res: Response,
+  conversationId: number,
+  userId: string,
+  content: string,
+): Promise<void> {
+  emitSafetySignalEvent();
+  const support = crisisSupportResponse();
+  await db.insert(messages).values({
+    conversationId,
+    userId,
+    role: "user",
+    content,
+  });
+  await db.insert(messages).values({
+    conversationId,
+    userId,
+    role: CRISIS_SUPPORT_ROLE,
+    content: support.message,
+  });
+  const full = await loadWithMessages(
+    conversationId,
+    userId,
+    MESSAGE_RESPONSE_LIMIT,
+  );
+  res.json({ ...JSON.parse(JSON.stringify(full)), crisisSupport: support });
+}
+
 function clip(s: string | null | undefined, max: number): string | null {
   if (!s) return null;
   const t = s.trim();
@@ -214,7 +246,7 @@ function buildSystemInstruction(
     "Vary your openings and rhythm. Do not start consecutive replies the same way. It is fine — often better — to make a statement, share an observation, or simply sit with what they said without asking anything at all.",
     "If the user sends a short logistical message ('brb', 'heading to therapy', 'one sec'), reply with a short acknowledgement that names the thing they mentioned (e.g. 'Take your time at therapy.'). Never default to a generic 'tell me more'.",
     "Avoid sycophancy ('what a great question', 'that's amazing'). Avoid therapist clichés. Never give medical advice or diagnose.",
-    "CRISIS PROTOCOL — If the user mentions self-harm, suicidal thoughts, or a crisis, respond with: (1) a brief acknowledgment of what they said, (2) a clear statement that you're not a crisis service, and (3) the national crisis resources: 988 Suicide & Crisis Lifeline (call or text 988) and Crisis Text Line (text HOME to 741741). Keep it simple and direct; do NOT add filler or commentary. Example: 'I hear you. I'm not a crisis service, but help is available — call or text 988, or text HOME to 741741.' Do not offer to 'stay with them' or 'talk through it' — direct them to the helplines. Then ask if there's anything else they'd like to talk about.",
+    "CRISIS PROTOCOL — If the user mentions self-harm, suicidal thoughts, or a crisis, respond with: (1) a brief acknowledgment of what they said, (2) a clear statement that you're not a crisis service, and (3) these resources: if they are in immediate danger, call 911 (Canada and the US) or their local emergency number; in Canada or the US, call or text 9-8-8 (Canada: 9-8-8 Suicide Crisis Helpline; US: 988 Suicide & Crisis Lifeline); text line: text 686868 in Canada or text HOME to 741741 in the US; anywhere else, findahelpline.com. Keep it simple and direct; do NOT add filler or commentary. Example: 'I'm really sorry you're carrying this. I'm not a crisis service, but help is available right now — if you're in immediate danger call 911. In Canada or the US you can call or text 9-8-8, or text 686868 (Canada) or HOME to 741741 (US). Anywhere else, findahelpline.com lists local lines.' Do not offer to 'stay with them' or 'talk through it' — direct them to the helplines. Then ask if there's anything else they'd like to talk about.",
     "You can quietly look things up about them when it genuinely helps: recent morning check-ins, evening reflections, body scans, habit streaks, and today's medications. Only look something up when the conversation actually calls for it — never for small talk or short logistical messages — and read only what you need. Weave anything you find in naturally, like you simply remember it; never mention tools, functions, data, lookups, or that you checked anything.",
   ];
   if (user?.birthday) parts.push(`Their birthday is ${user.birthday}.`);
@@ -283,6 +315,12 @@ router.post(
     }
     const userId = req.user!.id;
     const conv = await getOrCreateActive(userId);
+    // Onboarding answers are user turns too. Scripted assistant prompts are
+    // not screened.
+    if (parsed.data.role === "user" && detectCrisis(clipped)) {
+      await respondWithCrisisSupport(res, conv.id, userId, clipped);
+      return;
+    }
     await db.insert(messages).values({
       conversationId: conv.id,
       userId,
@@ -316,8 +354,8 @@ router.post(
     const userId = req.user!.id;
 
     if (detectCrisis(clipped)) {
-      emitSafetySignalEvent();
-      res.json(crisisSupportResponse());
+      const conv = await getOrCreateActive(userId);
+      await respondWithCrisisSupport(res, conv.id, userId, clipped);
       return;
     }
 
@@ -383,9 +421,12 @@ router.post(
     // greeting), so drop any leading assistant turns before mapping.
     let firstUserIdx = bounded.findIndex((m) => m.role === "user");
     if (firstUserIdx < 0) firstUserIdx = bounded.length;
+    // A stored crisis_support message was Kindred's reply, so the model sees
+    // it as its own earlier turn.
     const chatMessages = bounded.slice(firstUserIdx).map((m) => ({
-      role: (m.role === "assistant" ? "assistant" : "user") as
-        "assistant" | "user",
+      role: (m.role === "assistant" || m.role === CRISIS_SUPPORT_ROLE
+        ? "assistant"
+        : "user") as "assistant" | "user",
       content: clipMessage(m.content),
     }));
 

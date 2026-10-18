@@ -40,16 +40,24 @@ export function emitSafetySignalEvent(): void {
   );
 }
 
+/**
+ * Role of the fixed safety message stored after a user turn that tripped the
+ * detector. It is written only by the server (the append contract accepts
+ * user/assistant only), shown as Kindred's reply, and rendered by the chat UI
+ * as the crisis-resources card.
+ */
+export const CRISIS_SUPPORT_ROLE = "crisis_support";
+
 export function crisisSupportResponse() {
   return {
     type: "crisis_support",
     message: CRISIS_SUPPORT_CONFIG.response,
-    disclaimer: "Kindred is not medical care or an emergency service.",
+    disclaimer: CRISIS_SUPPORT_CONFIG.disclaimer,
+    resources: CRISIS_SUPPORT_CONFIG.resources,
     falsePositive: {
       label: CRISIS_SUPPORT_CONFIG.falsePositiveLabel,
-      instruction: "Rephrase or resend your message to continue coaching.",
+      instruction: CRISIS_SUPPORT_CONFIG.falsePositiveInstruction,
     },
-    regionSelector: CRISIS_SUPPORT_CONFIG.regions,
     reviewedConfigVersion: CRISIS_SUPPORT_CONFIG.review.version,
   } as const;
 }
