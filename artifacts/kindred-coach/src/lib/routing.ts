@@ -39,8 +39,7 @@ export const LEGACY_PRIMARY_ROUTE_REDIRECTS: Record<string, string> = {
 };
 
 // Match /app at a segment boundary without creating a nested router base.
-export const PRIVATE_ROUTE_PATTERN =
-  /^\/(?:today|talk|insights|you|app(?:\/.*)?)\/?$/;
+export const PRIVATE_ROUTE_PATTERN = /^\/(?:today|talk|insights|you|app(?:\/.*)?)\/?$/;
 
 export function signedInPage(pathname: string) {
   const path = canonicalPathname(pathname);
@@ -60,33 +59,60 @@ export function canonicalPathname(pathname: string): string {
   return pathname.replace(/\/+$/, "") || "/";
 }
 
+// Fixed, unroutable origin used to resolve candidate destinations the same way
+// the browser's URL parser will, without touching `window`.
+const RETURN_DESTINATION_BASE = "https://return-destination.invalid";
+
+/**
+ * Normalize a post-login destination, or return `null` if it could leave this
+ * site. The value must be an absolute path with no C0 control characters (the
+ * URL parser silently strips TAB/CR/LF, turning `/\t/evil.com` into
+ * `//evil.com`), no backslashes, and no scheme-relative `//host` prefix. It is
+ * then resolved against a fixed origin and the normalized
+ * `pathname + search + hash` is returned only if it stays on that origin and is
+ * still not scheme-relative (e.g. `/.//evil.com` normalizes to `//evil.com`).
+ */
+function normalizeReturnDestination(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+  if (!value.startsWith("/")) return null;
+  if (/[\u0000-\u001F\u007F]/.test(value)) return null;
+  if (value.startsWith("//")) return null;
+  if (value.includes("\\")) return null;
+
+  let url: URL;
+  try {
+    url = new URL(value, RETURN_DESTINATION_BASE);
+  } catch {
+    return null;
+  }
+  if (url.origin !== RETURN_DESTINATION_BASE) return null;
+
+  const normalized = `${url.pathname}${url.search}${url.hash}`;
+  if (!normalized.startsWith("/") || normalized.startsWith("//")) return null;
+  return normalized;
+}
+
 /**
  * A post-login destination is only trusted when it is a clean, absolute path
  * *within this site*. Anything that could take the browser off-site — a full
  * URL, a scheme-relative `//host`, a `javascript:`/`data:` scheme, backslashes,
- * or embedded CR/LF used for header/redirect smuggling — is rejected so the
+ * or embedded control characters such as TAB/CR/LF — is rejected so the
  * caller can fall back to a safe default.
  */
-export function isSafeReturnDestination(
-  value: string | null | undefined,
-): value is string {
-  if (typeof value !== "string") return false;
-  if (!value.startsWith("/")) return false;
-  if (value.startsWith("//")) return false;
-  if (value.includes("\\")) return false;
-  if (/[\r\n]/.test(value)) return false;
-  return true;
+export function isSafeReturnDestination(value: string | null | undefined): value is string {
+  return normalizeReturnDestination(value) !== null;
 }
 
 /**
- * Resolve a `returnTo` query value into a destination path we are willing to
- * navigate to after sign-in. Unsafe or missing values collapse to `fallback`.
+ * Resolve a `returnTo` query value into a normalized destination path we are
+ * willing to navigate to after sign-in. Unsafe or missing values collapse to
+ * `fallback`.
  */
 export function resolveReturnDestination(
   raw: string | null | undefined,
   fallback: string = DEFAULT_APP_PATH,
 ): string {
-  return isSafeReturnDestination(raw) ? raw : fallback;
+  return normalizeReturnDestination(raw) ?? fallback;
 }
 
 /**
