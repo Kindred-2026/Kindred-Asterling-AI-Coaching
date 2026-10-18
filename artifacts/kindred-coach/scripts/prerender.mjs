@@ -424,20 +424,45 @@ if (IS_SPLIT) {
 // Cloudflare Pages serves the marketing-only build. Give it the same security
 // headers the API server sends for the app, minus Auth0 (this site never
 // signs anyone in), and long caching for hashed assets.
+// Intercom Messenger (US region); keep in sync with INTERCOM_CSP in
+// api-server/src/middlewares/securityHeaders.ts.
 if (IS_MARKETING_BUILD) {
+  const intercomConnect = [
+    "https://via.intercom.io",
+    "https://api.intercom.io",
+    "https://api-iam.intercom.io",
+    "https://api-ping.intercom.io",
+    "https://*.intercom-messenger.com",
+    "wss://*.intercom-messenger.com",
+    "https://nexus-websocket-a.intercom.io",
+    "wss://nexus-websocket-a.intercom.io",
+    "https://nexus-websocket-b.intercom.io",
+    "wss://nexus-websocket-b.intercom.io",
+    "https://uploads.intercomcdn.com",
+    "https://uploads.intercomusercontent.com",
+  ].join(" ");
+  const intercomFrames = [
+    "https://intercom-sheets.com",
+    "https://www.intercom-reporting.com",
+    "https://www.youtube.com",
+    "https://player.vimeo.com",
+    "https://fast.wistia.net",
+  ].join(" ");
   const csp = [
     "default-src 'self'",
-    "script-src 'self'",
+    "script-src 'self' https://app.intercom.io https://widget.intercom.io https://js.intercomcdn.com",
     "script-src-attr 'none'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: https:",
-    "connect-src 'self' https://*.ingest.us.sentry.io",
-    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: blob: https:",
+    `connect-src 'self' https://*.ingest.us.sentry.io ${intercomConnect}`,
+    "font-src 'self' https://fonts.gstatic.com https://js.intercomcdn.com https://fonts.intercomcdn.com",
+    "media-src 'self' https://js.intercomcdn.com https://downloads.intercomcdn.com",
+    `frame-src ${intercomFrames}`,
     "object-src 'none'",
     "frame-ancestors 'none'",
     "worker-src 'self' blob:",
     "base-uri 'self'",
-    "form-action 'self'",
+    "form-action 'self' https://intercom.help https://api-iam.intercom.io",
     "upgrade-insecure-requests",
   ].join("; ");
   writeFileSync(

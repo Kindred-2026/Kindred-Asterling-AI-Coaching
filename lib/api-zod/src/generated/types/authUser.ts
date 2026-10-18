@@ -36,4 +36,5 @@ export interface AuthUser {
   timezone: string | null;
   /** @nullable */
   onboardedAt: Date | null;
+  createdAt: Date;
 }

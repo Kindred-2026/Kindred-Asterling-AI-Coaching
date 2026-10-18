@@ -32,6 +32,7 @@ vi.mock("@/components/layout/public-layout", () => ({
   PublicLayout: ({ children }: any) => children,
 }));
 vi.mock("@/components/ui/toaster", () => ({ Toaster: () => null }));
+vi.mock("@/components/intercom-messenger", () => ({ IntercomMessenger: () => null }));
 vi.mock("@/pages/dashboard", () => ({
   default: () => createElement("div", { "data-page": "Today" }, "Today"),
 }));

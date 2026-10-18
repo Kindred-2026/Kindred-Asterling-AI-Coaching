@@ -51,7 +51,8 @@ export const GetCurrentAuthUserResponse = zod.object({
   "motivationalQuote": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "timezone": zod.string().nullable(),
-  "onboardedAt": zod.coerce.date().nullable()
+  "onboardedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
 }),zod.null()])
 })
 
@@ -427,7 +428,8 @@ export const UpdateProfileResponse = zod.object({
   "motivationalQuote": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "timezone": zod.string().nullable(),
-  "onboardedAt": zod.coerce.date().nullable()
+  "onboardedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
 })
 
 

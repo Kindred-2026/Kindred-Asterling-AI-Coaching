@@ -20,17 +20,30 @@ describe("security headers", () => {
     expect(HSTS_MAX_AGE_SECONDS).toBeGreaterThanOrEqual(31536000);
   });
 
-  it("allows the Auth0 origin for connections and frames only", async () => {
+  it("allows the Auth0 origin for connections and frames", async () => {
     const csp = (await request(createTestApp()).get("/")).headers["content-security-policy"];
     expect(csp).toContain("connect-src 'self' https://tenant.auth0.test");
     expect(csp).toContain("frame-src https://tenant.auth0.test");
     expect(csp).toContain("frame-ancestors 'none'");
   });
 
+  it("allows the Intercom Messenger to load and connect", async () => {
+    const csp = (await request(createTestApp()).get("/")).headers["content-security-policy"];
+    const directive = (name: string) =>
+      csp.split(";").find((d: string) => d.startsWith(`${name} `)) ?? "";
+    expect(directive("script-src")).toContain("https://widget.intercom.io");
+    expect(directive("connect-src")).toContain("https://api-iam.intercom.io");
+    expect(directive("connect-src")).toContain("wss://nexus-websocket-a.intercom.io");
+    expect(directive("frame-src")).toContain("https://intercom-sheets.com");
+    expect(directive("font-src")).toContain("https://fonts.intercomcdn.com");
+  });
+
   it("blocks inline scripts", async () => {
     const csp = (await request(createTestApp()).get("/")).headers["content-security-policy"];
     const scriptSrc = csp.split(";").find((d: string) => d.startsWith("script-src "));
-    expect(scriptSrc).toBe("script-src 'self'");
+    expect(scriptSrc).toBe(
+      "script-src 'self' https://app.intercom.io https://widget.intercom.io https://js.intercomcdn.com",
+    );
     expect(csp).toContain("script-src-attr 'none'");
   });
 });

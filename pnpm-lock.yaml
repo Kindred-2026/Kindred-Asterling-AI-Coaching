@@ -190,6 +190,9 @@ importers:
       '@auth0/auth0-react':
         specifier: ^2.28.2
         version: 2.28.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@intercom/messenger-js-sdk':
+        specifier: ^0.0.20
+        version: 0.0.20
       '@sentry/react':
         specifier: ^11.8.0
         version: 11.8.0(react@19.3.1)
@@ -756,6 +759,9 @@ packages:
         optional: true
       zod:
         optional: true
+
+  '@intercom/messenger-js-sdk@0.0.20':
+    resolution: {integrity: sha512-99ixqRcsX4ZL+HnH3xxpQewKqdN9/mtptsnxk5vDd31TQG4x1o0gvp6aNPJm5iX3SPSJldQhA/uqW66NV1LO1w==}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -4244,6 +4250,8 @@ snapshots:
       '@standard-schema/spec': 1.1.0
       ajv: 8.20.0
       zod: 4.6.6
+
+  '@intercom/messenger-js-sdk@0.0.20': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:

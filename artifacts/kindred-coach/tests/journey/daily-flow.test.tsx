@@ -34,6 +34,9 @@ vi.mock("@/lib/auth", async (importOriginal) => ({
     login: vi.fn(),
   }),
 }));
+vi.mock("@/components/intercom-messenger", () => ({
+  IntercomMessenger: () => null,
+}));
 import App from "../../src/App";
 
 let server: Server;

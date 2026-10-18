@@ -836,6 +836,7 @@ components:
           phone,
           timezone,
           onboardedAt,
+          createdAt,
         ]
       properties:
         id:
@@ -883,6 +884,9 @@ components:
         onboardedAt:
           type: string
           nullable: true
+          format: date-time
+        createdAt:
+          type: string
           format: date-time
     AuthUserEnvelope:
       type: object

@@ -57,6 +57,7 @@ import {
   PRIVATE_ROUTE_PATTERN,
 } from "@/lib/routing";
 import { SignedInMetadata } from "@/components/signed-in-metadata";
+import { IntercomMessenger } from "@/components/intercom-messenger";
 import { LEGACY_PRIMARY_ROUTE_REDIRECTS } from "@/lib/navigation";
 import {
   AIUseDisclosure,
@@ -114,6 +115,42 @@ function AuthTokenBridge({ children }: { children: ReactNode }) {
     >
       {children}
     </AuthTokenReadyContext.Provider>
+  );
+}
+
+// Identifies signed-in people to Intercom with their Kindred account. Shares the
+// account query (and its cache entry) with PrivateRoutes.
+function SiteIntercom() {
+  const { isLoaded, isSignedIn } = useAuth();
+  const tokenBridgeReady = useContext(AuthTokenReadyContext);
+  const account = useGetCurrentAuthUser({
+    query: {
+      queryKey: getGetCurrentAuthUserQueryKey(),
+      enabled: isLoaded && isSignedIn && tokenBridgeReady,
+      retry: false,
+    },
+  });
+  const profile = isSignedIn ? account.data?.user : null;
+  const fullName = [profile?.firstName, profile?.lastName]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <IntercomMessenger
+      // A failed account load falls back to the visitor messenger, so the
+      // person can still reach support.
+      ready={isLoaded && (!isSignedIn || account.isFetched)}
+      user={
+        profile
+          ? {
+              id: profile.id,
+              name: fullName || profile.preferredName,
+              email: profile.email,
+              createdAt: profile.createdAt,
+            }
+          : null
+      }
+    />
   );
 }
 
@@ -280,6 +317,7 @@ function LegalShell() {
           <Toaster />
         </WouterRouter>
       </TooltipProvider>
+      <IntercomMessenger user={null} />
     </ThemeProvider>
   );
 }
@@ -342,6 +380,7 @@ function App() {
               <Toaster />
             </TooltipProvider>
           </ThemeProvider>
+          <SiteIntercom />
         </QueryClientProvider>
       </AuthTokenBridge>
     </SiteAuthProvider>
