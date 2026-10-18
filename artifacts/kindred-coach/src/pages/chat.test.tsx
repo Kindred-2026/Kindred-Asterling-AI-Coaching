@@ -7,8 +7,16 @@ import type {
   ChatTurnResponse,
 } from "@workspace/api-client-react";
 
+const ONBOARDED_USER = {
+  id: "user-1",
+  firstName: "Sam",
+  preferredName: "Sam",
+  onboardedAt: "2026-10-01T00:00:00.000Z",
+};
+
 const mocks = vi.hoisted(() => ({
   conversation: null as ChatConversationWithMessages | null,
+  user: {} as Record<string, unknown>,
   sendChatMessage: vi.fn(),
   appendChatMessage: vi.fn(),
   updateProfile: vi.fn(),
@@ -30,14 +38,7 @@ vi.mock("@workspace/api-client-react", async () => {
     useGetCurrentAuthUser: () =>
       useQuery({
         queryKey: ["/api/auth/user"],
-        queryFn: async () => ({
-          user: {
-            id: "user-1",
-            firstName: "Sam",
-            preferredName: "Sam",
-            onboardedAt: "2026-10-01T00:00:00.000Z",
-          },
-        }),
+        queryFn: async () => ({ user: { ...mocks.user } }),
       }),
     sendChatMessage: mocks.sendChatMessage,
     appendChatMessage: mocks.appendChatMessage,
@@ -94,6 +95,7 @@ let root: Root;
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.conversation = null;
+  mocks.user = { ...ONBOARDED_USER };
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -127,8 +129,11 @@ async function render() {
       createElement(QueryClientProvider, { client }, createElement(Chat)),
     ),
   );
-  await waitFor(() => input() !== null);
+  await waitFor(() => input() !== null || paused() !== null);
 }
+
+const paused = () =>
+  container.querySelector('[data-testid="onboarding-paused"]');
 
 async function send(text: string) {
   const textarea = input()!;
@@ -192,5 +197,139 @@ describe("chat crisis support", () => {
     expect(card()!.getAttribute("role")).toBeNull();
     // The card replaces the plain-text bubble rather than duplicating it.
     expect(container.textContent).not.toContain(CRISIS_TEXT);
+  });
+});
+
+describe("onboarding after a crisis turn", () => {
+  // Fake server for the onboarding flow: profile updates merge into the user,
+  // and appends land in the conversation. A user answer containing "suicide"
+  // comes back as a crisis turn, like the real detector.
+  function fakeOnboardingServer() {
+    mocks.updateProfile.mockImplementation(
+      async (patch: Record<string, unknown>) => {
+        Object.assign(mocks.user, patch);
+        return { user: { ...mocks.user } };
+      },
+    );
+    mocks.appendChatMessage.mockImplementation(
+      async ({ role, content }: { role: string; content: string }) => {
+        if (role === "user" && content.includes("suicide")) {
+          const turn = crisisTurn(content);
+          mocks.conversation = turn;
+          return turn;
+        }
+        const base = mocks.conversation ?? crisisTurn("");
+        mocks.conversation = {
+          ...base,
+          messages: [
+            ...(mocks.conversation?.messages ?? []),
+            {
+              id: 100 + (mocks.conversation?.messages.length ?? 0),
+              conversationId: 7,
+              role: role as "user" | "assistant",
+              content,
+              createdAt: "2026-10-16T12:01:00.000Z",
+            },
+          ],
+        };
+        return mocks.conversation;
+      },
+    );
+  }
+
+  function resume() {
+    return act(async () => {
+      (
+        container.querySelector(
+          '[data-testid="onboarding-resume"]',
+        ) as HTMLButtonElement
+      ).click();
+    });
+  }
+
+  it("pauses instead of asking the next question, then resumes on request", async () => {
+    // Name and birthday answered; the next step asks what feels heavy.
+    mocks.user = {
+      id: "user-1",
+      firstName: "Sam",
+      preferredName: "Sam",
+      birthday: "1990-01-01",
+      onboardedAt: null,
+    };
+    fakeOnboardingServer();
+    await render();
+
+    await send("honestly I think about suicide a lot");
+    await waitFor(() => paused() !== null);
+
+    expect(mocks.updateProfile).toHaveBeenCalledWith({
+      struggles: "honestly I think about suicide a lot",
+    });
+    // Only the answer was written: no scripted follow-up question.
+    expect(mocks.appendChatMessage).toHaveBeenCalledTimes(1);
+    expect(mocks.appendChatMessage).toHaveBeenCalledWith({
+      role: "user",
+      content: "honestly I think about suicide a lot",
+    });
+    expect(card()!.getAttribute("role")).toBe("alert");
+    expect(input()).toBeNull();
+    expect(container.textContent).not.toContain("real strengths");
+
+    await resume();
+    await waitFor(() => input() !== null);
+
+    expect(mocks.appendChatMessage).toHaveBeenLastCalledWith({
+      role: "assistant",
+      content: expect.stringContaining("real strengths"),
+    });
+    expect(paused()).toBeNull();
+    expect(container.textContent).toContain("real strengths");
+  });
+
+  it("finishes onboarding on resume when the crisis came on the last question", async () => {
+    mocks.user = {
+      id: "user-1",
+      firstName: "Sam",
+      preferredName: "Sam",
+      birthday: "1990-01-01",
+      struggles: "work",
+      strengths: "patience",
+      onboardedAt: null,
+    };
+    fakeOnboardingServer();
+    await render();
+
+    await send("nothing, I think about suicide");
+    await waitFor(() => paused() !== null);
+    // Onboarding is not marked complete while paused.
+    expect(mocks.user.onboardedAt).toBeNull();
+
+    await resume();
+    await waitFor(() => input() !== null);
+
+    expect(mocks.updateProfile).toHaveBeenLastCalledWith({
+      onboardedAt: expect.any(String),
+    });
+    expect(mocks.appendChatMessage).toHaveBeenLastCalledWith({
+      role: "assistant",
+      content: expect.stringContaining("Thank you, Sam."),
+    });
+  });
+
+  it("stays paused after a reload until they choose to continue", async () => {
+    mocks.user = {
+      id: "user-1",
+      firstName: "Sam",
+      preferredName: "Sam",
+      birthday: "1990-01-01",
+      struggles: "honestly I think about suicide a lot",
+      onboardedAt: null,
+    };
+    mocks.conversation = crisisTurn("honestly I think about suicide a lot");
+    await render();
+
+    expect(paused()).not.toBeNull();
+    expect(input()).toBeNull();
+    expect(card()!.getAttribute("role")).toBeNull();
   });
 });
