@@ -169,6 +169,13 @@ export default function Chat() {
       : [];
   const messages: ChatMessage[] =
     virtualFirstMessage.length > 0 ? virtualFirstMessage : storedMessages;
+  // An onboarding answer that tripped the crisis detector pauses onboarding:
+  // the next question waits until the person chooses to continue. Derived from
+  // the stored history so the pause survives a reload.
+  const onboardingPaused =
+    !onboarded &&
+    !!authUser &&
+    storedMessages[storedMessages.length - 1]?.role === "crisis_support";
 
   // Determine onboarding step from current profile state.
   const currentStep: OnboardingStep | null = useMemo(() => {
@@ -195,6 +202,38 @@ export default function Chat() {
     el.style.height = `${Math.min(el.scrollHeight, TEXTAREA_MAX_HEIGHT_PX)}px`;
   }, [draft, currentStep]);
 
+  // Write the next scripted onboarding prompt, or finish onboarding once every
+  // step has an answer. `user` must already include the latest answer.
+  async function advanceOnboarding(user: AuthUser) {
+    const nextStep = ONBOARDING.find((s) => !user[s.key]);
+    if (nextStep) {
+      await appendChatMessage({
+        role: "assistant",
+        content: nextStep.prompt(user),
+      });
+    } else {
+      // Onboarding complete
+      await updateProfile({ onboardedAt: new Date().toISOString() });
+      const name = (user.preferredName ?? "friend").trim();
+      await appendChatMessage({
+        role: "assistant",
+        content: `Thank you, ${name}. I've got a feel for you now. Whenever you want to talk — about your day, how you're feeling, or anything at all — I'm here. What's on your mind right now?`,
+      });
+    }
+  }
+
+  async function handleResumeOnboarding() {
+    if (!authUser || sending) return;
+    setSending(true);
+    try {
+      await advanceOnboarding(authUser);
+      await refetchUser();
+      await qc.invalidateQueries({ queryKey: getGetActiveChatQueryKey() });
+    } finally {
+      setSending(false);
+    }
+  }
+
   async function handleSend() {
     const text = draft.trim();
     if (!text || sending) return;
@@ -210,25 +249,14 @@ export default function Chat() {
         await updateProfile({ [currentStep.key]: value });
         const answer = await appendChatMessage({ role: "user", content: text });
         const crisisId = crisisMessageId(answer);
-        if (crisisId !== null) setLiveCrisisId(crisisId);
-        // Determine next step from the updated profile
-        const updatedUser: AuthUser = {
-          ...(authUser as AuthUser),
-          [currentStep.key]: value,
-        };
-        const nextStep = ONBOARDING.find((s) => !updatedUser[s.key]);
-        if (nextStep) {
-          await appendChatMessage({
-            role: "assistant",
-            content: nextStep.prompt(updatedUser),
-          });
+        if (crisisId !== null) {
+          // Don't follow crisis resources with the next getting-to-know-you
+          // question; onboarding pauses until they choose to continue.
+          setLiveCrisisId(crisisId);
         } else {
-          // Onboarding complete
-          await updateProfile({ onboardedAt: new Date().toISOString() });
-          const name = (updatedUser.preferredName ?? "friend").trim();
-          await appendChatMessage({
-            role: "assistant",
-            content: `Thank you, ${name}. I've got a feel for you now. Whenever you want to talk — about your day, how you're feeling, or anything at all — I'm here. What's on your mind right now?`,
+          await advanceOnboarding({
+            ...(authUser as AuthUser),
+            [currentStep.key]: value,
           });
         }
         await refetchUser();
@@ -360,65 +388,88 @@ export default function Chat() {
             </button>
           </div>
         )}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSend();
-          }}
-          className="flex gap-2 items-end"
-        >
-          {currentStep?.inputType === "date" ? (
-            <input
-              type="date"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder={currentStep?.placeholder}
-              aria-label="Date of birth input"
-              disabled={sending}
-              className="flex-1 rounded-full px-4 py-2.5 text-sm bg-muted border-0 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
-              data-testid="chat-input"
-            />
-          ) : (
-            <textarea
-              ref={textareaRef}
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                // Enter sends; Shift+Enter inserts a newline. Match common chat UX.
-                if (
-                  e.key === "Enter" &&
-                  !e.shiftKey &&
-                  !e.nativeEvent.isComposing
-                ) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder={
-                currentStep?.placeholder ?? "Share what's on your mind..."
-              }
-              aria-label="Message input"
-              disabled={sending}
-              rows={1}
-              className="flex-1 rounded-2xl px-4 py-2.5 text-sm bg-muted border-0 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50 resize-none leading-relaxed overflow-y-auto"
-              style={{ maxHeight: TEXTAREA_MAX_HEIGHT_PX }}
-              data-testid="chat-input"
-            />
-          )}
-          <button
-            type="submit"
-            disabled={sending || !draft.trim()}
-            aria-label={sending ? "Sending message" : "Send message"}
-            className="flex items-center justify-center w-11 h-11 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40 transition-colors shrink-0"
-            data-testid="chat-send"
+        {onboardingPaused ? (
+          <div
+            className="rounded-xl border border-border bg-card px-4 py-3 text-sm"
+            data-testid="onboarding-paused"
           >
-            {sending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+            <p className="leading-6 text-muted-foreground">
+              Take all the time you need. The support above is there whenever
+              you want it. When you're ready, we can keep getting to know each
+              other.
+            </p>
+            <button
+              type="button"
+              onClick={handleResumeOnboarding}
+              disabled={sending}
+              className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-lg border border-border px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              data-testid="onboarding-resume"
+            >
+              {sending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              I'm ready to continue
+            </button>
+          </div>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+            className="flex gap-2 items-end"
+          >
+            {currentStep?.inputType === "date" ? (
+              <input
+                type="date"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder={currentStep?.placeholder}
+                aria-label="Date of birth input"
+                disabled={sending}
+                className="flex-1 rounded-full px-4 py-2.5 text-sm bg-muted border-0 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+                data-testid="chat-input"
+              />
             ) : (
-              <Send className="w-4 h-4" />
+              <textarea
+                ref={textareaRef}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  // Enter sends; Shift+Enter inserts a newline. Match common chat UX.
+                  if (
+                    e.key === "Enter" &&
+                    !e.shiftKey &&
+                    !e.nativeEvent.isComposing
+                  ) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder={
+                  currentStep?.placeholder ?? "Share what's on your mind..."
+                }
+                aria-label="Message input"
+                disabled={sending}
+                rows={1}
+                className="flex-1 rounded-2xl px-4 py-2.5 text-sm bg-muted border-0 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50 resize-none leading-relaxed overflow-y-auto"
+                style={{ maxHeight: TEXTAREA_MAX_HEIGHT_PX }}
+                data-testid="chat-input"
+              />
             )}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={sending || !draft.trim()}
+              aria-label={sending ? "Sending message" : "Send message"}
+              className="flex items-center justify-center w-11 h-11 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40 transition-colors shrink-0"
+              data-testid="chat-send"
+            >
+              {sending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
