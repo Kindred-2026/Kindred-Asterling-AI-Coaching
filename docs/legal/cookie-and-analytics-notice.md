@@ -16,7 +16,7 @@ Kindred may use:
 
 ## Diagnostics and advertising
 
-Kindred does not load a third-party browser analytics or error-reporting SDK. Application and hosting logs may be used to operate, secure, and troubleshoot the service. This notice must be updated before any browser diagnostics tool is enabled.
+Kindred loads Sentry's browser SDK for error monitoring. It sends error details, performance timing and, for 10% of sessions and every session with an error, a replay of page changes with all text, inputs, images and media hidden. It keeps a session identifier in session storage and sets no advertising or tracking cookies. The SDK is configured not to send user details, cookies, headers, query strings or request bodies. Application and hosting logs may also be used to operate, secure, and troubleshoot the service.
 
 No Google Analytics, Meta Pixel, advertising network, or similar advertising tracker was found in the reviewed repository. This notice must be updated before any such technology is enabled. Social links in the footer are ordinary outbound links; the site does not embed social feeds or pixels.
 

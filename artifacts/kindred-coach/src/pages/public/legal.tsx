@@ -247,6 +247,7 @@ const privacySections: LegalSection[] = [
         "Payment Processing: Helcim (Calgary, AB, Canada) - PCI-DSS compliant checkout and subscription billing.",
         "Communications: Resend (transactional email), Twilio (SMS reminders, where enabled), and ElevenLabs (voice synthesis, where enabled).",
         "Product Analytics: Amplitude (USA) - receives the names of actions you take in the app, such as completing a morning check-in, sent from our servers under a scrambled identifier. It never receives your name, email, notes, chat messages, medication details or other health information.",
+        "Error Monitoring: Sentry (USA) - receives technical details when something goes wrong in the app or on our servers, such as the error message, the page or feature involved, and browser and device type, along with timing data about how the app performs. For a sample of sessions, and for sessions where an error occurs, it also receives a replay of how the page changed, with all text, typing, images and media hidden. It does not receive your name, email, notes, chat messages or other health information, and it is set not to store your IP address.",
       ]),
     ],
   },
@@ -590,7 +591,7 @@ const cookieSections: LegalSection[] = [
       subheading("C. Technical Diagnostics & Error Monitoring"),
       list([
         "Application and Hosting Logs: Technical server and infrastructure logs may be used to operate, secure, and troubleshoot the service.",
-        "No Third-Party Browser Diagnostics: Kindred does not load a third-party browser analytics or error-reporting SDK.",
+        "Error Monitoring (Sentry): The app loads Sentry's error-reporting script to tell us when something breaks. It sends error details, performance timing and, for some sessions, a replay of page changes with all text, typing, images and media hidden. It keeps a session identifier in your browser's session storage, which is cleared when you close the tab, and places no advertising or tracking cookies.",
         "Server-Side Product Analytics: Our servers tell Amplitude when an action is completed, such as a morning check-in, under a scrambled identifier. No cookies or tracking scripts are placed in your browser for this, and no health details are sent.",
       ]),
     ],

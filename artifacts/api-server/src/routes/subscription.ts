@@ -207,6 +207,13 @@ router.post("/payment/webhook", async (req, res): Promise<void> => {
         ? (event.customerEmail ?? (await getHelcimCustomerEmail(customerId)))
         : null;
     const result = await db.transaction(async (tx) => {
+      // Replays are detected by a read so the duplicate never reaches a write inside the transaction.
+      const [seen] = await tx
+        .select({ webhookId: processedWebhooksTable.webhookId })
+        .from(processedWebhooksTable)
+        .where(eq(processedWebhooksTable.webhookId, webhookId))
+        .limit(1);
+      if (seen) return "duplicate" as const;
       // Claim first, but the claim rolls back with every other effect on failure.
       const [claim] = await tx
         .insert(processedWebhooksTable)

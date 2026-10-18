@@ -56,6 +56,19 @@ services:
         scope: BUILD_TIME
         value: https://kindred-asterling-ai.xyz
 
+      # Sentry error monitoring. DSNs are public identifiers, not secrets.
+      - key: VITE_SENTRY_DSN
+        scope: BUILD_TIME
+        value: https://b6bbbdb7645800476978dc3d2577252d@o4512266363797504.ingest.us.sentry.io/4512266373038080
+      - key: SENTRY_DSN
+        scope: RUN_TIME
+        value: https://78f9fdcad26393badd15505a47b4b3b6@o4512266363797504.ingest.us.sentry.io/4512266404429824
+      # Uploads source maps during the build. The encrypted value lives in
+      # App Platform (synced from Doppler prd); the deploy keeps it.
+      - key: SENTRY_AUTH_TOKEN
+        scope: BUILD_TIME
+        type: SECRET
+
       # Database: the managed PostgreSQL cluster below. App Platform fills in
       # the URL (with ?sslmode=require) and the cluster's private CA, which the
       # app uses to verify the server certificate.

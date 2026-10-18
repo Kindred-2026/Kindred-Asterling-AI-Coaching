@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
+import { sentryEsbuildPlugin } from "@sentry/esbuild-plugin";
 import { rm } from "node:fs/promises";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
@@ -15,7 +16,11 @@ async function buildAll() {
   await rm(distDir, { recursive: true, force: true });
 
   await esbuild({
-    entryPoints: [path.resolve(artifactDir, "src/index.ts")],
+    // instrument.ts is its own file so `node --import` can load Sentry first.
+    entryPoints: [
+      path.resolve(artifactDir, "src/index.ts"),
+      path.resolve(artifactDir, "src/instrument.ts"),
+    ],
     platform: "node",
     bundle: true,
     format: "esm",
@@ -64,6 +69,9 @@ async function buildAll() {
       "@swc/*",
       "@azure/*",
       "@opentelemetry/*",
+      // Sentry must be one shared copy for instrument.mjs and index.mjs, and
+      // its profiler loads a native module.
+      "@sentry/*",
       "@google-cloud/*",
       "googleapis",
       "firebase-admin",
@@ -103,6 +111,19 @@ async function buildAll() {
     plugins: [
       // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
       esbuildPluginPino({ transports: ["pino-pretty"] }),
+      // Deployment builds with a Sentry auth token upload source maps so API
+      // errors show the original code. The maps stay on disk for
+      // --enable-source-maps. Without the token (local, CI) nothing uploads.
+      ...(process.env.SENTRY_AUTH_TOKEN?.trim()
+        ? [
+            sentryEsbuildPlugin({
+              org: "kindred-asterling-ai",
+              project: "4512266404429824",
+              authToken: process.env.SENTRY_AUTH_TOKEN.trim(),
+              telemetry: false,
+            }),
+          ]
+        : []),
     ],
     // Make sure packages that are cjs only (e.g. express) but are bundled continue to work in our esm output file
     banner: {
