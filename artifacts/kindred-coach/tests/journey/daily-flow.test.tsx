@@ -3,7 +3,12 @@ import { createRoot, type Root } from "react-dom/client";
 import { beforeAll, afterAll, expect, it, vi } from "vitest";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { db, usersTable, closeDatabase } from "@workspace/db";
+import {
+  db,
+  usersTable,
+  betaGrantsTable,
+  closeDatabase,
+} from "@workspace/db";
 import {
   registerTestClerkIdentity,
   revokeTestClerkIdentity,
@@ -45,6 +50,9 @@ beforeAll(async () => {
   await db
     .insert(usersTable)
     .values({ id: "journey-test", email: "journey@example.test" });
+  // Product routes are gated on an owner, beta or paid entitlement. Journey
+  // users are beta testers, so give this one the same grant a real tester has.
+  await db.insert(betaGrantsTable).values({ userId: "journey-test" });
   await new Promise<void>((resolve) => {
     server = api.listen(0, "127.0.0.1", resolve);
   });

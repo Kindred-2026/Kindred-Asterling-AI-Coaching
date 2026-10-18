@@ -83,6 +83,9 @@ release. See [docs/release-rollback.md](docs/release-rollback.md).
 
 ## Documentation
 
+- [docs/WORKFLOW_SOP.md](docs/WORKFLOW_SOP.md) — operator SOP from branch to
+  verified production release, with a generated Word copy
+  (`pnpm docs:sop`)
 - [docs/claude-connectors.md](docs/claude-connectors.md) — connecting Claude to
   DigitalOcean, GitHub, Auth0 and the team's other services (per-person checklist)
 - [docs/devin-workspaces.md](docs/devin-workspaces.md) — local (Devin CLI/Desktop)
