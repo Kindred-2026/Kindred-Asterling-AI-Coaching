@@ -5,7 +5,7 @@
 > **Historical rollout record.** This document records the implementation and
 > evidence from that phase; it is not the source of current production status.
 > Check `docs/FINALIZATION_RECORD.md` and the latest release evidence for
-> current gates. Use `docs/FLY_DEPLOYMENT.md` for the selected hosting target.
+> current gates. Use `docs/DIGITALOCEAN_DEPLOYMENT.md` for the current hosting target.
 
 The React/Vite frontend and Express API use Auth0. Internal `users.id` values
 remain the owner keys for coaching records, subscriptions, reminders, and other
@@ -100,7 +100,7 @@ same restore rehearsal and production approval process as for Clerk accounts.
 
 - Run frontend tests/typecheck, full workspace typecheck, production frontend/API builds, the disposable MongoDB API harness, and `git diff --check`.
 - Complete a real browser login → API → logout round trip and account-security operations with a test identity. Verify rejected JWTs and anonymous requests stay rejected.
-- Review the active hosting build configuration before rollout. **Use `docs/FLY_DEPLOYMENT.md` for the selected Fly.io target.** PR #264 removed the legacy Coolify deployment record from the repository; recover it from history before `ecc8d45` if the rollback deployment needs it. The prepared Dockerfile uses `VITE_AUTH0_*`; build and runtime values must select the same tenant and API audience.
+- Review the active hosting build configuration before rollout. **Use `docs/DIGITALOCEAN_DEPLOYMENT.md` for the current DigitalOcean target.** PR #264 removed the legacy Coolify deployment record from the repository; recover it from history before `ecc8d45` if the rollback deployment needs it. The prepared Dockerfile uses `VITE_AUTH0_*`; build and runtime values must select the same tenant and API audience.
 - Register the final production callback, logout and web-origin URLs on the intended Auth0 application. Configure the approved production tenant and API variables in hosting. Do not mix tenants between frontend and backend.
 - Deploy only after explicit approval, then verify `/api/healthz`, `/api/healthz/db`, migrated signed-in flows, payments and reminders in production. A passing build or CI does not establish production readiness.
 

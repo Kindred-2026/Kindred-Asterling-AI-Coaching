@@ -3,10 +3,10 @@
 Monorepo for the Kindred Asterling AI Coaching product.
 
 **Current application stack:** React/Vite + Express + Auth0 + MongoDB.
-**Hosting:** the app and its PostgreSQL database run on Fly.io in Toronto and
-are moving to DigitalOcean App Platform and Managed PostgreSQL in Toronto; see
-[the DigitalOcean runbook](docs/DIGITALOCEAN_DEPLOYMENT.md). Fly.io stays the
-rollback until that cutover passes ([Fly.io runbook](docs/FLY_DEPLOYMENT.md)).
+**Hosting:** the app and its PostgreSQL database run on DigitalOcean App
+Platform and Managed PostgreSQL in Toronto; see
+[the DigitalOcean runbook](docs/DIGITALOCEAN_DEPLOYMENT.md). Fly.io, the
+previous host, is retired.
 Cloudflare remains the DNS and AI Gateway layer and hosts the marketing site.
 See [the finalization record](docs/FINALIZATION_RECORD.md).
 
@@ -94,8 +94,8 @@ release. See [docs/release-rollback.md](docs/release-rollback.md).
   precedence, database modes, troubleshooting
 - [docs/CLOUDFLARE_SETUP.md](docs/CLOUDFLARE_SETUP.md) — custom domain, firewall,
   and AI Gateway in front of Claude
-- [docs/FLY_DEPLOYMENT.md](docs/FLY_DEPLOYMENT.md) — selected Fly.io staging,
-  migration, and cutover runbook; provider steps remain unverified until run
+- [docs/DIGITALOCEAN_DEPLOYMENT.md](docs/DIGITALOCEAN_DEPLOYMENT.md) — hosting,
+  deploy, new-migration and cutover runbook
 - [docs/release-rollback.md](docs/release-rollback.md) — release evidence and
   rollback responsibilities during and after the hosting transition
 - [docs/FINALIZATION_RECORD.md](docs/FINALIZATION_RECORD.md) — foundation

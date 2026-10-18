@@ -9,9 +9,9 @@ when `main` was at `62ca0c9` (`TRUST_PROXY_HOPS` `2`), was live on 2026-10-16
 `main` was at `0ce2f89` (Sentry, #302) was live on 2026-10-17
 ([public check](#public-read-only-check--2026-10-17)); it predates the legal
 v1.3 and account-deletion changes in #303/#305. Step 9's sign-in, chat
-and log checks are not recorded here. `kindred-asterling-ai-coaching.fly.dev`
-no longer resolves, so the Fly rollback below may no longer be available.
-Check with `fly status` before relying on it. The DigitalOcean account is now operational, so this
+and log checks are not recorded here. Fly.io is retired: `kindred-asterling-ai-coaching.fly.dev` no longer
+resolves and the Fly files were removed from the repository, so the Fly
+rollback below is no longer available. The DigitalOcean account is now operational, so this
 replaces the 2026-09 guides that were removed when DigitalOcean declined the
 payment methods available then.
 
@@ -25,7 +25,7 @@ Run it in three parts:
 
 ## What moves where
 
-| | Fly.io (today) | DigitalOcean (target) |
+| | Fly.io (before) | DigitalOcean (target) |
 | --- | --- | --- |
 | App | Fly app `kindred-asterling-ai-coaching`, one 1 GB shared machine, Toronto (`yyz`) | App Platform app `kindred-asterling-ai-coaching`, service `web`, one `apps-s-1vcpu-1gb` instance, Toronto (`tor`) |
 | Database | Fly Managed Postgres 16, Toronto | Managed PostgreSQL 16 cluster `kindred-db`, Toronto (`tor1`), database `kindred` |
@@ -74,7 +74,7 @@ and Kindred uses the Free plan. So the app domain's records become
 What the app domain loses: Cloudflare's Bot Fight Mode, the Free Managed
 Ruleset and the `/api/` rate-limiting rule. The app keeps its own per-user and
 per-IP rate limits. Problems recorded in the
-[Fly runbook's public checks](FLY_DEPLOYMENT.md#public-read-only-check--2026-10-07)
+[Fly runbook's public checks](https://github.com/Kindred-2026/Kindred-Asterling-AI-Coaching/blob/8a5d7ee/docs/FLY_DEPLOYMENT.md#public-read-only-check--2026-10-07)
 go away with them: challenges on `/api/` requests, an injected script that the
 CSP blocks, and rewritten security headers. The marketing domain and AI
 Gateway are not affected.
@@ -347,6 +347,19 @@ the switch is not on Fly; ask for help before copying it back.
   policy names DigitalOcean as the host.
 - Deploy from now on with **Deploy to DigitalOcean**. Change configuration in
   `.do/app.yaml` and secret values in the dashboard.
+- **New database migrations.** Migrations never run when the app starts, and
+  the app refuses to start if a table or column it expects is missing. Before
+  deploying a build that adds a file to `lib/db/migrations-postgres/`, add
+  your IP to the database's **Trusted Sources**, apply the new file as
+  `doadmin`, then deploy, and remove your IP again:
+
+  ```sh
+  psql "$DO_DB" -v ON_ERROR_STOP=1 -f lib/db/migrations-postgres/<000N_new_file>.sql
+  psql "$DO_DB" -v ON_ERROR_STOP=1 -f .do/grant-app-role.sql   # if it adds tables
+  ```
+
+  Deploying before the migration leaves the app crash-looping. That is the
+  likely cause of the 2026-10-11 Fly outage, when `0003` was not applied.
 
 ## 8. Retire Fly (after about a week without problems)
 
@@ -356,12 +369,10 @@ the switch is not on Fly; ask for help before copying it back.
 2. Revoke the Anthropic and Resend keys that Fly used, delete the Fly deploy
    token, and remove the `fly-staging` GitHub environment.
 3. In Auth0, remove the `fly.dev` callback, logout and origin entries.
-4. Remove the Fly files from the repository: `fly.toml`,
-   `.github/workflows/fly-deploy.yml`, the Fly parts of `plugins/kindred-mcp`
-   and `lib/db/scripts/run-fly-postgres-integration.mjs`. Also update
-   `docs/FLY_DEPLOYMENT.md`, `docs/release-rollback.md`,
-   `docs/DOMAIN_SPLIT.md`, `docs/COST_BASELINE.md` and `SECRET_INVENTORY.md`
-   to match.
+4. Done: `fly.toml`, `.github/workflows/fly-deploy.yml`,
+   `lib/db/scripts/run-fly-postgres-integration.mjs` and
+   `docs/FLY_DEPLOYMENT.md` were removed, and the other docs now point here.
+   `plugins/kindred-mcp` had no Fly parts left.
 
 ## Public read-only check — 2026-10-14
 
