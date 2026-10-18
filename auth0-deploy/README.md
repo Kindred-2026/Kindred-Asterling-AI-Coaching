@@ -19,6 +19,15 @@ environment variables documented in `.env.example`:
 - `AUTH0_DOMAIN`
 - `AUTH0_AUDIENCE`
 
+Optional: account deletion can also delete the user's Auth0 record. To turn
+that on, create a machine-to-machine application in the Auth0 dashboard,
+authorize it for the Management API with only the `delete:users` scope, and
+set its client ID and secret as the runtime `AUTH0_MGMT_CLIENT_ID` and
+`AUTH0_MGMT_CLIENT_SECRET`. `AUTH0_MGMT_DOMAIN` must be the tenant's canonical
+domain (`dev-4c281gnuylq4hccq.ca.auth0.com`, already set in `.do/app.yaml`),
+because the Management API does not answer on the custom sign-in domain.
+Without these, deletion skips Auth0 and requests are handled by email.
+
 The API audience configured by this export is
 `https://kindred-asterling-ai-coaching.com/api`.
 

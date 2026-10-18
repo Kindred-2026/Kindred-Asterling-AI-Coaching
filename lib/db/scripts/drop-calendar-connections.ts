@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { MongoClient, type Db } from "mongodb";
 import pg from "pg";
+import { postgresConnectionConfig } from "../src/postgresDb";
 
 // The Google Calendar integration was permanently removed on 2026-10-01. Its
 // stored refresh tokens can no longer be decrypted or revoked, so this one-off
@@ -87,7 +88,7 @@ export async function runDropCalendarConnections(
       await client.close();
     }
   } else if (provider === "postgres") {
-    const client = new pg.Client({ connectionString: required("POSTGRES_URL") });
+    const client = new pg.Client(postgresConnectionConfig(required("POSTGRES_URL")));
     try {
       await client.connect();
       result = await dropPostgresCalendarConnections(client, confirmed, await readFile(DROP_SQL, "utf8"));

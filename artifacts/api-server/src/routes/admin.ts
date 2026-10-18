@@ -5,15 +5,23 @@ import {
   type Response,
   type NextFunction,
 } from "express";
-import { eq, and, desc, gt, isNull, or } from "@workspace/db";
+import { eq, and, desc, isNull } from "@workspace/db";
 import {
   db,
   usersTable,
   betaGrantsTable,
   entitlementAuditTable,
+  DatabaseLeaseUnavailableError,
 } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
 import { ownerIds } from "../lib/subscriptionService";
+import {
+  activeBetaGrant,
+  betaConfig,
+  countBetaSpots,
+  isOpenSpot,
+  withBetaSpotLock,
+} from "../lib/betaSpots";
 
 function ownerEmails(): Set<string> {
   return new Set(
@@ -86,7 +94,15 @@ router.get("/beta/grants", async (_req, res): Promise<void> => {
     .orderBy(desc(betaGrantsTable.grantedAt))
     .limit(200);
 
-  res.json({ grants: rows });
+  const config = betaConfig();
+  res.json({
+    grants: rows.map((row) => ({
+      ...row,
+      kind: isOpenSpot(row) ? "open" : "reserved",
+    })),
+    spots: await countBetaSpots(config),
+    opensAt: config.opensAt?.toISOString() ?? null,
+  });
 });
 
 router.post("/beta/grant", async (req, res): Promise<void> => {
@@ -107,42 +123,56 @@ router.post("/beta/grant", async (req, res): Promise<void> => {
     return;
   }
 
-  const [existing] = await db
-    .select()
-    .from(betaGrantsTable)
-    .where(
-      and(
-        eq(betaGrantsTable.userId, userId),
-        isNull(betaGrantsTable.revokedAt),
-        or(
-          isNull(betaGrantsTable.expiresAt),
-          gt(betaGrantsTable.expiresAt, new Date()),
-        ),
-      ),
-    )
-    .limit(1);
+  // Owner grants use the reserved spots set aside for friends.
+  let result;
+  try {
+    result = await withBetaSpotLock(async () => {
+      const [existing] = await db
+        .select()
+        .from(betaGrantsTable)
+        .where(and(eq(betaGrantsTable.userId, userId), activeBetaGrant()))
+        .limit(1);
+      if (existing) return { error: "User already has an active beta grant" };
 
-  if (existing) {
-    res.status(409).json({ error: "User already has an active beta grant" });
-    return;
+      const spots = await countBetaSpots(betaConfig());
+      if (spots.reserved.left === 0) {
+        return {
+          error:
+            spots.reserved.taken >= spots.reserved.total
+              ? `All ${spots.reserved.total} reserved spots are in use. Revoke one, or ask them to join an open spot.`
+              : "The beta is full.",
+        };
+      }
+
+      const [grant] = await db
+        .insert(betaGrantsTable)
+        .values({
+          userId,
+          grantedBy: req.user!.id,
+        })
+        .returning();
+
+      await db.insert(entitlementAuditTable).values({
+        userId,
+        action: "beta_granted",
+        actorId: req.user!.id,
+        metadata: { grantId: grant.id },
+      });
+      return { grant };
+    });
+  } catch (err) {
+    if (err instanceof DatabaseLeaseUnavailableError) {
+      res.status(503).json({ error: "Beta spots are busy. Try again." });
+      return;
+    }
+    throw err;
   }
 
-  const [grant] = await db
-    .insert(betaGrantsTable)
-    .values({
-      userId,
-      grantedBy: req.user!.id,
-    })
-    .returning();
-
-  await db.insert(entitlementAuditTable).values({
-    userId,
-    action: "beta_granted",
-    actorId: req.user!.id,
-    metadata: { grantId: grant.id },
-  });
-
-  res.status(201).json({ grant });
+  if ("error" in result) {
+    res.status(409).json({ error: result.error });
+    return;
+  }
+  res.status(201).json({ grant: result.grant });
 });
 
 router.post("/beta/revoke", async (req, res): Promise<void> => {

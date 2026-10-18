@@ -19,17 +19,21 @@
     "test:verify": "node --test scripts/verify.test.mjs",
     "test:release-check": "node --test scripts/release-check.test.mjs",
     "test:auth0-local": "node --test scripts/auth0-local.test.mjs",
+    "test:digitalocean": "node --test scripts/digitalocean.test.mjs",
+    "test:sop-docx": "node --test scripts/generate-sop-docx.test.mjs",
     "format": "node scripts/format-check.mjs --write",
     "format:check": "node scripts/format-check.mjs",
     "verify": "node scripts/verify.mjs",
     "generate:check": "node scripts/verify-generated.mjs",
     "release:check": "node scripts/release-check.mjs",
     "workspace:check": "node scripts/workspace-check.mjs",
-    "auth0:local": "node scripts/auth0-local.mjs"
+    "auth0:local": "node scripts/auth0-local.mjs",
+    "docs:sop": "node scripts/generate-sop-docx.mjs",
+    "docs:sop:check": "node scripts/generate-sop-docx.mjs --check"
   },
   "devDependencies": {
-    "mongodb-memory-server": "^10.4.3",
-    "prettier": "^3.8.3",
-    "typescript": "~5.9.3"
+    "mongodb-memory-server": "^11.3.0",
+    "prettier": "^3.9.10",
+    "typescript": "~7.0.2"
   }
 }

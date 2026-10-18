@@ -1,5 +1,7 @@
 # Privacy Policy
 
+> **Superseded working draft.** The published text is in `artifacts/kindred-coach/src/pages/public/legal.tsx` (version 1.3, effective October 17, 2026), with matching PDFs in `artifacts/kindred-coach/public/legal-documents/`. This file is kept for history; where it differs from the published text, the published text applies.
+
 **Status:** Approved — not legal advice
 **Last repository review:** October 5, 2026
 **Intended users:** Adults aged 18 and older only
@@ -36,7 +38,7 @@ Kindred uses information to:
 
 ## Service providers and disclosures
 
-The application and its Managed Postgres database run on Fly.io in Toronto (`yyz`). Since 2026-10-03 the public domain has been served by the Fly app through Cloudflare, which provides DNS, TLS, and network protection. `fly.toml` selects Anthropic's Claude models through the Anthropic API for coaching replies; requests can optionally be routed through Cloudflare AI Gateway with payload logging and caching turned off. The production cutover gates in the Fly.io runbook are still open, and the previous server and MongoDB database are kept for rollback until they close.
+The application and its Managed Postgres database run on Fly.io in Toronto (`yyz`) and are moving to DigitalOcean App Platform and Managed PostgreSQL in Toronto (`tor1`) under the [DigitalOcean runbook](../DIGITALOCEAN_DEPLOYMENT.md); Fly.io keeps a copy for rollback until it is retired. Since 2026-10-03 the public domain has been served by the Fly app through Cloudflare, which provides DNS, TLS, and network protection; after the move Cloudflare provides only DNS for the app domain and DigitalOcean serves it with TLS. The published privacy policy names DigitalOcean, so deploy the marketing site with the cutover. The deployed configuration (`fly.toml`, then `.do/app.yaml`) selects Anthropic's Claude models through the Anthropic API for coaching replies; requests can optionally be routed through Cloudflare AI Gateway with payload logging and caching turned off. The production cutover gates in the Fly.io runbook are still open, and the previous server and MongoDB database are kept for rollback until they close.
 
 The service uses Auth0 for identity, Helcim for payments, Twilio for SMS, Resend for email, and ElevenLabs for voice features. Legacy Clerk identity mappings are retained only for account-history reconciliation and rollback. Information should be sent to a provider only when its feature is enabled and needed.
 

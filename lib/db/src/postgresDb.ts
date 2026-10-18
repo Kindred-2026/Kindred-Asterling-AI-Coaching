@@ -95,8 +95,10 @@ function compile(value: Condition, table: Table, params: unknown[], qualify = fa
     if (!values.length) return "FALSE";
     return `${left} IN (${values.map((item) => { params.push(item); return `$${params.length}`; }).join(", ")})`;
   }
+  // Real PostgreSQL rejects a parameter the statement never uses.
+  if (expression.value === null) return `${left} IS NULL`;
   params.push(expression.value);
-  return expression.value === null ? `${left} IS NULL` : `${left} ${expression.operator} $${params.length}`;
+  return `${left} ${expression.operator} $${params.length}`;
 }
 function validateValue(value: unknown): void {
   if (value === undefined || typeof value === "function" || column(value)) throw new Error("Invalid PostgreSQL value");
@@ -124,6 +126,25 @@ function targetColumns(target: Column | Column[], table: Table): Column[] { cons
 
 export class DatabaseLeaseUnavailableError extends Error {}
 
+// Managed databases such as DigitalOcean's sign server certificates with a
+// private CA and hand out `?sslmode=require` URLs. node-postgres lets TLS
+// settings parsed from the URL replace an explicit `ssl` option, so when a CA
+// is supplied the URL's TLS parameters are dropped and the server certificate
+// and hostname are verified against that CA instead.
+const urlTlsParameters = ["ssl", "sslmode", "sslrootcert", "sslcert", "sslkey", "uselibpqcompat"];
+export function postgresConnectionConfig(url: string, caCert = process.env.POSTGRES_CA_CERT): { connectionString: string; ssl?: { ca: string; rejectUnauthorized: true } } {
+  const ca = caCert?.trim();
+  if (!ca) return { connectionString: url };
+  let parsed: URL;
+  try { parsed = new URL(url); } catch { throw new Error("POSTGRES_URL must be a PostgreSQL URL"); }
+  const { searchParams } = parsed;
+  if (searchParams.get("sslmode") === "disable" || searchParams.get("ssl") === "0" || searchParams.get("ssl") === "false") {
+    throw new Error("POSTGRES_CA_CERT is set but POSTGRES_URL disables TLS");
+  }
+  urlTlsParameters.forEach((name) => searchParams.delete(name));
+  return { connectionString: parsed.toString(), ssl: { ca, rejectUnauthorized: true } };
+}
+
 export type PostgresOptions = { pool?: Pool; url?: string; maxPoolSize?: number };
 let pool: Pool | null = null;
 function getPool(options?: PostgresOptions): Pool {
@@ -131,7 +152,7 @@ function getPool(options?: PostgresOptions): Pool {
   if (options?.pool) { pool = options.pool; return pool; }
   const url = (options?.url ?? process.env.POSTGRES_URL)?.trim();
   if (!url || !/^postgres(?:ql):\/\//i.test(url)) throw new Error("POSTGRES_URL must be a PostgreSQL URL");
-  pool = new Pool({ connectionString: url, max: options?.maxPoolSize ?? 10, min: 0, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 5_000, maxUses: 0 });
+  pool = new Pool({ ...postgresConnectionConfig(url), max: options?.maxPoolSize ?? 10, min: 0, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 5_000, maxUses: 0 });
   return pool;
 }
 export async function initializePostgresDatabase(options?: PostgresOptions): Promise<void> {

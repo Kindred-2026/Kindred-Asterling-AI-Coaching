@@ -1,6 +1,10 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { requireAuth } from "../middlewares/requireAuth";
-import { deleteAccount, exportAccount } from "../lib/accountLifecycle";
+import {
+  AccountDeletionBlockedError,
+  deleteAccount,
+  exportAccount,
+} from "../lib/accountLifecycle";
 
 const router: IRouter = Router();
 router.get(
@@ -20,7 +24,20 @@ router.get(
   },
 );
 router.delete("/account", requireAuth, async (req: Request, res: Response) => {
-  if (!(await deleteAccount(req.user!.id))) {
+  let deleted: boolean;
+  try {
+    deleted = await deleteAccount(req.user!.id);
+  } catch (err) {
+    if (err instanceof AccountDeletionBlockedError) {
+      res.status(502).json({
+        error:
+          "We could not cancel your Yearly renewal with Helcim, so nothing was deleted. Please try again shortly.",
+      });
+      return;
+    }
+    throw err;
+  }
+  if (!deleted) {
     res.status(404).json({ error: "Account not found" });
     return;
   }

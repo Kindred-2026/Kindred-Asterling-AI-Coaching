@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.10
 FROM node:24-bookworm-slim AS build
 
 ENV PNPM_HOME=/pnpm \
@@ -20,8 +19,9 @@ COPY lib/api-spec/package.json lib/api-spec/package.json
 COPY lib/api-zod/package.json lib/api-zod/package.json
 COPY lib/db/package.json lib/db/package.json
 COPY scripts/package.json scripts/package.json
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile
+# Plain Dockerfile syntax only (no RUN --mount), so the image also builds
+# where BuildKit is unavailable, as reported for DigitalOcean App Platform.
+RUN pnpm install --frozen-lockfile
 
 COPY artifacts/api-server artifacts/api-server
 COPY artifacts/kindred-coach artifacts/kindred-coach
@@ -36,16 +36,19 @@ ARG VITE_AUTH0_AUDIENCE
 # Optional domain split (docs/DOMAIN_SPLIT.md): the marketing website's URL.
 # Empty keeps the website and app on one domain.
 ARG VITE_MARKETING_SITE_URL=""
+# Optional: the public Sentry DSN. Empty leaves browser error reporting off.
+ARG VITE_SENTRY_DSN=""
 ENV VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN \
     VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID \
     VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE \
-    VITE_MARKETING_SITE_URL=$VITE_MARKETING_SITE_URL
-# These identifiers are public. Accept build arguments or optional BuildKit
-# secret mounts; never pass a client secret to the browser build.
-RUN --mount=type=secret,id=VITE_AUTH0_DOMAIN,env=VITE_AUTH0_DOMAIN,required=false \
-    --mount=type=secret,id=VITE_AUTH0_CLIENT_ID,env=VITE_AUTH0_CLIENT_ID,required=false \
-    --mount=type=secret,id=VITE_AUTH0_AUDIENCE,env=VITE_AUTH0_AUDIENCE,required=false \
-    export NODE_ENV=production \
+    VITE_MARKETING_SITE_URL=$VITE_MARKETING_SITE_URL \
+    VITE_SENTRY_DSN=$VITE_SENTRY_DSN
+# These identifiers are public build arguments (App Platform build-time
+# variables, or --build-arg); never pass a client secret to the browser build.
+# Optional: uploads source maps to Sentry. Read only by the build tools in this
+# stage, never written to an image ENV or copied to the runtime image.
+ARG SENTRY_AUTH_TOKEN=""
+RUN export NODE_ENV=production SENTRY_AUTH_TOKEN="$SENTRY_AUTH_TOKEN" \
  && pnpm --filter @workspace/kindred-coach run build:deployment \
  && pnpm --filter @workspace/api-server run build \
  && pnpm --filter @workspace/api-server deploy --prod --legacy /app/runtime
@@ -63,4 +66,4 @@ USER kindred
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/api/healthz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
-CMD ["node", "--enable-source-maps", "artifacts/api-server/dist/index.mjs"]
+CMD ["node", "--enable-source-maps", "--import", "./artifacts/api-server/dist/instrument.mjs", "artifacts/api-server/dist/index.mjs"]

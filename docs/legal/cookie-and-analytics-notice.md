@@ -1,5 +1,7 @@
 # Cookie and Analytics Notice
 
+> **Superseded working draft.** The published text is in `artifacts/kindred-coach/src/pages/public/legal.tsx` (version 1.3, effective October 17, 2026), with matching PDFs in `artifacts/kindred-coach/public/legal-documents/`. This file is kept for history; where it differs from the published text, the published text applies.
+
 **Status:** Approved — not legal advice
 **Last repository review:** October 5, 2026
 **Intended users:** Adults aged 18 and older only
@@ -12,7 +14,7 @@ Kindred may use:
 
 - Auth0 authentication and session technologies to keep users signed in and protect account requests.
 - Browser storage for interface preferences such as theme, where supported.
-- Security, load-balancing, or hosting cookies set by Fly.io or Cloudflare and identified in the final deployment inventory.
+- Security, load-balancing, or hosting cookies set by DigitalOcean or Cloudflare and identified in the final deployment inventory.
 
 ## Diagnostics and advertising
 
@@ -24,4 +26,4 @@ No Google Analytics, Meta Pixel, advertising network, or similar advertising tra
 
 Users can use browser controls to remove or block cookies, but blocking essential authentication storage may prevent sign-in or secure features from working.
 
-> **Founder/legal confirmation required:** Inspect production response headers and browser storage. Identify cookie names, providers, and lifetimes; confirm Auth0, Fly.io, and Cloudflare behavior; and determine whether a consent manager is required in each supported launch location.
+> **Founder/legal confirmation required:** Inspect production response headers and browser storage. Identify cookie names, providers, and lifetimes; confirm Auth0, DigitalOcean, and Cloudflare behavior; and determine whether a consent manager is required in each supported launch location.

@@ -1,0 +1,172 @@
+# DigitalOcean App Platform spec for Kindred (docs/DIGITALOCEAN_DEPLOYMENT.md).
+#
+# The "Deploy to DigitalOcean" workflow applies this file on every deploy, the
+# way fly.toml was applied on Fly. Secret values never go in this file: an env
+# with `type: SECRET` and no value keeps the encrypted value stored in the App
+# Platform dashboard, and secrets added only in the dashboard are kept too.
+# Plain settings added only in the dashboard are dropped, so put them here.
+# Reference: https://docs.digitalocean.com/products/app-platform/reference/app-spec/
+
+name: kindred-asterling-ai-coaching
+# Toronto, so the app and its database stay in Canada.
+region: tor
+
+alerts:
+  - rule: DEPLOYMENT_FAILED
+  - rule: DOMAIN_FAILED
+
+# The custom domain is added in the dashboard at cutover (runbook step 6);
+# while this file has no `domains:` list, deploys keep the live app's domains.
+
+services:
+  - name: web
+    github:
+      repo: Kindred-2026/Kindred-Asterling-AI-Coaching
+      branch: main
+      # Manual only: a deploy is an outward-facing action, so it never runs on
+      # push. Deploy with the workflow or the dashboard's Deploy button.
+      deploy_on_push: false
+    dockerfile_path: Dockerfile
+    source_dir: /
+    http_port: 8080
+    instance_size_slug: apps-s-1vcpu-1gb
+    # Exactly one instance: reminders run on an in-process scheduler.
+    instance_count: 1
+    health_check:
+      http_path: /api/healthz/db
+      initial_delay_seconds: 30
+      period_seconds: 30
+      timeout_seconds: 5
+      failure_threshold: 3
+    envs:
+      # Public browser identifiers for the frontend build (never a client
+      # secret). The workflow fills them from GitHub variables.
+      - key: VITE_AUTH0_DOMAIN
+        scope: BUILD_TIME
+        value: ${VITE_AUTH0_DOMAIN}
+      - key: VITE_AUTH0_CLIENT_ID
+        scope: BUILD_TIME
+        value: ${VITE_AUTH0_CLIENT_ID}
+      - key: VITE_AUTH0_AUDIENCE
+        scope: BUILD_TIME
+        value: ${VITE_AUTH0_AUDIENCE}
+      # The public website lives on kindred-asterling-ai.xyz (docs/DOMAIN_SPLIT.md),
+      # so this domain's root is the sign-in page. Pairs with MARKETING_SITE_URL.
+      - key: VITE_MARKETING_SITE_URL
+        scope: BUILD_TIME
+        value: https://kindred-asterling-ai.xyz
+      # Sentry error monitoring. A DSN is a public client key, safe to commit.
+      # The browser and the server report to separate Sentry projects.
+      - key: VITE_SENTRY_DSN
+        scope: BUILD_TIME
+        value: https://b6bbbdb7645800476978dc3d2577252d@o4512266363797504.ingest.us.sentry.io/4512266373038080
+      # Uploads source maps during the build. The encrypted value lives in
+      # App Platform (synced from Doppler prd); the deploy keeps it.
+      - key: SENTRY_AUTH_TOKEN
+        scope: BUILD_TIME
+        type: SECRET
+
+      # Database: the managed PostgreSQL cluster below. App Platform fills in
+      # the URL (with ?sslmode=require) and the cluster's private CA, which the
+      # app uses to verify the server certificate.
+      - key: DATABASE_PROVIDER
+        scope: RUN_TIME
+        value: postgres
+      - key: POSTGRES_URL
+        scope: RUN_TIME
+        value: ${kindred-db.DATABASE_URL}
+      - key: POSTGRES_CA_CERT
+        scope: RUN_TIME
+        value: ${kindred-db.CA_CERT}
+
+      - key: NODE_ENV
+        scope: RUN_TIME
+        value: production
+      - key: PORT
+        scope: RUN_TIME
+        value: "8080"
+      - key: APP_PUBLIC_URL
+        scope: RUN_TIME
+        value: https://kindred-asterling-ai-coaching.com
+      # Domain split (docs/DOMAIN_SPLIT.md): this domain serves only the
+      # sign-in portal and the app, and redirects marketing and legal pages.
+      - key: MARKETING_SITE_URL
+        scope: RUN_TIME
+        value: https://kindred-asterling-ai.xyz
+      - key: SENTRY_DSN
+        scope: RUN_TIME
+        value: https://78f9fdcad26393badd15505a47b4b3b6@o4512266363797504.ingest.us.sentry.io/4512266404429824
+      # Proxy hops in front of the app, so rate limits see the real visitor
+      # IP: App Platform's Cloudflare edge, then its load balancer. The
+      # workflow's client-IP check fails if this is wrong for App Platform;
+      # see the runbook before changing it.
+      - key: TRUST_PROXY_HOPS
+        scope: RUN_TIME
+        value: "2"
+
+      # Claude via the Anthropic API. The app refuses to start without
+      # ANTHROPIC_API_KEY while AI_PROVIDER is 'anthropic'.
+      - key: AI_PROVIDER
+        scope: RUN_TIME
+        value: anthropic
+      - key: ANTHROPIC_MODEL
+        scope: RUN_TIME
+        value: claude-opus-5
+      - key: ANTHROPIC_EFFORT
+        scope: RUN_TIME
+        value: low
+      - key: AI_REQUEST_TIMEOUT_MS
+        scope: RUN_TIME
+        value: "60000"
+
+      # First-come, first-served beta: 20 spots, 5 of them reserved for friends
+      # that an owner grants from /app/admin/beta.
+      - key: BETA_CAPACITY
+        scope: RUN_TIME
+        value: "20"
+      - key: BETA_RESERVED_SPOTS
+        scope: RUN_TIME
+        value: "5"
+      - key: BETA_OPENS_AT
+        scope: RUN_TIME
+        value: "2026-10-12T00:00:00-04:00"
+
+      # Optional: only used if AUTH0_MGMT_CLIENT_ID/SECRET are added in the
+      # dashboard, so account deletion also removes the Auth0 user. The
+      # Management API answers on the tenant's canonical domain, not the custom
+      # sign-in domain in AUTH0_DOMAIN.
+      - key: AUTH0_MGMT_DOMAIN
+        scope: RUN_TIME
+        value: dev-4c281gnuylq4hccq.ca.auth0.com
+
+      # Secrets: values are entered in the dashboard (Settings > web >
+      # Environment Variables, with Encrypt ticked), never here.
+      - key: ANTHROPIC_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: AUTH0_DOMAIN
+        scope: RUN_TIME
+        type: SECRET
+      - key: AUTH0_AUDIENCE
+        scope: RUN_TIME
+        type: SECRET
+      - key: RESEND_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: RESEND_FROM_EMAIL
+        scope: RUN_TIME
+        type: SECRET
+      - key: SUBSCRIPTION_OWNER_IDS
+        scope: RUN_TIME
+        type: SECRET
+
+databases:
+  # Managed PostgreSQL 16 (the version Fly ran) in Toronto. Create the cluster,
+  # the `kindred` database and the `kindred_app` user first (runbook step 1).
+  - name: kindred-db
+    engine: PG
+    version: "16"
+    production: true
+    cluster_name: kindred-db
+    db_name: kindred
+    db_user: kindred_app

@@ -12,6 +12,7 @@ import {
   isNull,
   initializePostgresDatabase,
   closePostgresDatabase,
+  postgresConnectionConfig,
   withDatabaseLease,
 } from "./postgresDb";
 import { affirmationsTable, conversations, messages, usersTable } from "./mongoSchema";
@@ -57,6 +58,20 @@ test("translates supported conditions and rejects forged or cross-table conditio
     const nullRows = await api.select().from(usersTable).where(isNull(usersTable.clerkUserId));
     assert.equal(nullRows.length, 1);
   } finally { await pool.end(); }
+});
+
+test("sends no parameter for IS NULL, which real PostgreSQL cannot type", async () => {
+  const sent: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const api = new PostgresDataApi({
+    query: async (sql: string, values?: readonly unknown[]) => {
+      sent.push({ sql, values });
+      return { rows: [], rowCount: 0 };
+    },
+  } as any);
+  await api.select().from(usersTable)
+    .where(and(isNull(usersTable.clerkUserId), eq(usersTable.id, "owner-a")));
+  assert.match(sent[0]!.sql, /IS NULL AND .* = \$1/);
+  assert.deepEqual(sent[0]!.values, ["owner-a"]);
 });
 
 test("preserves defaults, IDs, conflict targets, updates, deletes, count and cascades", async () => {
@@ -197,6 +212,32 @@ test("rejects malformed sort values and supports empty logical conditions", asyn
     assert.throws(() => api.select().from(conversations).orderBy({ sort: { nope: 1 } } as any), /Invalid database sort/);
     assert.equal(await api.count(conversations, and()), 0);
   } finally { await pool.end(); }
+});
+
+test("verifies TLS against a supplied CA instead of the URL's sslmode", () => {
+  const url = "postgresql://kindred_app:p%40ss%2Fword@db-host.example.test:25060/kindred?sslmode=require&application_name=kindred";
+  assert.deepEqual(postgresConnectionConfig(url, undefined), { connectionString: url });
+  assert.deepEqual(postgresConnectionConfig(url, "  "), { connectionString: url });
+
+  const ca = "-----BEGIN CERTIFICATE-----\nTEST\n-----END CERTIFICATE-----";
+  const config = postgresConnectionConfig(`${url}&sslrootcert=/tmp/ca.crt&uselibpqcompat=true`, `${ca}\n`);
+  assert.deepEqual(config.ssl, { ca, rejectUnauthorized: true });
+  const parsed = new URL(config.connectionString);
+  assert.deepEqual([...parsed.searchParams.keys()], ["application_name"]);
+  assert.equal(decodeURIComponent(parsed.password), "p@ss/word");
+  assert.equal(parsed.host, "db-host.example.test:25060");
+  assert.equal(parsed.pathname, "/kindred");
+
+  for (const disabled of ["sslmode=disable", "ssl=false", "ssl=0"]) {
+    assert.throws(
+      () => postgresConnectionConfig(`postgresql://u:secret@h/db?${disabled}`, ca),
+      (error: Error) => error.message === "POSTGRES_CA_CERT is set but POSTGRES_URL disables TLS",
+    );
+  }
+  assert.throws(
+    () => postgresConnectionConfig("postgresql://u:secret@[bad/db", ca),
+    (error: Error) => error.message === "POSTGRES_URL must be a PostgreSQL URL",
+  );
 });
 
 test("supports deterministic ping, close and reinitialization with an embedded pool", async () => {

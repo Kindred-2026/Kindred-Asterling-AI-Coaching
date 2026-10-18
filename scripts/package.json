@@ -2,5 +2,8 @@
   "name": "@workspace/scripts",
   "version": "0.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "yaml": "^2.9.1"
+  }
 }

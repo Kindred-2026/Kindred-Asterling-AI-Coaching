@@ -34,7 +34,7 @@ const LEGAL_LINKS = [
   { label: "AI Disclosure", href: marketingHref("/legal/ai-disclosure") },
   { label: "Cookies", href: marketingHref("/legal/cookies") },
   {
-    label: "Marketing Consent",
+    label: "Email & Marketing",
     href: marketingHref("/legal/marketing-consent"),
   },
 ];

@@ -13,6 +13,6 @@
       "Exec(git diff)",
       "Exec(git log)"
     ],
-    "deny": ["Exec(sudo)", "Exec(fly)", "Exec(flyctl)", "Read(.env)", "Write(.env)"]
+    "deny": ["Exec(sudo)", "Exec(fly)", "Exec(flyctl)", "Exec(doctl)", "Read(.env)", "Write(.env)"]
   }
 }

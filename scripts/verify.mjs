@@ -22,6 +22,8 @@ export const COMPONENTS = [
   { name: "test:verify", cmd: "pnpm", args: ["run", "test:verify"] },
   { name: "test:release-check", cmd: "pnpm", args: ["run", "test:release-check"] },
   { name: "test:auth0-local", cmd: "pnpm", args: ["run", "test:auth0-local"] },
+  { name: "test:digitalocean", cmd: "pnpm", args: ["run", "test:digitalocean"] },
+  { name: "test:sop-docx", cmd: "pnpm", args: ["run", "test:sop-docx"] },
   {
     name: "test:frontend",
     cmd: "pnpm",

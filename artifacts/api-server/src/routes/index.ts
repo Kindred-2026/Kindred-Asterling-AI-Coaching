@@ -22,6 +22,7 @@ import adminRouter from "./admin";
 import userRouter from "./user";
 import accountRouter from "./account";
 import betaChecklistRouter from "./betaChecklist";
+import betaRouter from "./beta";
 import { requireAuth } from "../middlewares/requireAuth";
 import { requireSubscription } from "../middlewares/requireSubscription";
 
@@ -46,11 +47,14 @@ router.use(requireAuth);
 // Sensitive personal/wellness data must never be cached.
 router.use(noStore);
 
-// Export and deletion stay open to every signed-in user, invited or not.
+// Export and deletion stay open to every signed-in user, with or without access.
 router.use(accountRouter);
 
+// Joining the beta has to work before the person has access.
+router.use(betaRouter);
+
 // Everything below needs access: an owner, an active beta grant, or a paid
-// subscription. Kindred's beta is invite-only, so uninvited accounts stop here.
+// subscription. Accounts without a beta spot stop here.
 router.use(requireSubscription);
 
 router.use(morningLogsRouter);

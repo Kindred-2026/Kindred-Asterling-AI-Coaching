@@ -1,6 +1,13 @@
 # Cloudflare setup (custom domain, firewall, AI Gateway)
 
-Kindred runs on Fly.io. Cloudflare sits in front of it for three things:
+> **DigitalOcean since 2026-10-14:** the app domain's records are **DNS only**
+> and point at App Platform ([runbook](DIGITALOCEAN_DEPLOYMENT.md)). Sections 1
+> and 2 describe the retired Fly.io setup and no longer apply to the app.
+> Section 3 (AI Gateway) still applies: put `ANTHROPIC_BASE_URL` in
+> `.do/app.yaml` and `CLOUDFLARE_AI_GATEWAY_TOKEN` in the App Platform
+> dashboard as an encrypted variable, instead of `fly.toml` and Fly secrets.
+
+Kindred ran on Fly.io when this was written. Cloudflare sat in front of it for three things:
 
 1. **DNS + HTTPS** for the custom domain.
 2. **Security**: proxy, WAF, bot protection and rate limiting.

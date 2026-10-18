@@ -20,7 +20,9 @@ import {
 import { requireAuth } from "../middlewares/requireAuth";
 import { resolveSubscription } from "../lib/subscriptionService";
 import { logger } from "../lib/logger";
+import { withRetries } from "../lib/retry";
 import {
+  cancelHelcimSubscription,
   checkoutUrl,
   createHelcimCustomer,
   getHelcimCustomerEmail,
@@ -29,6 +31,7 @@ import {
   verifyCustomerReference,
   verifyHelcimWebhook,
   type HelcimEventType,
+  type HelcimWebhookEvent,
   type SubscriptionStatus,
 } from "../lib/helcimClient";
 
@@ -66,6 +69,35 @@ function statusFor(
       ? "cancel_at_period_end"
       : "cancelled";
   return "active";
+}
+
+/** Subscriptions that start or renew after their account was deleted. */
+async function stopBillingForDeletedAccount(
+  event: HelcimWebhookEvent,
+  customerId: string,
+  webhookId: string,
+): Promise<void> {
+  const subscriptionId = event.subscriptionId;
+  if (
+    event.eventType === "subscription.cancelled" ||
+    event.eventType === "subscription.expired" ||
+    !subscriptionId
+  ) {
+    logger.info(
+      { webhookId, eventType: event.eventType },
+      "Helcim webhook for a deleted account needs no action",
+    );
+    return;
+  }
+  const outcome = await withRetries(
+    () => cancelHelcimSubscription(subscriptionId, customerId),
+    "Helcim cancellation for a deleted account",
+    { webhookId },
+  );
+  logger.warn(
+    { webhookId, eventType: event.eventType, outcome },
+    "Helcim billing for a deleted account was stopped",
+  );
 }
 
 const router: IRouter = Router();
@@ -200,6 +232,20 @@ router.post("/payment/webhook", async (req, res): Promise<void> => {
       .from(subscriptionsTable)
       .where(eq(subscriptionsTable.paymentCustomerId, customerId))
       .limit(1);
+    if (referencedUser && !knownSubscription) {
+      const [owner] = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(eq(usersTable.id, referencedUser))
+        .limit(1);
+      if (!owner) {
+        // A signed reference is only issued to a real account, so its owner
+        // deleted the account. Throws (500, Helcim redelivers) until cancelled.
+        await stopBillingForDeletedAccount(event, customerId, webhookId);
+        res.json({ received: true });
+        return;
+      }
+    }
     const fallbackEmail =
       !knownSubscription &&
       !referencedUser &&
