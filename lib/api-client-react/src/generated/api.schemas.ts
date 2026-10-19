@@ -324,10 +324,23 @@ export interface ReminderSettingsUpdateInput {
   timezone?: string | null;
 }
 
+/**
+ * `crisis_support` is the fixed safety message the server stores after a user message that matched the crisis detector. Show it as Kindred's reply, rendered as the crisis-resources card.
+ */
+export type ChatMessageRole = typeof ChatMessageRole[keyof typeof ChatMessageRole];
+
+
+export const ChatMessageRole = {
+  user: 'user',
+  assistant: 'assistant',
+  crisis_support: 'crisis_support',
+} as const;
+
 export interface ChatMessage {
   id: number;
   conversationId: number;
-  role: string;
+  /** `crisis_support` is the fixed safety message the server stores after a user message that matched the crisis detector. Show it as Kindred's reply, rendered as the crisis-resources card. */
+  role: ChatMessageRole;
   content: string;
   createdAt: string;
 }
@@ -348,6 +361,58 @@ export type ChatConversationWithMessages = ChatConversation & {
      * @maxItems 500
      */
   messages: ChatMessage[];
+};
+
+export type CrisisSupportType = typeof CrisisSupportType[keyof typeof CrisisSupportType];
+
+
+export const CrisisSupportType = {
+  crisis_support: 'crisis_support',
+} as const;
+
+export type CrisisResourceContactKind = typeof CrisisResourceContactKind[keyof typeof CrisisResourceContactKind];
+
+
+export const CrisisResourceContactKind = {
+  call: 'call',
+  text: 'text',
+  web: 'web',
+} as const;
+
+export interface CrisisResourceContact {
+  kind: CrisisResourceContactKind;
+  label: string;
+  href: string;
+}
+
+export interface CrisisResource {
+  id: string;
+  region: string;
+  name: string;
+  description: string;
+  contacts: CrisisResourceContact[];
+}
+
+export type CrisisSupportFalsePositive = {
+  label: string;
+  instruction: string;
+};
+
+/**
+ * Present only when this turn matched the crisis detector.
+ */
+export interface CrisisSupport {
+  type: CrisisSupportType;
+  /** The same text stored as the `crisis_support` message. */
+  message: string;
+  disclaimer: string;
+  resources: CrisisResource[];
+  falsePositive: CrisisSupportFalsePositive;
+  reviewedConfigVersion: string;
+}
+
+export type ChatTurnResponse = ChatConversationWithMessages & {
+  crisisSupport?: CrisisSupport;
 };
 
 export interface ChatSendInput {

@@ -34,9 +34,7 @@ describe("isSafeReturnDestination", () => {
   });
 
   it("rejects full external URLs", () => {
-    expect(isSafeReturnDestination("https://evil.example.com/pricing")).toBe(
-      false,
-    );
+    expect(isSafeReturnDestination("https://evil.example.com/pricing")).toBe(false);
     expect(isSafeReturnDestination("http://evil.example.com")).toBe(false);
   });
 
@@ -48,9 +46,7 @@ describe("isSafeReturnDestination", () => {
     expect(isSafeReturnDestination("javascript:alert(1)")).toBe(false);
     expect(isSafeReturnDestination("data:text/html,<script>")).toBe(false);
     expect(isSafeReturnDestination("/pricing\\evil")).toBe(false);
-    expect(
-      isSafeReturnDestination("/pricing\r\nLocation:https://evil.com"),
-    ).toBe(false);
+    expect(isSafeReturnDestination("/pricing\r\nLocation:https://evil.com")).toBe(false);
   });
 
   it("rejects missing, empty, or non-path values", () => {
@@ -74,9 +70,36 @@ describe("resolveReturnDestination", () => {
   });
 
   it("honours a custom fallback", () => {
-    expect(
-      resolveReturnDestination("https://evil.example.com", "/pricing"),
-    ).toBe("/pricing");
+    expect(resolveReturnDestination("https://evil.example.com", "/pricing")).toBe("/pricing");
+  });
+});
+
+describe("control-character and normalization bypasses", () => {
+  it.each([
+    ["/\t/evil.example.com"],
+    [new URLSearchParams("returnTo=/%09/evil.example.com").get("returnTo")],
+    ["/\n/evil.example.com"],
+    ["/\r/evil.example.com"],
+    ["/\u0000/evil.example.com"],
+    ["/\u001f/evil.example.com"],
+    ["/\u007f/evil.example.com"],
+    ["/\t\\evil.example.com"],
+  ])("rejects %j", (value) => {
+    expect(isSafeReturnDestination(value)).toBe(false);
+    expect(resolveReturnDestination(value)).toBe("/today");
+  });
+
+  it("never returns a scheme-relative destination after normalization", () => {
+    for (const value of ["/.//evil.example.com", "/a/..//evil.example.com"]) {
+      const resolved = resolveReturnDestination(value);
+      expect(resolved.startsWith("//")).toBe(false);
+      expect(new URL(resolved, "https://kindred.test").origin).toBe("https://kindred.test");
+    }
+  });
+
+  it("returns the normalized path rather than the raw value", () => {
+    expect(resolveReturnDestination("/app/../today")).toBe("/today");
+    expect(resolveReturnDestination("/talk?q=a b#x")).toBe("/talk?q=a%20b#x");
   });
 });
 
@@ -92,12 +115,8 @@ describe("buildLoginUrl", () => {
   });
 
   it("rejects an external return destination and falls back to /today", () => {
-    expect(buildLoginUrl("https://evil.example.com/pricing")).toBe(
-      "/login?returnTo=%2Ftoday",
-    );
-    expect(buildLoginUrl("//evil.example.com")).toBe(
-      "/login?returnTo=%2Ftoday",
-    );
+    expect(buildLoginUrl("https://evil.example.com/pricing")).toBe("/login?returnTo=%2Ftoday");
+    expect(buildLoginUrl("//evil.example.com")).toBe("/login?returnTo=%2Ftoday");
   });
 });
 
@@ -113,16 +132,12 @@ describe("protected destinations", () => {
     "/app/account#security",
   ])("preserves %s through login", (path) => {
     expect(protectedDestination(path)).toBe(path);
-    expect(protectedRouteLoginTarget(path)).toBe(
-      `/login?returnTo=${encodeURIComponent(path)}`,
-    );
+    expect(protectedRouteLoginTarget(path)).toBe(`/login?returnTo=${encodeURIComponent(path)}`);
   });
 
   it("defaults missing destinations to Today", () => {
     expect(protectedDestination(undefined)).toBe("/today");
-    expect(protectedRouteLoginTarget(undefined)).toBe(
-      "/login?returnTo=%2Ftoday",
-    );
+    expect(protectedRouteLoginTarget(undefined)).toBe("/login?returnTo=%2Ftoday");
   });
 });
 
@@ -131,9 +146,7 @@ describe("pricing to login", () => {
     const target = buildLoginUrl(PRICING_RETURN_PATH);
     expect(target).toBe("/login?returnTo=%2Fpricing");
     expect(
-      resolveReturnDestination(
-        new URLSearchParams(target.split("?")[1]).get("returnTo"),
-      ),
+      resolveReturnDestination(new URLSearchParams(target.split("?")[1]).get("returnTo")),
     ).toBe("/pricing");
   });
 });

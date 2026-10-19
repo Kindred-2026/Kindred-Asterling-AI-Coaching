@@ -1,31 +1,28 @@
 # Release and rollback
 
-This page records how to capture release/rollback evidence during Kindred's
-hosting transition. **Coolify/MongoDB remain the current production rollback
-baseline until the Fly.io cutover passes its gates.** A Toronto staging app
-and Managed Postgres cluster were provisioned on 2026-09-24, and staging
-release v1 was deployed on 2026-09-26 with the database attached (see
-`docs/FLY_DEPLOYMENT.md`). No production cutover is verified. Do not guess provider state here; record only what an operator can
+This page records how to capture release/rollback evidence. Production runs on
+DigitalOcean App Platform with Managed PostgreSQL in Toronto (see
+`docs/DIGITALOCEAN_DEPLOYMENT.md`); Fly.io and Coolify are retired. Do not guess provider state here; record only what an operator can
 verify in GitHub Actions or the relevant provider dashboard.
 
 ## Responsibilities
 
 - The repository-root **`Dockerfile`** is the supported production image
-  definition. For the selected Fly.io target, follow
-  `docs/FLY_DEPLOYMENT.md`; only the staging deployment is verified, not production.
-- **Before Fly cutover:** GitHub Actions validates the monorepo, the MongoDB
+  definition. Follow
+  `docs/DIGITALOCEAN_DEPLOYMENT.md` to deploy it.
+- **Before a release:** GitHub Actions validates the monorepo, the MongoDB
   source backup has been restore-tested, the isolated PostgreSQL target has
   been validated, and the exact commit is built and verified.
   `pnpm run release:check` (read-only) is the local pre-push report for the
   candidate.
-- **Deployment:** Before cutover, Coolify builds the Dockerfile for the chosen
-  Git commit. After verified Fly cutover, use the reviewed commit and Fly
-  deployment process documented in `docs/FLY_DEPLOYMENT.md`. Do not treat a
+- **Deployment:** deploy the reviewed commit on `main` with the **Deploy to
+  DigitalOcean** workflow (`docs/DIGITALOCEAN_DEPLOYMENT.md`). Do not treat a
   push or a successful CI run as proof of deployment.
 - **Database:** migration/initialization is **never** part of container startup.
   A restart cannot copy, initialise, or delete data. Initialize an empty
   production database with `pnpm --filter @workspace/db run initialize` from a
-  trusted environment before switching traffic.
+  trusted environment before switching traffic. Apply each new migration to the
+  live database before deploying the build that needs it (runbook step 7).
 
 ## Record the deployed revision
 
@@ -57,9 +54,8 @@ them.
 
 ## Rollback
 
-- **Application rollback:** before cutover, select the preceding successful
-  Coolify deployment (or its immutable image digest). After Fly cutover, select
-  the preceding healthy Fly release. Redeploy it and verify both health checks.
+- **Application rollback:** select the preceding successful App Platform
+  deployment (the app's **Activity** tab → **Rollback**). Redeploy it and verify both health checks.
   The app image is stateless; releases and rollback depend on immutable image
   contents (no persistent volume over `/app`).
 - **Database:** do **not** reverse a database migration automatically. If a

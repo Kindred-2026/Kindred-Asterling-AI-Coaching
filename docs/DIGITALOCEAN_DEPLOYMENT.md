@@ -1,8 +1,17 @@
 # DigitalOcean deployment and cutover runbook
 
-**Status (2026-10-13):** prepared, not yet executed. Kindred still runs on
-Fly.io, and Fly stays the rollback until the cutover below passes and the
-rollback window closes. The DigitalOcean account is now operational, so this
+**Status (2026-10-17):** the domain is served by DigitalOcean App Platform
+([public check](#public-read-only-check--2026-10-14)). A later deploy, made
+when `main` was at `23b0713`, was live on 2026-10-15
+([public check](#public-read-only-check--2026-10-15)). Another deploy, made
+when `main` was at `62ca0c9` (`TRUST_PROXY_HOPS` `2`), was live on 2026-10-16
+([public check](#public-read-only-check--2026-10-16)). A deploy made when
+`main` was at `0ce2f89` (Sentry, #302) was live on 2026-10-17
+([public check](#public-read-only-check--2026-10-17)); it predates the legal
+v1.3 and account-deletion changes in #303/#305. Step 9's sign-in, chat
+and log checks are not recorded here. Fly.io is retired: `kindred-asterling-ai-coaching.fly.dev` no longer
+resolves and the Fly files were removed from the repository, so the Fly
+rollback below is no longer available. The DigitalOcean account is now operational, so this
 replaces the 2026-09 guides that were removed when DigitalOcean declined the
 payment methods available then.
 
@@ -16,7 +25,7 @@ Run it in three parts:
 
 ## What moves where
 
-| | Fly.io (today) | DigitalOcean (target) |
+| | Fly.io (before) | DigitalOcean (target) |
 | --- | --- | --- |
 | App | Fly app `kindred-asterling-ai-coaching`, one 1 GB shared machine, Toronto (`yyz`) | App Platform app `kindred-asterling-ai-coaching`, service `web`, one `apps-s-1vcpu-1gb` instance, Toronto (`tor`) |
 | Database | Fly Managed Postgres 16, Toronto | Managed PostgreSQL 16 cluster `kindred-db`, Toronto (`tor1`), database `kindred` |
@@ -65,7 +74,7 @@ and Kindred uses the Free plan. So the app domain's records become
 What the app domain loses: Cloudflare's Bot Fight Mode, the Free Managed
 Ruleset and the `/api/` rate-limiting rule. The app keeps its own per-user and
 per-IP rate limits. Problems recorded in the
-[Fly runbook's public checks](FLY_DEPLOYMENT.md#public-read-only-check--2026-10-07)
+[Fly runbook's public checks](https://github.com/Kindred-2026/Kindred-Asterling-AI-Coaching/blob/8a5d7ee/docs/FLY_DEPLOYMENT.md#public-read-only-check--2026-10-07)
 go away with them: challenges on `/api/` requests, an injected script that the
 CSP blocks, and rewritten security headers. The marketing domain and AI
 Gateway are not affected.
@@ -189,8 +198,10 @@ proxy and they all share one limit of 300 requests per 15 minutes, which
 would break the sign-in page under normal use. If it is too high, anyone can
 choose their own IP with a forged `X-Forwarded-For` header and dodge limits.
 
-How many hops App Platform adds is not documented, so `.do/app.yaml` starts
-at `1`. The workflow's last step tests it. It compares the rate limiter's
+How many hops App Platform adds is not documented. The first deploys ran with
+`1`, and the check showed the app keying on a Cloudflare edge address
+(App Platform's own edge, then its load balancer), so `.do/app.yaml` uses `2`.
+The workflow's last step tests it. It compares the rate limiter's
 hashed key with the runner's real IP, and it sends a forged header to see
 whether the app believes it. If the step fails, it says whether to raise or
 lower the value. Change `TRUST_PROXY_HOPS` in `.do/app.yaml`, merge, and
@@ -336,6 +347,19 @@ the switch is not on Fly; ask for help before copying it back.
   policy names DigitalOcean as the host.
 - Deploy from now on with **Deploy to DigitalOcean**. Change configuration in
   `.do/app.yaml` and secret values in the dashboard.
+- **New database migrations.** Migrations never run when the app starts, and
+  the app refuses to start if a table or column it expects is missing. Before
+  deploying a build that adds a file to `lib/db/migrations-postgres/`, add
+  your IP to the database's **Trusted Sources**, apply the new file as
+  `doadmin`, then deploy, and remove your IP again:
+
+  ```sh
+  psql "$DO_DB" -v ON_ERROR_STOP=1 -f lib/db/migrations-postgres/<000N_new_file>.sql
+  psql "$DO_DB" -v ON_ERROR_STOP=1 -f .do/grant-app-role.sql   # if it adds tables
+  ```
+
+  Deploying before the migration leaves the app crash-looping. That is the
+  likely cause of the 2026-10-11 Fly outage, when `0003` was not applied.
 
 ## 8. Retire Fly (after about a week without problems)
 
@@ -345,9 +369,89 @@ the switch is not on Fly; ask for help before copying it back.
 2. Revoke the Anthropic and Resend keys that Fly used, delete the Fly deploy
    token, and remove the `fly-staging` GitHub environment.
 3. In Auth0, remove the `fly.dev` callback, logout and origin entries.
-4. Remove the Fly files from the repository: `fly.toml`,
-   `.github/workflows/fly-deploy.yml`, the Fly parts of `plugins/kindred-mcp`
-   and `lib/db/scripts/run-fly-postgres-integration.mjs`. Also update
-   `docs/FLY_DEPLOYMENT.md`, `docs/release-rollback.md`,
-   `docs/DOMAIN_SPLIT.md`, `docs/COST_BASELINE.md` and `SECRET_INVENTORY.md`
-   to match.
+4. Done: `fly.toml`, `.github/workflows/fly-deploy.yml`,
+   `lib/db/scripts/run-fly-postgres-integration.mjs` and
+   `docs/FLY_DEPLOYMENT.md` were removed, and the other docs now point here.
+   `plugins/kindred-mcp` had no Fly parts left.
+
+## Public read-only check — 2026-10-14
+
+Unauthenticated `curl`/`dig`/`openssl` checks from 13:03 to 13:09 UTC against
+`https://kindred-asterling-ai-coaching.com` and
+`https://kindred-asterling-ai-coaching.fly.dev`. The marketing domain and
+`www.` were outside this run's network allowlist. No sign-in, form, or AI
+request was made.
+
+| Check | Observed result |
+| --- | --- |
+| Host | Responses carry `x-do-app-origin` and `x-do-orig-status`, and no `via: 1.1 fly.io`, so App Platform serves the domain |
+| Health | `/api/healthz` returned 200 `{"status":"ok"}` and `/api/healthz/db` returned 200 `{"status":"ok","database":"connected"}` in under 0.4 s, at 13:03 and again at 13:08 UTC |
+| Fly staging | `kindred-asterling-ai-coaching.fly.dev` returns NXDOMAIN from Fly's DNS (`ns1.flydns.net`). Fly keeps that name while an app is scaled to 0, so the app was probably deleted or its IPs released. This could not be confirmed without Fly access |
+| Deployed build | Static files are dated 2026-10-13 17:12:24 UTC, when `main` was at `7a9206b`. The served bundle `assets/index-BV4L0MRT.js` uses the public Auth0 tenant `dev-4c281gnuylq4hccq.ca.auth0.com` and audience `https://kindred-asterling-ai-coaching.com/api`. A local `build:deployment` of current `main` (`8e85acb`, which only adds the #282 dependency patch updates) gives a byte-identical `assets/index-D7RfiWZr.css` and `index.html`, apart from the bundle name. The JS bundle and `/pricing/` differ in dependency output. `7a9206b` could not be rebuilt offline, so the served build is not byte-verified |
+| Public pages and domain split | `/`, `/login`, `/signup`, `/pricing/`, `/dashboard` and `/app/` return 200. `/about`, `/science`, `/legal/*`, `/legal-documents/*`, `/llms.txt` and `/sitemap.xml` return 301 to the same path on `https://kindred-asterling-ai.xyz`. `/robots.txt` returns `Disallow: /`. The Cloudflare managed challenges and the injected challenge script recorded on Fly are gone |
+| Auth and CORS | `/api/auth/user` and `/api/calendar/status` return 401 without a token. With origin `https://kindred-asterling-ai-coaching.com`, the 401 carries a matching `Access-Control-Allow-Origin`. With the `fly.dev` origin or an unknown origin, it returns 403 (PR #268). The calendar 404 criterion stays unverified because authentication runs first |
+| Security headers | The CSP from `securityHeaders.ts` (Auth0 tenant in `connect-src`/`frame-src`), HSTS `max-age=31536000; includeSubDomains`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-XSS-Protection: 0`, and `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy: same-origin`, matching Helmet with no edge rewrites |
+| TLS | Google Trust Services `WE1` certificate for `kindred-asterling-ai-coaching.com`, expiring 2027-01-11 (89 days). `*.fly.dev` could not be checked because the name does not resolve |
+
+## Public read-only check — 2026-10-15
+
+Unauthenticated `curl`/`dig`/`openssl` checks from 13:04 to 13:07 UTC against
+`https://kindred-asterling-ai-coaching.com` and
+`https://kindred-asterling-ai-coaching.fly.dev`. Access to the marketing
+domain and `www.` was requested but not granted during the run. No sign-in,
+form, or AI request was made.
+
+| Check | Observed result |
+| --- | --- |
+| Host | Responses carry `x-do-app-origin` and `x-do-orig-status`, so App Platform still serves the domain |
+| Health | `/api/healthz` returned 200 `{"status":"ok"}` and `/api/healthz/db` returned 200 `{"status":"ok","database":"connected"}` in under 0.4 s, at 13:04 and again at 13:06 UTC |
+| Fly staging | `kindred-asterling-ai-coaching.fly.dev` still returns NXDOMAIN from `ns1.flydns.net` |
+| Deployed build | This is a new deploy. Static files are dated 2026-10-15 06:40:39 UTC, when `main` was at `23b0713`. The frontend source there is the same as at `8e85acb`, because later commits only change docs and a root verification file. The served bundle `assets/index-DgOQNXdc.js` uses the public Auth0 tenant `dev-4c281gnuylq4hccq.ca.auth0.com` and audience `https://kindred-asterling-ai-coaching.com/api`. It embeds React `19.3.0`, the version in `pnpm-lock.yaml` on `main`. A local `build:deployment` gives a byte-identical `assets/index-D7RfiWZr.css` and `index.html`, apart from the bundle name. The JS bundle and `/pricing/` differ because this workspace's `node_modules` predates #282 (React `19.1.4`), and the offline store cannot install the current lockfile. So the served build is not byte-verified |
+| Public pages and domain split | `/`, `/login`, `/signup`, `/pricing/`, `/dashboard` and `/app/` return 200. `/about`, `/science`, `/legal/privacy`, `/legal/terms`, `/legal-documents/privacy-policy`, `/llms.txt` and `/sitemap.xml` return 301 to the same path on `https://kindred-asterling-ai.xyz`. `/robots.txt` returns `Disallow: /`. Whether the redirect targets load was not checked |
+| Auth and CORS | `/api/auth/user` and `/api/calendar/status` return 401 without a token. `/api/auth/user` returns 401 with origin `https://kindred-asterling-ai-coaching.com`, and 403 with the `fly.dev` origin or an unknown origin |
+| Security headers | Same as 2026-10-14: the `securityHeaders.ts` CSP with the Auth0 tenant in `connect-src`/`frame-src`, HSTS `max-age=31536000; includeSubDomains`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-XSS-Protection: 0`, and `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy: same-origin` |
+| TLS | Google Trust Services `WE1` certificate for `kindred-asterling-ai-coaching.com`, expiring 2027-01-11 17:57 UTC (88 days). `*.fly.dev` could not be checked because the name does not resolve |
+| `pnpm release:check` | On `23b0713`, it exits 13, as expected here: no local verify evidence (reported as `MALFORMED — evidence is not an object`), no local public Auth0 config, and CI/deploy/acceptance not verifiable remotely |
+
+## Public read-only check — 2026-10-16
+
+Unauthenticated `curl`/`dig`/`openssl` checks from 13:04 to 13:07 UTC against
+`https://kindred-asterling-ai-coaching.com` and
+`https://kindred-asterling-ai-coaching.fly.dev`. Access to the marketing
+domain and `www.` was requested but not granted during the run. No sign-in,
+form, or AI request was made.
+
+| Check | Observed result |
+| --- | --- |
+| Host | Responses carry `x-do-app-origin` and `x-do-orig-status`, so App Platform still serves the domain |
+| Health | `/api/healthz` returned 200 `{"status":"ok"}` and `/api/healthz/db` returned 200 `{"status":"ok","database":"connected"}` in under 0.4 s, at 13:04 and again at 13:05 UTC |
+| Fly staging | `kindred-asterling-ai-coaching.fly.dev` still returns NXDOMAIN from `ns1.flydns.net` |
+| Deployed build | This is a new deploy. Static files are dated 2026-10-16 11:03:53 UTC, when `main` was at `62ca0c9`. That commit only changes `.do/app.yaml` (`TRUST_PROXY_HOPS` `1` to `2`) and docs since `23b0713`, and the served bundle is still `assets/index-DgOQNXdc.js`, the same content-hashed name as on 2026-10-15. It uses the public Auth0 tenant `dev-4c281gnuylq4hccq.ca.auth0.com` and audience `https://kindred-asterling-ai-coaching.com/api`. A local `build:deployment` gives a byte-identical `assets/index-D7RfiWZr.css` and `index.html`, apart from the bundle name. The JS bundle and `/pricing/` differ for the same reason as on 2026-10-15 (this workspace's `node_modules` has React `19.1.4`, the lockfile `19.3.0`), so the served build is not byte-verified |
+| Proxy hops | With and without a forged `X-Forwarded-For: 192.0.2.1`, `/api/auth/user` returned the same `RateLimit-Policy` key (`pk`), so the app does not trust the forged header. Whether the key matches this machine's IP was not checked, because `scripts/check-client-ip.mjs` needs `checkip.amazonaws.com`, which is outside this run's network allowlist |
+| Public pages and domain split | `/`, `/login`, `/signup`, `/pricing/`, `/dashboard` and `/app/` return 200. `/about`, `/science`, `/legal/privacy`, `/legal/terms`, `/legal-documents/privacy-policy`, `/llms.txt` and `/sitemap.xml` return 301 to the same path on `https://kindred-asterling-ai.xyz`. `/robots.txt` returns `Disallow: /`. Whether the redirect targets load was not checked |
+| Auth and CORS | `/api/auth/user` and `/api/calendar/status` return 401 without a token. `/api/auth/user` returns 401 with a matching `Access-Control-Allow-Origin` for origin `https://kindred-asterling-ai-coaching.com`, and 403 with the `fly.dev` origin or an unknown origin |
+| Security headers | Same as 2026-10-15: the `securityHeaders.ts` CSP with the Auth0 tenant in `connect-src`/`frame-src`, HSTS `max-age=31536000; includeSubDomains`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-XSS-Protection: 0`, and `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy: same-origin` |
+| TLS | Google Trust Services `WE1` certificate for `kindred-asterling-ai-coaching.com`, expiring 2027-01-11 17:57 UTC (87 days). `*.fly.dev` could not be checked because the name does not resolve |
+| `pnpm release:check` | On `62ca0c9`, it exits 13, as expected here: no local verify evidence (reported as `MALFORMED — evidence is not an object`), no local public Auth0 config, and CI/deploy/acceptance not verifiable remotely |
+
+## Public read-only check — 2026-10-17
+
+Unauthenticated `curl`/`dig`/`openssl` checks from 13:03 to 13:19 UTC against
+`https://kindred-asterling-ai-coaching.com`,
+`https://kindred-asterling-ai-coaching.fly.dev`, and (from 13:17 UTC, once
+network access was granted) `https://kindred-asterling-ai.xyz` and `www.`. No
+sign-in, form, or AI request was made.
+
+| Check | Observed result |
+| --- | --- |
+| Host | Responses carry `x-do-app-origin` and `x-do-orig-status`, so App Platform still serves the domain |
+| Health | `/api/healthz` returned 200 `{"status":"ok"}` and `/api/healthz/db` returned 200 `{"status":"ok","database":"connected"}` in under 0.4 s, at 13:03 and again at 13:05 UTC |
+| Fly staging | `kindred-asterling-ai-coaching.fly.dev` still returns NXDOMAIN from `ns1.flydns.net` |
+| Deployed build | This is a new deploy. Static files are dated 2026-10-16 22:29:29 UTC, when `main` was at `0ce2f89` (after #302 Sentry, before #303 and #305). The served bundle is `assets/index-ILQGMQkH.js` with the unchanged `assets/index-D7RfiWZr.css`. It uses the public Auth0 tenant `dev-4c281gnuylq4hccq.ca.auth0.com` and audience `https://kindred-asterling-ai-coaching.com/api`, embeds React `19.3.0` and the browser Sentry DSN from `.do/app.yaml` (project `4512266373038080`). `assets/index-ILQGMQkH.js.map` returns the SPA `index.html`, not a source map. The bundle still has legal `1.2` (effective October 16, 2026) and the old account-deletion wording, so #303/#305 (legal `1.3`, deletion cancels Helcim renewal) are on `main` but not deployed. This workspace's `node_modules` has no `@sentry/*` packages, which `vite.config.ts` now imports, so no local `build:deployment` was run and the served build is not byte-verified |
+| Proxy hops | With and without a forged `X-Forwarded-For: 192.0.2.1`, `/api/auth/user` returned the same `RateLimit-Policy` key (`pk`), so the app does not trust the forged header |
+| Public pages and domain split | `/`, `/login`, `/signup`, `/pricing/`, `/dashboard` and `/app/` return 200. `/about`, `/science`, `/legal/privacy`, `/legal/terms`, `/legal-documents/privacy-policy`, `/legal-documents/privacy-policy.pdf`, `/llms.txt` and `/sitemap.xml` return 301 to the same path on `https://kindred-asterling-ai.xyz`. `/robots.txt` returns `Disallow: /`. The redirect targets load (next row) |
+| Marketing site | On `kindred-asterling-ai.xyz`, `/about`, `/science`, `/legal/privacy` and `/legal/terms` return 307 to the trailing-slash path, which returns 200 with the page's own `<title>`. `/llms.txt`, `/sitemap.xml`, `/robots.txt` and `/legal-documents/privacy-policy.pdf` return 200. `/legal-documents/privacy-policy` (no `.pdf`) returns the SPA shell. `www.` returns 200 on `/` and 307 to the trailing-slash path on `/about`. Headers match the `_headers` that `prerender.mjs` writes (CSP with Sentry ingest in `connect-src`, HSTS, `X-Frame-Options: SAMEORIGIN`). The certificate for both names is Google Trust Services `WE1`, expiring 2027-01-04 12:16 UTC (79 days). The marketing site already serves legal `1.3`: the legal pages say effective October 17, 2026, and `privacy-policy.pdf` is byte-identical to `main`. The app is still on `0ce2f89` (legal `1.2`), so the published policy says account deletion cancels a Yearly Helcim renewal, but the deployed API does not do that yet |
+| Auth and CORS | `/api/auth/user` and `/api/calendar/status` return 401 without a token. `/api/auth/user` returns 401 with a matching `Access-Control-Allow-Origin` for origin `https://kindred-asterling-ai-coaching.com`, and 403 with the `fly.dev` origin or an unknown origin |
+| Security headers | The `securityHeaders.ts` CSP now includes `https://*.ingest.us.sentry.io` in `connect-src` (#302), alongside the Auth0 tenant in `connect-src`/`frame-src`. The rest is unchanged: HSTS `max-age=31536000; includeSubDomains`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-XSS-Protection: 0`, and `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy: same-origin` |
+| TLS | Google Trust Services `WE1` certificate for `kindred-asterling-ai-coaching.com`, expiring 2027-01-11 17:57 UTC (86 days). `*.fly.dev` could not be checked because the name does not resolve |
+| `pnpm release:check` | On `c2900cb`, it exits 13, as expected here: no local verify evidence (reported as `MALFORMED — evidence is not an object`), no local public Auth0 config, and CI/deploy/acceptance not verifiable remotely |

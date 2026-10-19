@@ -513,7 +513,7 @@ export const GetActiveChatResponse = zod.object({
   "messages": zod.array(zod.object({
   "id": zod.number().int(),
   "conversationId": zod.number().int(),
-  "role": zod.string(),
+  "role": zod.enum(['user', 'assistant', 'crisis_support']).describe('`crisis_support` is the fixed safety message the server stores after a user message that matched the crisis detector. Show it as Kindred\'s reply, rendered as the crisis-resources card.\n'),
   "content": zod.string(),
   "createdAt": zod.coerce.date()
 })).max(getActiveChatResponseTwoMessagesMax).describe('A bounded window of the most recent messages. Live chat endpoints return at most 100 messages; the archive export endpoint returns at most 500. The server never materialises the full transcript.\n')
@@ -521,6 +521,7 @@ export const GetActiveChatResponse = zod.object({
 
 
 /**
+ * When the crisis detector matches the message, the AI is not called and no daily quota is used. The user message and a fixed `crisis_support` message are stored, and the response carries `crisisSupport`.
  * @summary Append a user message and get the AI response
  */
 export const sendChatMessageBodyContentMax = 4000;
@@ -531,7 +532,7 @@ export const SendChatMessageBody = zod.object({
   "content": zod.string().min(1).max(sendChatMessageBodyContentMax)
 })
 
-export const sendChatMessageResponseTwoMessagesMax = 500;
+export const sendChatMessageResponseOneTwoMessagesMax = 500;
 
 
 
@@ -546,14 +547,37 @@ export const SendChatMessageResponse = zod.object({
   "messages": zod.array(zod.object({
   "id": zod.number().int(),
   "conversationId": zod.number().int(),
-  "role": zod.string(),
+  "role": zod.enum(['user', 'assistant', 'crisis_support']).describe('`crisis_support` is the fixed safety message the server stores after a user message that matched the crisis detector. Show it as Kindred\'s reply, rendered as the crisis-resources card.\n'),
   "content": zod.string(),
   "createdAt": zod.coerce.date()
-})).max(sendChatMessageResponseTwoMessagesMax).describe('A bounded window of the most recent messages. Live chat endpoints return at most 100 messages; the archive export endpoint returns at most 500. The server never materialises the full transcript.\n')
+})).max(sendChatMessageResponseOneTwoMessagesMax).describe('A bounded window of the most recent messages. Live chat endpoints return at most 100 messages; the archive export endpoint returns at most 500. The server never materialises the full transcript.\n')
+})).and(zod.object({
+  "crisisSupport": zod.object({
+  "type": zod.enum(['crisis_support']),
+  "message": zod.string().describe('The same text stored as the `crisis_support` message.'),
+  "disclaimer": zod.string(),
+  "resources": zod.array(zod.object({
+  "id": zod.string(),
+  "region": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "contacts": zod.array(zod.object({
+  "kind": zod.enum(['call', 'text', 'web']),
+  "label": zod.string(),
+  "href": zod.string()
+}))
+})),
+  "falsePositive": zod.object({
+  "label": zod.string(),
+  "instruction": zod.string()
+}),
+  "reviewedConfigVersion": zod.string()
+}).optional().describe('Present only when this turn matched the crisis detector.')
 }))
 
 
 /**
+ * User messages are screened by the same crisis detector as /chat/send. On a match a fixed `crisis_support` message is stored after the user message and the response carries `crisisSupport`.
  * @summary Append a pre-composed message without invoking the AI (used by onboarding script)
  */
 export const appendChatMessageBodyContentMax = 4000;
@@ -565,7 +589,7 @@ export const AppendChatMessageBody = zod.object({
   "content": zod.string().min(1).max(appendChatMessageBodyContentMax)
 })
 
-export const appendChatMessageResponseTwoMessagesMax = 500;
+export const appendChatMessageResponseOneTwoMessagesMax = 500;
 
 
 
@@ -580,10 +604,32 @@ export const AppendChatMessageResponse = zod.object({
   "messages": zod.array(zod.object({
   "id": zod.number().int(),
   "conversationId": zod.number().int(),
-  "role": zod.string(),
+  "role": zod.enum(['user', 'assistant', 'crisis_support']).describe('`crisis_support` is the fixed safety message the server stores after a user message that matched the crisis detector. Show it as Kindred\'s reply, rendered as the crisis-resources card.\n'),
   "content": zod.string(),
   "createdAt": zod.coerce.date()
-})).max(appendChatMessageResponseTwoMessagesMax).describe('A bounded window of the most recent messages. Live chat endpoints return at most 100 messages; the archive export endpoint returns at most 500. The server never materialises the full transcript.\n')
+})).max(appendChatMessageResponseOneTwoMessagesMax).describe('A bounded window of the most recent messages. Live chat endpoints return at most 100 messages; the archive export endpoint returns at most 500. The server never materialises the full transcript.\n')
+})).and(zod.object({
+  "crisisSupport": zod.object({
+  "type": zod.enum(['crisis_support']),
+  "message": zod.string().describe('The same text stored as the `crisis_support` message.'),
+  "disclaimer": zod.string(),
+  "resources": zod.array(zod.object({
+  "id": zod.string(),
+  "region": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "contacts": zod.array(zod.object({
+  "kind": zod.enum(['call', 'text', 'web']),
+  "label": zod.string(),
+  "href": zod.string()
+}))
+})),
+  "falsePositive": zod.object({
+  "label": zod.string(),
+  "instruction": zod.string()
+}),
+  "reviewedConfigVersion": zod.string()
+}).optional().describe('Present only when this turn matched the crisis detector.')
 }))
 
 
@@ -605,7 +651,7 @@ export const ArchiveActiveChatResponse = zod.object({
   "messages": zod.array(zod.object({
   "id": zod.number().int(),
   "conversationId": zod.number().int(),
-  "role": zod.string(),
+  "role": zod.enum(['user', 'assistant', 'crisis_support']).describe('`crisis_support` is the fixed safety message the server stores after a user message that matched the crisis detector. Show it as Kindred\'s reply, rendered as the crisis-resources card.\n'),
   "content": zod.string(),
   "createdAt": zod.coerce.date()
 })).max(archiveActiveChatResponseTwoMessagesMax).describe('A bounded window of the most recent messages. Live chat endpoints return at most 100 messages; the archive export endpoint returns at most 500. The server never materialises the full transcript.\n')
@@ -648,7 +694,7 @@ export const GetArchivedChatResponse = zod.object({
   "messages": zod.array(zod.object({
   "id": zod.number().int(),
   "conversationId": zod.number().int(),
-  "role": zod.string(),
+  "role": zod.enum(['user', 'assistant', 'crisis_support']).describe('`crisis_support` is the fixed safety message the server stores after a user message that matched the crisis detector. Show it as Kindred\'s reply, rendered as the crisis-resources card.\n'),
   "content": zod.string(),
   "createdAt": zod.coerce.date()
 })).max(getArchivedChatResponseTwoMessagesMax).describe('A bounded window of the most recent messages. Live chat endpoints return at most 100 messages; the archive export endpoint returns at most 500. The server never materialises the full transcript.\n')

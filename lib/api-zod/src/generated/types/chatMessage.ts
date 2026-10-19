@@ -5,11 +5,13 @@
  * Kindred Coach API
  * OpenAPI spec version: 0.1.0
  */
+import type { ChatMessageRole } from './chatMessageRole';
 
 export interface ChatMessage {
   id: number;
   conversationId: number;
-  role: string;
+  /** `crisis_support` is the fixed safety message the server stores after a user message that matched the crisis detector. Show it as Kindred's reply, rendered as the crisis-resources card. */
+  role: ChatMessageRole;
   content: string;
   createdAt: Date;
 }

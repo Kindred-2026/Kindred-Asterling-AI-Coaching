@@ -118,7 +118,7 @@ async function buildAll() {
         ? [
             sentryEsbuildPlugin({
               org: "kindred-asterling-ai",
-              project: "4512266404429824",
+              project: "node",
               authToken: process.env.SENTRY_AUTH_TOKEN.trim(),
               telemetry: false,
             }),

@@ -1,5 +1,9 @@
 # Kindred recurring cost baseline
 
+> **Hosting changed (2026-10-14):** Fly.io is retired. See the
+> [DigitalOcean runbook's cost section](DIGITALOCEAN_DEPLOYMENT.md#cost) for
+> the current hosting estimate. The Fly rows below are historical.
+
 **As of:** 2026-09-26. **Status:** partial provider verification; Auth0 plan and
 quota dashboards were inspected, but no provider invoices were verified. The under-$50/month target excludes Helcim
 payment-processing charges and remains unverified until every applicable row
@@ -57,7 +61,7 @@ application's daily quota and provider-side budget alerts as additional controls
 The smaller
 256 MB machine estimate would lower the subtotal but has not been shown to run
 Kindred reliably. Do not retire MongoDB or Coolify from list prices alone. See
-[the Fly.io deployment runbook](FLY_DEPLOYMENT.md).
+[the DigitalOcean runbook](DIGITALOCEAN_DEPLOYMENT.md).
 
 Before cutover, fill in actual monthly totals and billing periods for every
 retained service, configure model quotas and spend alerts, and record a dated

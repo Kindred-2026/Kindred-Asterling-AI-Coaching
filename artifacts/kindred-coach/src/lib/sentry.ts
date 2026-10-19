@@ -20,21 +20,16 @@ export function initSentry(): void {
       urlQueryParams: false,
       genAI: { inputs: false, outputs: false },
     },
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      // Replays hide all text and inputs and block images, audio and video,
-      // so no journal entries or chat messages leave the browser.
-      Sentry.replayIntegration({
-        maskAllText: true,
-        maskAllInputs: true,
-        blockAllMedia: true,
-      }),
-    ],
-    tracesSampleRate: 1.0,
-    // Trace headers go only to our own API (Sentry's same-origin default),
-    // never to Auth0 or other third parties.
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
+    // No Session Replay: the Privacy Policy describes error reports and
+    // performance timing only, and Replay would record the screen.
+    integrations: [Sentry.browserTracingIntegration()],
+    // A sample keeps the free plan's quota. Trace headers go only to our own
+    // API (Sentry's same-origin default), never to Auth0 or other third parties.
+    tracesSampleRate: 0.2,
+    // Console messages can echo what someone typed, so they never become
+    // breadcrumbs.
+    beforeBreadcrumb: (breadcrumb) =>
+      breadcrumb.category === "console" ? null : breadcrumb,
   });
 }
 

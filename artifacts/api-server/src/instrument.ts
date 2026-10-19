@@ -25,8 +25,13 @@ if (dsn) {
       databaseQueryData: false,
       stackFrameVariables: false,
     },
-    tracesSampleRate: 1.0,
-    profileSessionSampleRate: 1.0,
+    // A sample keeps the free plan's quota.
+    tracesSampleRate: 0.2,
+    profileSessionSampleRate: 0.2,
     profileLifecycle: "trace",
+    // Console messages can echo request data, so they never become
+    // breadcrumbs.
+    beforeBreadcrumb: (breadcrumb) =>
+      breadcrumb.category === "console" ? null : breadcrumb,
   });
 }
