@@ -154,8 +154,9 @@ pnpm verify
 ```
 
 Components: `format:check`, `typecheck:production`, `test:dev-supervisor`,
-`test:frontend`, `test:api`, `test:journey`, `generate:check`, `build:api`,
-`build:frontend`. The run fails fast (stops at the first failing component) and
+`test:verify`, `test:release-check`, `test:auth0-local`, `test:digitalocean`,
+`test:sop-docx`, `test:frontend`, `test:api`, `test:journey`, `generate:check`,
+`build:api`, `build:frontend`. The run fails fast (stops at the first failing component) and
 a full pass records `.verify-evidence.json` (git-ignored) keyed to your exact
 commit + working-tree state.
 
@@ -167,6 +168,9 @@ pnpm run format:check        # verify formatting only
 pnpm run test:verify         # unit tests for the verify/format machinery
 pnpm run test:release-check  # unit tests for the release gate
 pnpm run test:auth0-local    # unit tests for `pnpm auth0:local`
+pnpm run test:digitalocean   # unit tests for the DigitalOcean app-spec/client-IP scripts
+pnpm run test:sop-docx       # unit tests for the workflow SOP Word generator
+pnpm run docs:sop:check      # check docs/Kindred-Asterling-Workflow-SOP.docx matches docs/WORKFLOW_SOP.md
 pnpm run generate:check      # generated-client drift check (no file writes)
 pnpm run test:dev-supervisor # unit tests for this launcher
 pnpm --filter @workspace/kindred-coach run test
