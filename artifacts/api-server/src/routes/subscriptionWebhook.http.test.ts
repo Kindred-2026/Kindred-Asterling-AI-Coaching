@@ -17,10 +17,9 @@ import { signedCustomerReference } from "../lib/helcimClient";
 const suffix = Math.random().toString(36).slice(2, 10);
 const userId = `test-webhook-${suffix}`;
 const email = `${userId}@example.test`;
-const webhookSecret = Buffer.from("synthetic-fixture-only").toString(
-  "base64",
-);
-const referenceSecret = "test-reference-secret";
+// Generated per run so no secret-like literal sits in source.
+const webhookSecret = crypto.randomBytes(32).toString("base64");
+const referenceSecret = `test-reference-${crypto.randomUUID()}`;
 
 let server: Server;
 let baseUrl: string;
