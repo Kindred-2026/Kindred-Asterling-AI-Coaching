@@ -44,7 +44,6 @@
     "react-is": "^19.3.1",
     "react-hook-form": "^7.89.0",
     "react-icons": "^5.7.0",
-    "react-is": "^19.3.0",
     "recharts": "^3.10.1",
     "tailwind-merge": "catalog:",
     "tailwindcss": "catalog:",
