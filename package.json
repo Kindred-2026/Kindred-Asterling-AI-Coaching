@@ -35,5 +35,9 @@
     "mongodb-memory-server": "^11.3.0",
     "prettier": "^3.9.10",
     "typescript": "~7.0.2"
+  },
+  "dependencies": {
+    "@intercom/messenger-js-sdk": "^0.0.20",
+    "@sentry/node": "^11.8.0"
   }
 }

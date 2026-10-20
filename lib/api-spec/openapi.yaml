@@ -100,6 +100,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /health:
+    get:
+      operationId: getHealth
+      tags: [health]
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
 
   /morning-logs:
     get:
