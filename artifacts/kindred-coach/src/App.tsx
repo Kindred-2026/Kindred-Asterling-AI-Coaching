@@ -50,6 +50,7 @@ import Account from "@/pages/account";
 import AdminBeta from "@/pages/admin-beta";
 import BetaChecklist from "@/pages/beta-checklist";
 import { BetaJoin } from "@/components/beta-join";
+import { IntercomMessenger } from "@/components/intercom-messenger";
 import { ThemeProvider } from "@/hooks/use-theme";
 import {
   canonicalPathname,
@@ -120,6 +121,7 @@ function AuthTokenBridge({ children }: { children: ReactNode }) {
 function PublicRoutes() {
   return (
     <PublicLayout>
+      <IntercomMessenger />
       <Switch>
         {/* On the app-only domain the root is the sign-in portal. */}
         <Route path="/" component={MARKETING_SITE_ORIGIN ? Login : Landing} />

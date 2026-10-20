@@ -37,7 +37,6 @@
     "typescript": "~7.0.2"
   },
   "dependencies": {
-    "@intercom/messenger-js-sdk": "^0.0.20",
     "@sentry/node": "^11.8.0"
   }
 }

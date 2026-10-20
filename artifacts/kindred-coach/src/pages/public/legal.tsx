@@ -101,8 +101,8 @@ function renderLegacyContent(content: ReactNode | LegalBlock): ReactNode {
 }
 
 /** Bump both whenever any published legal text changes. */
-export const LEGAL_VERSION = "1.3";
-export const LEGAL_EFFECTIVE_DATE = "October 17, 2026";
+export const LEGAL_VERSION = "1.4";
+export const LEGAL_EFFECTIVE_DATE = "October 20, 2026";
 
 function LegalPage({
   published = false,
@@ -268,6 +268,7 @@ const privacySections: LegalSection[] = [
         "Website and network - Cloudflare (global network): DNS for the app domain, and hosting of our website at kindred-asterling-ai.xyz, including request logs for that website.",
         "Web fonts - Google Fonts (United States): pages load fonts from Google, which receives your IP address and browser details when a page loads.",
         "Error monitoring - Sentry (United States): when something goes wrong in the app or on our servers, Sentry receives an error report, and a sample of performance data: the error message and where in our code it happened, the page or API route involved, your browser, operating system and device type, and timing information. We configure Sentry not to store IP addresses, the content of your entries or chat messages, or request bodies, and error reports are not linked to your name or email address.",
+        "Support chat - Intercom (United States): our website at kindred-asterling-ai.xyz has a chat button run by Intercom. Intercom receives your IP address, browser details and the pages you visit on our website, and, if you start a conversation, the messages you send and any name or email address you give. The chat is not part of the signed-in app and is not linked to your Kindred account, so please do not share health information in it.",
         "Product analytics - Amplitude (United States): our servers report actions such as \"Morning Check-in Completed\" or \"Habit Logged\" under a scrambled identifier, with no name, email or entry content. Where our coaching-chat analytics are switched on, Amplitude also receives the text of chat messages and coaching replies, with automated redaction of personal identifiers, and the names of the information the coach looked up (for example, medication status), linked to your account ID.",
       ]),
       paragraph(
@@ -651,13 +652,14 @@ const cookieSections: LegalSection[] = [
       list([
         "Google Fonts: our pages load fonts from Google, which receives your IP address and browser details when a page loads.",
         "Checkout: payment pages are hosted by Helcim on its own site, under Helcim's own cookie and privacy policies.",
+        "Support chat (Intercom): on our website at kindred-asterling-ai.xyz, a chat button loads Intercom's Messenger script from Intercom's servers. Intercom sets cookies (intercom-id, intercom-session and intercom-device-id) to recognise your browser and keep any conversation you start, and receives your IP address, browser details and the pages you visit on our website, as described in section 4 of our Privacy Policy. The Messenger does not run in the signed-in Kindred app.",
       ]),
       subheading("D. Logs & Analytics"),
       list([
         "Server logs: our servers and hosting providers keep technical logs to run and secure the Service. App logs do not record your IP address or the content of your entries.",
         "Website logs: Cloudflare keeps request logs for our website at kindred-asterling-ai.xyz.",
         "Error monitoring: if an error happens in your browser, the app sends an error report and performance timing to Sentry, as described in section 4 of our Privacy Policy. The monitoring code is part of the app itself, not a separate tracking script, and it does not set cookies.",
-        "Product analytics: our servers send usage events to Amplitude, as described in section 4 of our Privacy Policy. No analytics cookies or tracking scripts are placed in your browser.",
+        "Product analytics: our servers send usage events to Amplitude, as described in section 4 of our Privacy Policy. Amplitude places no cookies or tracking scripts in your browser.",
         "We do not use Google Analytics, Meta (Facebook) Pixel, TikTok Pixel or other advertising trackers. Links to other sites are plain links with no tracking scripts.",
       ]),
     ],
@@ -668,6 +670,7 @@ const cookieSections: LegalSection[] = [
       list([
         "You can block or delete cookies and local storage in your browser settings.",
         "If you block the strictly necessary cookies, you will not be able to sign in.",
+        "If you block Intercom's cookies, the support chat on our website may not work. You can email us instead.",
       ]),
     ],
   },

@@ -37,10 +37,12 @@ jobs:
 
       # VITE_APP_URL makes sign-in, checkout and signed-in pages hand off to
       # the app domain (docs/DOMAIN_SPLIT.md). The build writes the _headers
-      # file next to the static assets.
+      # file next to the static assets. VITE_INTERCOM_APP_ID (public) turns on
+      # the Intercom Messenger and adds Intercom's hosts to that CSP.
       - name: Build marketing site
         env:
           VITE_APP_URL: https://kindred-asterling-ai-coaching.com
+          VITE_INTERCOM_APP_ID: ggu2qi1h
         run: pnpm --filter @workspace/kindred-coach run build
 
       # CLOUDFLARE_API_TOKEN needs the "Edit Cloudflare Workers" template plus
