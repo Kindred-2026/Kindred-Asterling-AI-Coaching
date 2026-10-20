@@ -6,7 +6,7 @@ Kindred has two Devin workspace profiles.
 
 Runs on a developer machine with Devin CLI or Devin Desktop (local agent), against a local clone.
 
-- Configuration is committed in the repo: `.devin/rules/local-workspace.md` (always-on agent rules) and `.devin/config.json` (shared permissions: pnpm/git read commands allowed; `sudo`, `fly`/`flyctl` and `.env` access denied). Personal overrides go in `.devin/config.local.json` (git-ignored by Devin CLI).
+- Configuration is committed in the repo: `.devin/rules/local-workspace.md` (always-on agent rules) and `.devin/config.json` (shared permissions: pnpm/git read commands allowed; `sudo`, `fly`/`flyctl`, `doctl` and `.env` access denied). Personal overrides go in `.devin/config.local.json` (git-ignored by Devin CLI).
 - Setup:
 
   ```sh

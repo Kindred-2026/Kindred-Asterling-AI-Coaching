@@ -15,7 +15,7 @@ been proven and its rollback window has closed.
   multi-document writes and account deletion.
 - Take and restore-test a PostgreSQL backup before the final migration.
 - Give `POSTGRES_SOURCE_URL` a read-only login. Never add it to the application
-  container or Coolify runtime variables.
+  container or hosting runtime variables (App Platform, `.do/app.yaml`).
 - Give the API MongoDB `readWrite` only on `MONGODB_DATABASE`. Use a separate
   credential with MongoDB's `read` role for reporting or manual inspection.
 - Use a new, empty `MONGODB_MIGRATION_DATABASE` for every rehearsal and final

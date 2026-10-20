@@ -51,7 +51,7 @@ AUTH0_DOMAIN=dev-rio3w0hvdl6hccn6.us.auth0.com
 AUTH0_AUDIENCE=https://kindred-asterling-ai-coaching.com/api
 ```
 
-Set these in the existing environment injection mechanism. The API never uses a SPA client secret or MCP management token. `CLERK_*` variables are no longer runtime requirements. Health handlers do not require user authentication, but production startup requires both Auth0 runtime variables. API routes that require a user reject missing/invalid tokens. JWT signature, algorithm, issuer, audience and expiration are checked by `express-oauth2-jwt-bearer`. UserInfo must match the verified subject. Auth0 machine identities are rejected on user routes.
+Set these in the existing environment injection mechanism. The API never uses a SPA client secret or MCP management token. Optionally, account deletion also deletes the user's Auth0 record through a dedicated machine-to-machine application granted only `delete:users`, configured with `AUTH0_MGMT_DOMAIN` (the tenant's canonical domain, not the custom sign-in domain), `AUTH0_MGMT_CLIENT_ID` and `AUTH0_MGMT_CLIENT_SECRET`; when they are blank, deletion skips Auth0. See `auth0-deploy/README.md` and `SECRET_INVENTORY.md`. `CLERK_*` variables are no longer runtime requirements. Health handlers do not require user authentication, but production startup requires both Auth0 runtime variables. API routes that require a user reject missing/invalid tokens. JWT signature, algorithm, issuer, audience and expiration are checked by `express-oauth2-jwt-bearer`. UserInfo must match the verified subject. Auth0 machine identities are rejected on user routes.
 
 ## Account security
 
