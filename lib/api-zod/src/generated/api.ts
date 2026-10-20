@@ -65,6 +65,14 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * @summary Health check
+ */
+export const GetHealthResponse = zod.object({
+  "status": zod.string()
+})
+
+
+/**
  * @summary List morning baseline logs
  */
 export const ListMorningLogsResponseItem = zod.object({

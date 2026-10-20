@@ -9,6 +9,11 @@ router.get("/healthz", (_req, res) => {
   res.json(data);
 });
 
+router.get("/health", (_req, res) => {
+  const data = HealthCheckResponse.parse({ status: "ok" });
+  res.json(data);
+});
+
 router.get("/healthz/db", async (_req, res) => {
   try {
     await pingDatabase();
