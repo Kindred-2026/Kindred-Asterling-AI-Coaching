@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   moodLoading: false,
   moodError: false,
   refetchSummary: vi.fn(),
+  streaks: [] as any[],
 }));
 
 vi.mock("wouter", () => ({
@@ -28,7 +29,7 @@ vi.mock("@workspace/api-client-react", () => ({
     isError: mocks.summaryError,
     refetch: mocks.refetchSummary,
   }),
-  useGetStreaks: () => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() }),
+  useGetStreaks: () => ({ data: mocks.streaks, isLoading: false, isError: false, refetch: vi.fn() }),
   useGetMoodTrend: () => ({
     data: mocks.moodTrend,
     isLoading: mocks.moodLoading,
@@ -74,6 +75,7 @@ describe("Dashboard (Today experience)", () => {
     mocks.moodTrend = [];
     mocks.moodLoading = false;
     mocks.moodError = false;
+    mocks.streaks = [];
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
@@ -359,5 +361,26 @@ describe("Dashboard (Today experience)", () => {
     expect(container.textContent).toContain("Not enough data yet");
     expect(container.querySelector('[data-testid="medication-effectiveness-error"]'))
       .toBeNull();
+  });
+
+  it("lists only unbroken streaks as active", async () => {
+    mocks.summaryLoading = false;
+    mocks.streaks = [
+      { habitId: 1, habitName: "Broken walk", currentStreak: 0, longestStreak: 5 },
+      { habitId: 2, habitName: "Daily reading", currentStreak: 3, longestStreak: 3 },
+    ];
+    await renderDashboard();
+    expect(container.textContent).toContain("Daily reading");
+    expect(container.textContent).not.toContain("Broken walk");
+  });
+
+  it("shows the empty state when every streak is broken", async () => {
+    mocks.summaryLoading = false;
+    mocks.streaks = [
+      { habitId: 1, habitName: "Broken walk", currentStreak: 0, longestStreak: 5 },
+    ];
+    await renderDashboard();
+    expect(container.textContent).toContain("No active streaks yet");
+    expect(container.textContent).not.toContain("Broken walk");
   });
 });
