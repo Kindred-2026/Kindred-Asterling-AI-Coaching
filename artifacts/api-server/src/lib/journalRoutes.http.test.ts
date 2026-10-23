@@ -465,6 +465,40 @@ describe("Today progression after journal saves", () => {
     },
   );
 
+  it("includes timestamp-form entries from the last day of the mood trend", async () => {
+    const clock = vi
+      .spyOn(Date, "now")
+      .mockReturnValue(Date.parse("2026-09-08T12:00:00Z"));
+    try {
+      await api("POST", "/morning-logs", {
+        token: tokenA,
+        body: {
+          date: "2026-09-08T09:30:00.000Z",
+          mentalLoadLevel: "clear",
+          miniGoals: [],
+        },
+      });
+      await api("POST", "/evening-reports", {
+        token: tokenA,
+        body: { date: "2026-09-08T21:00:00.000Z", medicationEffectiveness: 4 },
+      });
+      const trend = await api("GET", "/dashboard/mood-trend", { token: tokenA });
+      expect(trend.status).toBe(200);
+      const days = trend.body as {
+        date: string;
+        mentalLoadLevel: string | null;
+        medicationEffectiveness: number | null;
+      }[];
+      expect(days.at(-1)).toMatchObject({
+        date: "2026-09-08",
+        mentalLoadLevel: "clear",
+        medicationEffectiveness: 4,
+      });
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
   it.each([
     [360, "2026-09-09T02:00:00Z", "2026-09-08", "2026-09-08T06:00:00Z"],
     [-600, "2026-09-08T18:00:00Z", "2026-09-09", "2026-09-08T14:00:00Z"],

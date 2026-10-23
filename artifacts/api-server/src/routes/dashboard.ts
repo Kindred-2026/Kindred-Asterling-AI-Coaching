@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc, gte, inArray, lt, lte } from "@workspace/db";
+import { eq, and, desc, gte, inArray, lt } from "@workspace/db";
 import {
   db,
   morningLogsTable,
@@ -205,6 +205,10 @@ router.get(
     const endDate = days[days.length - 1];
     const afterEndDate = new Date(`${endDate}T00:00:00.000Z`);
     afterEndDate.setUTCDate(afterEndDate.getUTCDate() + 1);
+    // Date fields hold both YYYY-MM-DD and ISO timestamps, and a timestamp on
+    // the last day sorts after the bare endDate string, so bound with < the
+    // next day and key rows by their day prefix (as /dashboard/today does).
+    const afterEnd = afterEndDate.toISOString().split("T")[0];
 
     const [morningLogs, bodyScans, eveningReports] = await Promise.all([
       db
@@ -214,7 +218,7 @@ router.get(
           and(
             eq(morningLogsTable.userId, userId),
             gte(morningLogsTable.date, startDate),
-            lte(morningLogsTable.date, endDate),
+            lt(morningLogsTable.date, afterEnd),
           ),
         ),
       db
@@ -243,12 +247,14 @@ router.get(
           and(
             eq(eveningReportsTable.userId, userId),
             gte(eveningReportsTable.date, startDate),
-            lte(eveningReportsTable.date, endDate),
+            lt(eveningReportsTable.date, afterEnd),
           ),
         ),
     ]);
 
-    const morningLogMap = new Map(morningLogs.map((log) => [log.date, log]));
+    const morningLogMap = new Map(
+      morningLogs.map((log) => [log.date.slice(0, 10), log]),
+    );
     const bodyScanMap = new Map<string, number>();
     for (const scan of bodyScans) {
       const date = new Date(scan.scannedAt.getTime() - offset * 60_000)
@@ -257,7 +263,7 @@ router.get(
       bodyScanMap.set(date, (bodyScanMap.get(date) ?? 0) + 1);
     }
     const eveningReportMap = new Map(
-      eveningReports.map((report) => [report.date, report]),
+      eveningReports.map((report) => [report.date.slice(0, 10), report]),
     );
 
     const results = days.map((ds) => {
