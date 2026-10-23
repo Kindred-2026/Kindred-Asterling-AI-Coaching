@@ -74,6 +74,17 @@ describe("MongoDB data API semantics", () => {
     expect("filter" in orCondition ? orCondition.filter : undefined).toEqual({});
   });
 
+  it("returns no rows for a zero limit instead of every row", async () => {
+    const marker = `limit-${suffix}`;
+    await createUser(`${marker}-1`, { firstName: marker });
+    const rows = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.firstName, marker))
+      .limit(0);
+    expect(rows).toEqual([]);
+  });
+
   it("updates and returns every matching document", async () => {
     const marker = `multi-${suffix}`;
     const ids = [`${marker}-1`, `${marker}-2`];

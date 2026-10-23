@@ -124,6 +124,23 @@ describe("PostgreSQL to MongoDB migration", () => {
     expect(left.hex()).toBe(right.hex());
   });
 
+  it("does not let an even number of identical rows cancel out", () => {
+    const empty = new OrderIndependentDigest();
+    const twice = new OrderIndependentDigest();
+    const row = { _id: 1, value: "a" };
+    twice.add(row);
+    twice.add(row);
+    expect(twice.hex()).not.toBe(empty.hex());
+
+    const once = new OrderIndependentDigest();
+    const extraPair = new OrderIndependentDigest();
+    once.add({ _id: 2, value: "b" });
+    extraPair.add({ _id: 2, value: "b" });
+    extraPair.add(row);
+    extraPair.add(row);
+    expect(extraPair.hex()).not.toBe(once.hex());
+  });
+
   it("enforces the snapshot and fresh-target safety gates", () => {
     const source = readFileSync(
       new URL(

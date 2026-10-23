@@ -23,6 +23,7 @@ export const SECONDARY_PAGES: Record<string, string> = {
   "/app/account": "Account security",
   "/app/archive": "Archive",
   "/app/admin/beta": "Beta administration",
+  "/app/beta-checklist": "Beta checklist",
   "/app/session-tasks/choose-organization": "Choose organization",
   "/app/session-tasks/reset-password": "Reset password",
   "/app/session-tasks/setup-mfa": "Set up MFA",

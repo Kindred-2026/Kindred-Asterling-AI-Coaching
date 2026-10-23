@@ -595,6 +595,8 @@ class SelectQuery<Result extends Row> implements PromiseLike<Result[]> {
   }
 
   private async execute(): Promise<Result[]> {
+    // MongoDB treats limit(0) as "no limit"; a page size of zero means nothing.
+    if (this.maximum != null && this.maximum <= 0) return [];
     const target = await collection(this.table);
     let cursor = target.find(this.filter, { session: this.session });
     if (this.sort) cursor = cursor.sort(this.sort);

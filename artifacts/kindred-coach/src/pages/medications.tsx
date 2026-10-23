@@ -161,8 +161,8 @@ export default function Medications() {
     }
   }
 
+  // Only reached from the AlertDialog's confirm action.
   async function handleDelete(id: number) {
-    if (!confirm("Delete this medication?")) return;
     setBusy(true);
     try {
       await deleteMedication(id);
