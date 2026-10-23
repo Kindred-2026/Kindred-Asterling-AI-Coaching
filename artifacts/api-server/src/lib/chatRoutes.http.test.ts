@@ -482,6 +482,27 @@ describe("POST /chat/send", () => {
   });
 });
 
+describe("POST /chat/send cleanup failure", () => {
+  it("still refunds quota and answers 502 when removing the user turn fails", async () => {
+    const quotaBefore = await quotaCount(userBId);
+    createMock.mockRejectedValue(new Error("ollama unavailable"));
+    const remove = vi.spyOn(db, "delete").mockImplementationOnce(() => {
+      throw new Error("database unavailable");
+    });
+    try {
+      const res = await api("POST", "/chat/send", {
+        token: tokenB,
+        body: { content: "anyone there" },
+      });
+      expect(res.status).toBe(502);
+      expect(remove).toHaveBeenCalledWith(messages);
+      expect(await quotaCount(userBId)).toBe(quotaBefore);
+    } finally {
+      remove.mockRestore();
+    }
+  });
+});
+
 describe("POST /chat/send system prompt profile fields", () => {
   async function systemPromptFor(profile: Partial<typeof usersTable.$inferInsert>) {
     await db.update(usersTable).set(profile).where(eq(usersTable.id, userBId));

@@ -396,11 +396,20 @@ router.post(
       })
       .returning({ id: messages.id });
     // On a 502 the client restores the draft for a retry, so the stored user
-    // turn must go too or the retry duplicates it.
-    const removeUserTurn = () =>
-      db
-        .delete(messages)
-        .where(and(eq(messages.id, userTurn!.id), eq(messages.userId, userId)));
+    // turn must go too or the retry duplicates it. Best-effort, like the quota
+    // refund: a failed cleanup must not skip the refund or turn the 502 into
+    // a 500.
+    const removeUserTurn = async () => {
+      try {
+        await db
+          .delete(messages)
+          .where(
+            and(eq(messages.id, userTurn!.id), eq(messages.userId, userId)),
+          );
+      } catch (err) {
+        req.log.error({ err }, "Failed to remove user turn after AI failure");
+      }
+    };
 
     // Bounded SQL fetch: only pull the most recent HISTORY_TURN_LIMIT rows
     // instead of the entire conversation. Otherwise an attacker who has
