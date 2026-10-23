@@ -32,6 +32,7 @@ describe("security headers", () => {
     expect(closed).not.toContain("intercom");
 
     const app = express();
+    app.disable("x-powered-by");
     app.use(securityHeaders([], { intercom: true }));
     app.get("/", (_req, res) => res.send("ok"));
     const csp = (await request(app).get("/")).headers["content-security-policy"];

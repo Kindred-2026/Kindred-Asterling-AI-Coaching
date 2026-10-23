@@ -63,18 +63,19 @@ describe("IntercomMessenger", () => {
   });
 
   it("boots a signed-in user with the signed token and display details", () => {
+    const userJwt = crypto.randomUUID();
     act(() =>
       root.render(
         createElement(IntercomMessenger, {
           appId: "test-app",
-          user: { userJwt: "signed.jwt.value", name: "Ada", createdAt: 1700000000 },
+          user: { userJwt, name: "Ada", createdAt: 1700000000 },
         }),
       ),
     );
     const settings = mocks.boot.mock.calls.at(-1)?.[0];
     expect(settings).toEqual({
       app_id: "test-app",
-      intercom_user_jwt: "signed.jwt.value",
+      intercom_user_jwt: userJwt,
       name: "Ada",
       created_at: 1700000000,
     });

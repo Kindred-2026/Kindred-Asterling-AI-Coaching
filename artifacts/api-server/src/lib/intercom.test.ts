@@ -19,9 +19,10 @@ describe("intercomConfig", () => {
 
 describe("signIntercomUserJwt", () => {
   it("signs the user with HS256 and a short expiry", () => {
+    const secret = crypto.randomBytes(32).toString("hex");
     const jwt = signIntercomUserJwt(
       { user_id: "user-1", email: "a@example.test" },
-      "secret",
+      secret,
       1_000,
     );
     const [header, payload, signature] = jwt.split(".");
@@ -35,7 +36,7 @@ describe("signIntercomUserJwt", () => {
       exp: 1_000 + INTERCOM_JWT_TTL_SECONDS,
     });
     expect(signature).toBe(
-      crypto.createHmac("sha256", "secret").update(`${header}.${payload}`).digest("base64url"),
+      crypto.createHmac("sha256", secret).update(`${header}.${payload}`).digest("base64url"),
     );
   });
 });

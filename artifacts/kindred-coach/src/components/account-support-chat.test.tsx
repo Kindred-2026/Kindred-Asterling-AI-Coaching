@@ -57,10 +57,11 @@ describe("AccountSupportChat", () => {
   });
 
   it("boots the Messenger with the token the API signed", async () => {
+    const userJwt = crypto.randomUUID();
     fetchMock.mockResolvedValue(
       Response.json({
         appId: "test-app",
-        userJwt: "signed.jwt.value",
+        userJwt,
         name: "Ada",
         createdAt: 1700000000,
       }),
@@ -68,7 +69,7 @@ describe("AccountSupportChat", () => {
     await render();
     expect(mocks.messenger).toHaveBeenLastCalledWith({
       appId: "test-app",
-      user: { userJwt: "signed.jwt.value", name: "Ada", createdAt: 1700000000 },
+      user: { userJwt, name: "Ada", createdAt: 1700000000 },
     });
   });
 });

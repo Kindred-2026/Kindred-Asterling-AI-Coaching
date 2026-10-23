@@ -12,6 +12,7 @@ import {
 let server: Server;
 let baseUrl: string;
 const tokens: string[] = [];
+const messengerSecret = crypto.randomBytes(32).toString("hex");
 const userIds: string[] = [];
 const originalEnv = {
   appId: process.env.INTERCOM_APP_ID,
@@ -64,13 +65,13 @@ describe("GET /api/account/intercom", () => {
 
   it("requires sign-in", async () => {
     process.env.INTERCOM_APP_ID = "test-app";
-    process.env.INTERCOM_MESSENGER_SECRET = "test-secret";
+    process.env.INTERCOM_MESSENGER_SECRET = messengerSecret;
     expect((await fetch(`${baseUrl}/api/account/intercom`)).status).toBe(401);
   });
 
   it("returns a token signed for the signed-in user only", async () => {
     process.env.INTERCOM_APP_ID = "test-app";
-    process.env.INTERCOM_MESSENGER_SECRET = "test-secret";
+    process.env.INTERCOM_MESSENGER_SECRET = messengerSecret;
     const { id, token } = await seedUser();
 
     const response = await getSettings(token);
@@ -89,7 +90,7 @@ describe("GET /api/account/intercom", () => {
     const [header, payload, signature] = body.userJwt.split(".");
     expect(signature).toBe(
       crypto
-        .createHmac("sha256", "test-secret")
+        .createHmac("sha256", messengerSecret)
         .update(`${header}.${payload}`)
         .digest("base64url"),
     );
