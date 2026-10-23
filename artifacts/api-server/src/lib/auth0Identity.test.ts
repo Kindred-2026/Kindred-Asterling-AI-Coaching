@@ -77,4 +77,24 @@ describe("Auth0 identity mapping", () => {
     ids.push(user.id);
     expect(user.emailVerifiedAt).toBeNull();
   });
+  it("keeps the original verification time across later sign-ins", async () => {
+    const external = identity();
+    const first = await syncAuth0Identity(external);
+    ids.push(first.id);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const second = await syncAuth0Identity(external);
+    expect(second.emailVerifiedAt?.getTime()).toBe(
+      first.emailVerifiedAt?.getTime(),
+    );
+  });
+  it("refuses to move an existing account onto another account's email", async () => {
+    const other = await syncAuth0Identity(identity());
+    ids.push(other.id);
+    const external = identity();
+    const user = await syncAuth0Identity(external);
+    ids.push(user.id);
+    await expect(
+      syncAuth0Identity({ ...external, email: other.email }),
+    ).rejects.toBeInstanceOf(IdentityLinkRequiredError);
+  });
 });
