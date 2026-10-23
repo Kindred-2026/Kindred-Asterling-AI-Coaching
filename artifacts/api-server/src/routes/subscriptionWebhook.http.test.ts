@@ -269,6 +269,65 @@ describe("POST /api/payment/webhook", () => {
     expect(res.status).toBe(401);
   });
 
+  it("keeps the paid period when a cancellation carries no period end", async () => {
+    const periodEnd = new Date(Date.now() + 10 * 86_400_000);
+    const created = eventBody("subscription.created", {
+      subscriptionId: "sub_5",
+      currentPeriodEnd: periodEnd.toISOString(),
+    });
+    await post(
+      "/api/payment/webhook",
+      created,
+      signedHeaders(created, `wh_${Math.random()}`),
+    );
+
+    const cancelled = eventBody("subscription.cancelled", {
+      subscriptionId: "sub_5",
+    });
+    const res = await post(
+      "/api/payment/webhook",
+      cancelled,
+      signedHeaders(cancelled, `wh_${Math.random()}`),
+    );
+    expect(res.status).toBe(200);
+
+    const [row] = await db
+      .select()
+      .from(subscriptionsTable)
+      .where(eq(subscriptionsTable.userId, userId));
+    expect(row?.status).toBe("cancel_at_period_end");
+    expect(row?.currentPeriodEnd?.getTime()).toBe(periodEnd.getTime());
+  });
+
+  it("keeps the stored period end when a payment failure carries none", async () => {
+    const periodEnd = new Date(Date.now() + 10 * 86_400_000);
+    const paid = eventBody("invoice.paid", {
+      subscriptionId: "sub_6",
+      currentPeriodEnd: periodEnd.toISOString(),
+    });
+    await post(
+      "/api/payment/webhook",
+      paid,
+      signedHeaders(paid, `wh_${Math.random()}`),
+    );
+
+    const failed = eventBody("invoice.payment_failed", {
+      subscriptionId: "sub_6",
+    });
+    await post(
+      "/api/payment/webhook",
+      failed,
+      signedHeaders(failed, `wh_${Math.random()}`),
+    );
+
+    const [row] = await db
+      .select()
+      .from(subscriptionsTable)
+      .where(eq(subscriptionsTable.userId, userId));
+    expect(row?.status).toBe("past_due");
+    expect(row?.currentPeriodEnd?.getTime()).toBe(periodEnd.getTime());
+  });
+
   it("returns received:true without crashing when webhook headers are missing", async () => {
     const body = eventBody("subscription.created", { customerCode });
     const res = await fetch(`${baseUrl}/api/payment/webhook`, {

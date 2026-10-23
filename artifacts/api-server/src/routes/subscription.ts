@@ -311,7 +311,9 @@ router.post("/payment/webhook", async (req, res): Promise<void> => {
       }
       if (!subscription) throw new Error("Unable to correlate subscription");
 
-      const end = periodEnd(event.data);
+      // An event without a period end (e.g. invoice.payment_failed, or a
+      // cancellation) keeps the period already paid for.
+      const end = periodEnd(event.data) ?? subscription.currentPeriodEnd ?? null;
       const status = statusFor(event.eventType, end);
       // Strictly older only: a distinct event with the same timestamp (replays
       // are already deduplicated by webhook-id) must still be applied.
