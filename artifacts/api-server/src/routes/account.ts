@@ -1,5 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
+import { db, eq, usersTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
+import { intercomConfig, signIntercomUserJwt } from "../lib/intercom";
 import {
   AccountDeletionBlockedError,
   deleteAccount,
@@ -21,6 +23,42 @@ router.get(
       'attachment; filename="kindred-account-export.json"',
     );
     res.json(payload);
+  },
+);
+// Boot settings for the support Messenger on the Account page. Who the user is
+// travels only inside the signed token; name and sign-up date are unsigned
+// display details.
+router.get(
+  "/account/intercom",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const config = intercomConfig();
+    if (!config) {
+      res.status(404).json({ error: "Support chat is not set up" });
+      return;
+    }
+    const [row] = await db
+      .select({
+        createdAt: usersTable.createdAt,
+        preferredName: usersTable.preferredName,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, req.user!.id));
+    if (!row) {
+      res.status(404).json({ error: "Account not found" });
+      return;
+    }
+    const { id, email, firstName, lastName } = req.user!;
+    const fullName = [firstName, lastName].filter(Boolean).join(" ");
+    res.json({
+      appId: config.appId,
+      userJwt: signIntercomUserJwt(
+        { user_id: id, ...(email ? { email } : {}) },
+        config.secret,
+      ),
+      name: fullName || row.preferredName || null,
+      createdAt: Math.floor(row.createdAt.getTime() / 1000),
+    });
   },
 );
 router.delete("/account", requireAuth, async (req: Request, res: Response) => {

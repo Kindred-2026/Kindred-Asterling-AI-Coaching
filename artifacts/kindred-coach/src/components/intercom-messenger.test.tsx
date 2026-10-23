@@ -14,7 +14,11 @@ vi.mock("@intercom/messenger-js-sdk", () => ({
   shutdown: mocks.shutdown,
 }));
 
-import { INTERCOM_APP_ID, IntercomMessenger } from "./intercom-messenger";
+import {
+  INTERCOM_APP_ID,
+  IntercomMessenger,
+  shutdownIntercom,
+} from "./intercom-messenger";
 
 describe("IntercomMessenger", () => {
   let container: HTMLDivElement;
@@ -56,5 +60,30 @@ describe("IntercomMessenger", () => {
     );
     expect(mocks.Intercom).toHaveBeenCalledTimes(1);
     expect(mocks.boot).toHaveBeenCalledWith({ app_id: "test-app" });
+  });
+
+  it("boots a signed-in user with the signed token and display details", () => {
+    act(() =>
+      root.render(
+        createElement(IntercomMessenger, {
+          appId: "test-app",
+          user: { userJwt: "signed.jwt.value", name: "Ada", createdAt: 1700000000 },
+        }),
+      ),
+    );
+    const settings = mocks.boot.mock.calls.at(-1)?.[0];
+    expect(settings).toEqual({
+      app_id: "test-app",
+      intercom_user_jwt: "signed.jwt.value",
+      name: "Ada",
+      created_at: 1700000000,
+    });
+    expect(settings).not.toHaveProperty("user_id");
+    expect(settings).not.toHaveProperty("email");
+  });
+
+  it("shuts the session down on sign-out once the widget has loaded", () => {
+    shutdownIntercom();
+    expect(mocks.shutdown).toHaveBeenCalledTimes(1);
   });
 });

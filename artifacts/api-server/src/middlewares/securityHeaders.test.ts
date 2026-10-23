@@ -27,6 +27,26 @@ describe("security headers", () => {
     expect(csp).toContain("frame-ancestors 'none'");
   });
 
+  it("allows Intercom only when it is configured", async () => {
+    const closed = (await request(createTestApp()).get("/")).headers["content-security-policy"];
+    expect(closed).not.toContain("intercom");
+
+    const app = express();
+    app.use(securityHeaders([], { intercom: true }));
+    app.get("/", (_req, res) => res.send("ok"));
+    const csp = (await request(app).get("/")).headers["content-security-policy"];
+    const directive = (name: string) =>
+      csp.split(";").map((d: string) => d.trim()).find((d: string) => d.startsWith(`${name} `));
+    expect(directive("script-src")).toBe(
+      "script-src 'self' https://app.intercom.io https://widget.intercom.io https://js.intercomcdn.com",
+    );
+    expect(directive("connect-src")).toContain("wss://nexus-websocket-a.intercom.io");
+    expect(directive("form-action")).toBe(
+      "form-action 'self' https://intercom.help https://api-iam.intercom.io",
+    );
+    expect(csp).toContain("script-src-attr 'none'");
+  });
+
   it("blocks inline scripts", async () => {
     const csp = (await request(createTestApp()).get("/")).headers["content-security-policy"];
     const scriptSrc = csp.split(";").find((d: string) => d.startsWith("script-src "));
