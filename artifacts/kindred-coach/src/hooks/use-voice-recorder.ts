@@ -15,6 +15,9 @@ export function useVoiceRecorder(onText: (text: string) => void) {
   const streamRef = useRef<MediaStream | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
+  // True while waiting on getUserMedia (the permission prompt), so a second
+  // tap can't open a second stream that nothing would ever stop.
+  const startingRef = useRef(false);
 
   const supported =
     typeof navigator !== "undefined" &&
@@ -47,9 +50,17 @@ export function useVoiceRecorder(onText: (text: string) => void) {
       setError("Voice input isn't supported on this device.");
       return;
     }
+    if (startingRef.current) return;
+    startingRef.current = true;
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (!mountedRef.current) {
+        // Unmounted during the permission prompt: the unmount cleanup already
+        // ran, so release the mic here.
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
       streamRef.current = stream;
       chunksRef.current = [];
       const recorder = new MediaRecorder(stream);
@@ -101,6 +112,8 @@ export function useVoiceRecorder(onText: (text: string) => void) {
         setError("Couldn't start recording. Try again.");
       }
       setStatus("idle");
+    } finally {
+      startingRef.current = false;
     }
   }, [supported, cleanupStream, onText]);
 
