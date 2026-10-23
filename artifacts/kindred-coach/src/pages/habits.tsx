@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { failureDescription } from "@/lib/failure-description";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ListTodo, Plus, Trash2, CheckCircle2, Circle, Flame } from "lucide-react";
@@ -69,6 +70,13 @@ function HabitCard({ habit, streaks }: { habit: any; streaks: any[] }) {
           queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetTodaySummaryQueryKey() });
         },
+        onError: (err) => {
+          toast({
+            title: "Couldn't log habit",
+            description: failureDescription(err),
+            variant: "destructive",
+          });
+        },
       }
     );
   };
@@ -82,6 +90,13 @@ function HabitCard({ habit, streaks }: { habit: any; streaks: any[] }) {
           queryClient.invalidateQueries({ queryKey: getListHabitsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetTodaySummaryQueryKey() });
+        },
+        onError: (err) => {
+          toast({
+            title: "Couldn't delete habit",
+            description: failureDescription(err),
+            variant: "destructive",
+          });
         },
       }
     );
@@ -196,6 +211,13 @@ export default function Habits() {
           setNewDescription("");
           setTargetDays("90");
           setOpen(false);
+        },
+        onError: (err) => {
+          toast({
+            title: "Couldn't create habit",
+            description: failureDescription(err),
+            variant: "destructive",
+          });
         },
       }
     );

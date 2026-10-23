@@ -25,6 +25,7 @@ import {
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { failureDescription } from "@/lib/failure-description";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -74,22 +75,6 @@ function normalizeTimes(times: string[]): string[] {
   return Array.from(new Set(times.map((t) => t.trim())))
     .filter((t) => TIME_RE.test(t))
     .sort();
-}
-
-function failureDescription(err: unknown): string {
-  const status =
-    typeof err === "object" && err !== null && "status" in err
-      ? Number((err as { status: unknown }).status)
-      : NaN;
-  if (status === 401 || status === 403) {
-    return "Your session may have expired or your plan doesn't allow this. Sign in again and retry.";
-  }
-  if (status === 400) {
-    return "Please check the details you entered and try again.";
-  }
-  return Number.isFinite(status)
-    ? `Something went wrong (error ${status}). Please try again.`
-    : "Something went wrong. Check your connection and try again.";
 }
 
 export default function Medications() {
