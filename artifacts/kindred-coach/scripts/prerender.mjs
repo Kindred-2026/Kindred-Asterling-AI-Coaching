@@ -425,19 +425,42 @@ if (IS_SPLIT) {
 // headers the API server sends for the app, minus Auth0 (this site never
 // signs anyone in), and long caching for hashed assets.
 if (IS_MARKETING_BUILD) {
+  // With VITE_INTERCOM_APP_ID set, the Messenger runs on these pages, so allow
+  // the hosts Intercom lists for US-hosted workspaces:
+  // https://www.intercom.com/help/en/articles/3894-using-intercom-with-content-security-policy
+  const intercom = process.env.VITE_INTERCOM_APP_ID?.trim()
+    ? {
+        script: " https://app.intercom.io https://widget.intercom.io https://js.intercomcdn.com",
+        img: " blob:",
+        connect:
+          " https://via.intercom.io https://api.intercom.io https://api-iam.intercom.io https://api-ping.intercom.io" +
+          " https://*.intercom-messenger.com wss://*.intercom-messenger.com" +
+          " https://nexus-websocket-a.intercom.io wss://nexus-websocket-a.intercom.io" +
+          " https://nexus-websocket-b.intercom.io wss://nexus-websocket-b.intercom.io" +
+          " https://uploads.intercomcdn.com https://uploads.intercomusercontent.com",
+        font: " https://js.intercomcdn.com https://fonts.intercomcdn.com",
+        media: " https://js.intercomcdn.com https://downloads.intercomcdn.com",
+        frame:
+          " https://intercom-sheets.com https://www.intercom-reporting.com https://www.youtube.com https://player.vimeo.com https://fast.wistia.net",
+        form: " https://intercom.help https://api-iam.intercom.io",
+      }
+    : null;
   const csp = [
     "default-src 'self'",
-    "script-src 'self'",
+    `script-src 'self'${intercom?.script ?? ""}`,
     "script-src-attr 'none'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: https:",
-    "connect-src 'self' https://*.ingest.us.sentry.io",
-    "font-src 'self' https://fonts.gstatic.com",
+    `img-src 'self' data: https:${intercom?.img ?? ""}`,
+    `connect-src 'self' https://*.ingest.us.sentry.io${intercom?.connect ?? ""}`,
+    `font-src 'self' https://fonts.gstatic.com${intercom?.font ?? ""}`,
+    ...(intercom
+      ? [`media-src 'self'${intercom.media}`, `frame-src${intercom.frame}`]
+      : []),
     "object-src 'none'",
     "frame-ancestors 'none'",
     "worker-src 'self' blob:",
     "base-uri 'self'",
-    "form-action 'self'",
+    `form-action 'self'${intercom?.form ?? ""}`,
     "upgrade-insecure-requests",
   ].join("; ");
   writeFileSync(

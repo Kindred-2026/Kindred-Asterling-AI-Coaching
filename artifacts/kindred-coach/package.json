@@ -55,6 +55,7 @@
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.28.2",
+    "@intercom/messenger-js-sdk": "^0.0.20",
     "@sentry/react": "^11.8.0",
     "postcss": "^8.5.29"
   }
