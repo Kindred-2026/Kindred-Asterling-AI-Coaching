@@ -6,10 +6,10 @@ import { logger } from "./logger";
 
 const CRISIS_PATTERNS = [
   /\bsuicid(e|al)\b/i,
-  /\bkill\s*myself\b/i,
-  /\bend\s*my\s*life\b/i,
+  /\bkill(?:s|ed|ing)?\s*myself\b/i,
+  /\bend(?:s|ed|ing)?\s*my\s*life\b/i,
   /\bwant\s*to\s*die\b/i,
-  /\bself[- ]?harm\b/i,
+  /\bself[- ]?harm(?:s|ed|ing)?\b/i,
   /\bself[- ]?injur(y|ies)\b/i,
 ];
 
