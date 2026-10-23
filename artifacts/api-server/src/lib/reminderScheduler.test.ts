@@ -13,6 +13,8 @@ import {
   usersTable,
   reminderSettingsTable,
   reminderDeliveriesTable,
+  medicationsTable,
+  medicationScheduleEntriesTable,
 } from "@workspace/db";
 
 // The scheduler's only external dependencies are the two send libs, which we
@@ -170,5 +172,81 @@ describe("runReminderTick", () => {
     await runReminderTick(new Date("2026-06-26T08:00:00Z"));
     expect(mockSendSms).toHaveBeenCalledTimes(1);
     expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
+  describe("across midnight", () => {
+    const eveningOnly = {
+      morningEnabled: false,
+      eveningEnabled: true,
+      eveningTime: "23:59",
+      medicationEnabled: false,
+      smsEnabled: false,
+      emailEnabled: true,
+    };
+
+    async function ledgerDates(): Promise<string[]> {
+      const rows = await db
+        .select()
+        .from(reminderDeliveriesTable)
+        .where(eq(reminderDeliveriesTable.userId, userId));
+      return rows.map((r) => r.localDate).sort();
+    }
+
+    it("catches up a late-evening reminder just after midnight, dated to its own day", async () => {
+      await setSettings(eveningOnly);
+      // The 23:59 tick was missed; 00:01 is still inside the window.
+      await runReminderTick(new Date("2026-06-27T00:01:00Z"));
+      expect(mockSendEmail).toHaveBeenCalledTimes(1);
+      expect(await ledgerDates()).toEqual(["2026-06-26"]);
+
+      // Tonight's 23:59 is a separate occurrence and still goes out.
+      await runReminderTick(new Date("2026-06-27T23:59:00Z"));
+      expect(mockSendEmail).toHaveBeenCalledTimes(2);
+      expect(await ledgerDates()).toEqual(["2026-06-26", "2026-06-27"]);
+    });
+
+    it("does not resend after midnight when the on-time tick already delivered", async () => {
+      await setSettings(eveningOnly);
+      await runReminderTick(new Date("2026-06-26T23:59:00Z"));
+      await runReminderTick(new Date("2026-06-27T00:03:00Z"));
+      expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    });
+
+    it("still ignores occurrences outside the window after midnight", async () => {
+      await setSettings({ ...eveningOnly, eveningTime: "23:50" });
+      await runReminderTick(new Date("2026-06-27T00:01:00Z")); // 11 minutes late
+      expect(mockSendEmail).not.toHaveBeenCalled();
+    });
+
+    it("uses the occurrence's own day for medication schedule bounds", async () => {
+      await setSettings({ ...eveningOnly, eveningEnabled: false, medicationEnabled: true });
+      const [med] = await db
+        .insert(medicationsTable)
+        .values({ userId, name: "Melatonin", dosage: "1mg", times: ["23:59"] })
+        .returning();
+      try {
+        // Schedule starts on the 27th, so the 26th's 23:59 dose never existed.
+        await db.insert(medicationScheduleEntriesTable).values({
+          medicationId: med!.id,
+          userId,
+          scheduledTime: "23:59",
+          startDate: "2026-06-27",
+          endDate: null,
+        });
+        await runReminderTick(new Date("2026-06-27T00:01:00Z"));
+        expect(mockSendEmail).not.toHaveBeenCalled();
+
+        // Starting on the 26th, the caught-up dose is due and dated the 26th.
+        await db
+          .update(medicationScheduleEntriesTable)
+          .set({ startDate: "2026-06-26" })
+          .where(eq(medicationScheduleEntriesTable.medicationId, med!.id));
+        await runReminderTick(new Date("2026-06-27T00:02:00Z"));
+        expect(mockSendEmail).toHaveBeenCalledTimes(1);
+        expect(await ledgerDates()).toEqual(["2026-06-26"]);
+      } finally {
+        await db.delete(medicationsTable).where(eq(medicationsTable.id, med!.id));
+      }
+    });
   });
 });
