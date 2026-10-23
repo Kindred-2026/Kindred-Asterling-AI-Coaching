@@ -153,11 +153,57 @@ function getPool(options?: PostgresOptions): Pool {
   const url = (options?.url ?? process.env.POSTGRES_URL)?.trim();
   if (!url || !/^postgres(?:ql):\/\//i.test(url)) throw new Error("POSTGRES_URL must be a PostgreSQL URL");
   pool = new Pool({ ...postgresConnectionConfig(url), max: options?.maxPoolSize ?? 10, min: 0, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 5_000, maxUses: 0 });
+  // Idle clients emit "error" when the server drops them (restart, failover,
+  // `terminating connection due to administrator command`). Without a listener
+  // node-postgres re-emits it on the pool and the process crashes. The pool
+  // discards the broken client and opens a new one on the next query.
+  pool.on("error", (error) => {
+    console.warn("PostgreSQL idle client error; client discarded", { code: (error as NodeJS.ErrnoException).code, message: error.message });
+  });
   return pool;
 }
+
+const transientErrorCodes = new Set([
+  "ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "EPIPE", "ENOTFOUND", "EAI_AGAIN", "EHOSTUNREACH", "ENETUNREACH",
+  // admin_shutdown, crash_shutdown, cannot_connect_now (server starting up / shutting down)
+  "57P01", "57P02", "57P03",
+]);
+export function isTransientPostgresError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const code = (error as { code?: unknown }).code;
+  if (typeof code === "string" && transientErrorCodes.has(code)) return true;
+  const message = (error as { message?: unknown }).message;
+  return typeof message === "string" && /Connection terminated|timeout exceeded when trying to connect/i.test(message);
+}
+
+function startupRetryWindowMs(): number {
+  const raw = Number(process.env.POSTGRES_STARTUP_RETRY_MS);
+  return Number.isFinite(raw) && raw >= 0 ? raw : 60_000;
+}
+
+async function waitForPostgres(current: Pool, retryWindowMs = startupRetryWindowMs()): Promise<void> {
+  const deadline = Date.now() + retryWindowMs;
+  let delay = 500;
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      await current.query("SELECT 1");
+      return;
+    } catch (error) {
+      const remaining = deadline - Date.now();
+      if (!isTransientPostgresError(error) || remaining <= 0) throw error;
+      const wait = Math.min(delay, remaining, 10_000);
+      console.warn("PostgreSQL not reachable during startup; retrying", { attempt, code: (error as { code?: unknown }).code, retryInMs: wait });
+      await new Promise((resolve) => setTimeout(resolve, wait));
+      delay *= 2;
+    }
+  }
+}
+
 export async function initializePostgresDatabase(options?: PostgresOptions): Promise<void> {
   const current = getPool(options);
-  await current.query("SELECT 1");
+  // A managed database restart/failover can reset connections for a short
+  // window; retry only connectivity so real schema errors still fail fast.
+  await waitForPostgres(current);
   const [tables, columns, constraints] = await Promise.all([
     current.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"),
     current.query("SELECT table_name, column_name, data_type, udt_name FROM information_schema.columns WHERE table_schema = 'public'"),
