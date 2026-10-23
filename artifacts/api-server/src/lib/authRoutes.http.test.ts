@@ -94,6 +94,21 @@ describe("GET /auth/user emailVerifiedAt", () => {
     expect(user.emailVerifiedAt).not.toBe(user.createdAt);
   });
 
+  it("returns only public profile fields, never internal columns", async () => {
+    await db
+      .update(usersTable)
+      .set({ passwordHash: "legacy-hash", clerkUserId: `clerk-${suffix}` })
+      .where(eq(usersTable.id, userId));
+    const res = await fetch(`${baseUrl}/auth/user`, {
+      headers: { authorization: `Bearer ${token}` },
+    });
+    const { user } = (await res.json()) as { user: Record<string, unknown> };
+    for (const key of ["passwordHash", "clerkUserId", "auth0UserId", "clerkDeletedAt", "updatedAt"]) {
+      expect(user).not.toHaveProperty(key);
+    }
+    expect(user).toMatchObject({ id: userId, preferredName: null, timezone: null });
+  });
+
   it("reports null for a user whose email was never verified", async () => {
     const unverifiedId = `test-auth-unverified-${suffix}`;
     await db.insert(usersTable).values({ id: unverifiedId, emailVerifiedAt: null });

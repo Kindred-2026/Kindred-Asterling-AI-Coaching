@@ -38,12 +38,22 @@ router.get("/auth/user", requireAuth, async (req: Request, res: Response) => {
     return;
   }
 
+  // Explicit allowlist: never spread the row, which carries internal columns
+  // (passwordHash, provider subject IDs, deletion markers).
   const publicUser: PublicUser = {
-    ...row,
+    id: row.id,
     email: req.user!.email,
     firstName: req.user!.firstName,
     lastName: req.user!.lastName,
     profileImageUrl: req.user!.profileImageUrl,
+    preferredName: row.preferredName,
+    struggles: row.struggles,
+    strengths: row.strengths,
+    interests: row.interests,
+    bio: row.bio,
+    motivationalQuote: row.motivationalQuote,
+    phone: row.phone,
+    timezone: row.timezone,
     createdAt: row.createdAt.toISOString(),
     emailVerifiedAt: row.emailVerifiedAt?.toISOString() ?? null,
     onboardedAt: row.onboardedAt?.toISOString() ?? null,
