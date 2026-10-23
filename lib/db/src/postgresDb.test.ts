@@ -240,6 +240,23 @@ test("verifies TLS against a supplied CA instead of the URL's sslmode", () => {
   );
 });
 
+test("accepts both postgres:// and postgresql:// connection URLs", async () => {
+  for (const scheme of ["postgres", "postgresql", "POSTGRES"]) {
+    // Port 1 refuses the connection, so a URL that passes validation fails on
+    // connect instead of with the URL error.
+    await assert.rejects(
+      initializePostgresDatabase({ url: `${scheme}://u@127.0.0.1:1/db` }),
+      (error: Error) => error.message !== "POSTGRES_URL must be a PostgreSQL URL",
+    );
+    await closePostgresDatabase();
+  }
+  await assert.rejects(
+    initializePostgresDatabase({ url: "mysql://u@127.0.0.1:1/db" }),
+    (error: Error) => error.message === "POSTGRES_URL must be a PostgreSQL URL",
+  );
+  await closePostgresDatabase();
+});
+
 test("supports deterministic ping, close and reinitialization with an embedded pool", async () => {
   const first = await fixture();
   await first.api.initialize();

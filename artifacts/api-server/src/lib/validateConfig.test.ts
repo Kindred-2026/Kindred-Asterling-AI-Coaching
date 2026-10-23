@@ -117,6 +117,13 @@ describe("PostgreSQL runtime configuration", () => {
     expect(validateRuntimeConfig).not.toThrow();
   });
 
+  it("accepts the short postgres:// scheme", () => {
+    baseEnv();
+    process.env.DATABASE_PROVIDER = "postgres";
+    process.env.POSTGRES_URL = "postgres://db.example/kindred";
+    expect(validateRuntimeConfig).not.toThrow();
+  });
+
   it("rejects non-PostgreSQL connection URLs", () => {
     baseEnv();
     process.env.DATABASE_PROVIDER = "postgres";

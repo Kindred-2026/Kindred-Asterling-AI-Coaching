@@ -151,7 +151,7 @@ function getPool(options?: PostgresOptions): Pool {
   if (pool) return pool;
   if (options?.pool) { pool = options.pool; return pool; }
   const url = (options?.url ?? process.env.POSTGRES_URL)?.trim();
-  if (!url || !/^postgres(?:ql):\/\//i.test(url)) throw new Error("POSTGRES_URL must be a PostgreSQL URL");
+  if (!url || !/^postgres(?:ql)?:\/\//i.test(url)) throw new Error("POSTGRES_URL must be a PostgreSQL URL");
   pool = new Pool({ ...postgresConnectionConfig(url), max: options?.maxPoolSize ?? 10, min: 0, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 5_000, maxUses: 0 });
   return pool;
 }
