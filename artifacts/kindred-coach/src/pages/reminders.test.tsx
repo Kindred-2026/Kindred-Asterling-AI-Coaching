@@ -81,3 +81,42 @@ describe("Reminders dirty state", () => {
     expect(status()).toBe("Up to date.");
   });
 });
+
+describe("Reminders save guard", () => {
+  const save = () =>
+    container.querySelector<HTMLButtonElement>(
+      '[data-testid="reminders-save"]',
+    )!;
+  const toggle = (id: string) =>
+    act(async () =>
+      container
+        .querySelector<HTMLButtonElement>(`[data-testid="${id}"]`)!
+        .click(),
+    );
+
+  beforeEach(() => {
+    mocks.user = { id: "u1", phone: null, timezone: "America/Toronto" };
+  });
+
+  it("blocks saving text reminders with no phone number", async () => {
+    await render();
+    await toggle("reminders-sms-toggle");
+    expect(save().disabled).toBe(true);
+    expect(status()).toBe("Add a phone number to receive text reminders.");
+  });
+
+  it("blocks saving a reminder with no channel to send it on", async () => {
+    await render();
+    await toggle("reminders-email-toggle");
+    expect(save().disabled).toBe(true);
+    expect(status()).toBe("Turn on text or email to receive reminders.");
+  });
+
+  it("allows switching every reminder and channel off", async () => {
+    await render();
+    await toggle("reminders-morning-toggle");
+    await toggle("reminders-email-toggle");
+    expect(save().disabled).toBe(false);
+    expect(status()).toBe("You have unsaved changes.");
+  });
+});

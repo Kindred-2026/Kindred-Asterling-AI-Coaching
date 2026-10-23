@@ -52,9 +52,31 @@ router.patch(
       return;
     }
     const userId = req.user!.id;
-    await getOrCreateSettings(userId);
+    const current = await getOrCreateSettings(userId);
 
     const data = parsed.data;
+    // Text reminders can't be delivered without a phone number. Only check a
+    // request that touches SMS or the phone, so an older row in that state
+    // doesn't block unrelated edits.
+    if (data.smsEnabled !== undefined || data.phone !== undefined) {
+      const smsEnabled = data.smsEnabled ?? current?.smsEnabled ?? false;
+      let phone = data.phone;
+      if (phone === undefined) {
+        const [user] = await db
+          .select({ phone: usersTable.phone })
+          .from(usersTable)
+          .where(eq(usersTable.id, userId))
+          .limit(1);
+        phone = user?.phone ?? null;
+      }
+      if (smsEnabled && !phone?.trim()) {
+        res
+          .status(400)
+          .json({ error: "Add a phone number to turn on text reminders" });
+        return;
+      }
+    }
+
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     if (data.morningEnabled !== undefined)
       updates.morningEnabled = data.morningEnabled;
