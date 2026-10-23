@@ -91,6 +91,13 @@ export default function Morning() {
             queryKey: getGetTodaySummaryQueryKey(),
           });
         },
+        onError: () => {
+          toast({
+            title: "Couldn't save morning log",
+            description: "Check your connection and try again.",
+            variant: "destructive",
+          });
+        },
       },
     );
   };
