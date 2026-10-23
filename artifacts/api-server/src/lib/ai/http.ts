@@ -16,7 +16,15 @@ export async function fetchWithDeadline(
   outerSignal?.addEventListener("abort", abort, { once: true });
   if (outerSignal?.aborted) controller.abort();
   try {
-    return await fetch(url, { ...init, signal: controller.signal });
+    const response = await fetch(url, { ...init, signal: controller.signal });
+    // Read the whole body while the deadline still applies; otherwise a server
+    // that sends headers and then stalls would hang the caller forever.
+    const body = await response.arrayBuffer();
+    return new Response(body.byteLength > 0 ? body : null, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    });
   } catch (error) {
     if (timedOut)
       throw new AIProviderError("timeout", "AI request timed out", true, {
