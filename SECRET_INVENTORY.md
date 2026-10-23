@@ -51,6 +51,8 @@ The tracked files are `.env.example`, `.env.dev.example`, and `auth0-deploy/.env
 | `HELCIM_PAYMENTS_ENABLED` | N; payments feature gate; optional, CI explicitly disables | local config | unverified | Fly config | verify/retain |
 | `HELCIM_API_KEY` | S; Helcim API; required if payments enabled | local secret | unverified | Fly secret | verify/rotate |
 | `HELCIM_WEBHOOK_SECRET` | S; webhook signature; required if payments enabled | local secret | unverified | Fly secret | verify/rotate |
+| `INTERCOM_APP_ID` | N; Intercom workspace ID for the signed-in support Messenger; optional | local config | App Platform config | App Platform config | retain |
+| `INTERCOM_MESSENGER_SECRET` | S; signs Intercom Messenger identity tokens (HS256); optional, Messenger stays off without it | local secret | not set | App Platform encrypted variable | add when enabling |
 | `HELCIM_CUSTOMER_REFERENCE_SECRET` | S; customer reference HMAC; required if payments enabled | local secret | unverified | Fly secret | verify/rotate with compatibility plan |
 | `HELCIM_YEARLY_PLAN_ID` | N; Helcim yearly plan; validator requires if payments enabled, no active API consumer found | local config | unverified | Fly config only if still needed | verify/remove |
 | `HELCIM_LIFETIME_PRODUCT_ID` | N; legacy example product ID; no active consumer found | local config | unverified | none unless reintroduced | verify/remove |
@@ -101,6 +103,7 @@ cutover.
 | `AUTH0_MGMT_CLIENT_SECRET` | Management API `delete:users` only, on a dedicated machine-to-machine application. | Optional; create only if used |
 | `AMPLITUDE_SECRET_KEY`, `AMPLITUDE_AI_SECRET_KEY` | Project secret key; Amplitude has no narrower scope for the User Privacy API. Keep server-side only. | Provider limitation |
 | `HELCIM_WEBHOOK_SECRET` | Signature verification for Kindred's configured webhook endpoint only. | Endpoint-specific shared secret; verify rotation |
+| `INTERCOM_MESSENGER_SECRET` | Signing Messenger identity tokens only; Intercom issues no narrower credential. Keep server-side only; rotating it in Intercom invalidates open sessions. | Provider limitation |
 | `HELCIM_CUSTOMER_REFERENCE_SECRET` | Local HMAC signing/verification for stable customer references; no provider API access. | App-only secret; verify rotation compatibility |
 | `RESEND_API_KEY` | Send email from the verified Kindred sender/domain only; no account, domain, or API-key administration. | Proposed; verify provider grant |
 | `TWILIO_ACCOUNT_SID` | Identify the dedicated Kindred messaging subaccount/service only; do not use a parent-account credential. | Proposed; verify provider grant |

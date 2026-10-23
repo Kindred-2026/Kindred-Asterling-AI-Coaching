@@ -1,5 +1,6 @@
 import { AccountData } from "@/components/account-data";
 import { AccountSecurity } from "@/components/account-security";
+import { AccountSupportChat } from "@/components/account-support-chat";
 import { Link } from "wouter";
 import { ShieldCheck } from "lucide-react";
 
@@ -27,6 +28,7 @@ export default function AccountPage() {
       </header>
       <AccountSecurity />
       <AccountData />
+      <AccountSupportChat />
     </div>
   );
 }

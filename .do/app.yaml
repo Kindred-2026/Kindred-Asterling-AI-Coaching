@@ -172,6 +172,15 @@ services:
       - key: SUBSCRIPTION_OWNER_IDS
         scope: RUN_TIME
         type: SECRET
+      # Optional: support Messenger on the Account page. Both come from
+      # Intercom > Settings > Workspace > Security > Messenger; without them
+      # the Messenger stays off and the CSP stays closed to Intercom.
+      - key: INTERCOM_APP_ID
+        scope: RUN_TIME
+        value: ggu2qi1h
+      - key: INTERCOM_MESSENGER_SECRET
+        scope: RUN_TIME
+        type: SECRET
 
 databases:
   # Managed PostgreSQL 16 (the version Fly ran) in Toronto. Create the cluster,

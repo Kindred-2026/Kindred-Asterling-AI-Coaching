@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { resolveReturnDestination } from "./routing";
+import { shutdownIntercom } from "@/components/intercom-messenger";
 
 interface AuthState {
   isLoaded: boolean;
@@ -66,11 +67,14 @@ function AuthBridge({ children }: { children: ReactNode }) {
       auth.isAuthenticated ? ((await auth.getAccessTokenSilently()) ?? null) : null,
     [auth.isAuthenticated, auth.getAccessTokenSilently],
   );
-  const signOut = useCallback(
-    async () =>
-      auth.logout({ logoutParams: { returnTo: `${window.location.origin}/` } }),
-    [auth.logout],
-  );
+  const signOut = useCallback(async () => {
+    // Clear the Intercom session too, so the next person on this browser
+    // cannot see this user's support conversations.
+    shutdownIntercom();
+    await auth.logout({
+      logoutParams: { returnTo: `${window.location.origin}/` },
+    });
+  }, [auth.logout]);
   const login = useCallback(
     async (returnTo: string, signup = false, connection?: LoginConnection) => {
       setRedirectError(undefined);
