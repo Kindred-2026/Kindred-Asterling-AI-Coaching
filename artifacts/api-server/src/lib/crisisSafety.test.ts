@@ -20,6 +20,21 @@ describe("crisis safety boundary", () => {
     expect(detectCrisis("call 988 for information")).toBe(false);
   });
 
+  it("detects inflected verb forms, not only the base verb", () => {
+    for (const text of [
+      "I keep self-harming",
+      "I self-harmed last night",
+      "I self harm when it gets bad",
+      "I've been thinking about killing myself",
+      "I almost killed myself",
+      "ending my life feels like the only way out",
+    ]) {
+      expect(detectCrisis(text), text).toBe(true);
+    }
+    expect(detectCrisis("I won't self-harm")).toBe(false);
+    expect(detectCrisis("the weekend is ending, my life is busy")).toBe(false);
+  });
+
   it("logs an allowlisted event without message or identity data", () => {
     const secretMessage = randomBytes(24).toString("hex");
     const directIdentifier = "user_clerk_123@example.test";

@@ -235,9 +235,13 @@ export default function Chat() {
   async function handleResumeOnboarding() {
     if (!authUser || sending) return;
     setSending(true);
+    setSendError(null);
     try {
       await advanceOnboarding(authUser);
       await refetchUser();
+      await qc.invalidateQueries({ queryKey: getGetActiveChatQueryKey() });
+    } catch (err: unknown) {
+      setSendError(chatSendErrorMessage(err));
       await qc.invalidateQueries({ queryKey: getGetActiveChatQueryKey() });
     } finally {
       setSending(false);

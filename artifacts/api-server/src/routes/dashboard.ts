@@ -156,7 +156,8 @@ router.get(
       let longestStreak = 0;
       let tempStreak = 0;
       let counting = true;
-      const completedDates = entries.map((e) => e.date);
+      // Entries may be stored as full timestamps; compare calendar days only.
+      const completedDates = entries.map((e) => e.date.slice(0, 10));
 
       for (let i = 0; i < 90; i++) {
         const d = new Date(today);

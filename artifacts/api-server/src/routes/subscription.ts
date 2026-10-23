@@ -213,10 +213,6 @@ router.post("/payment/webhook", async (req, res): Promise<void> => {
     return;
   }
   try {
-    const event = parseHelcimEvent(req.body);
-    if (!allowedEvents.has(event.eventType) || !event.customerId)
-      throw new Error("Unsupported or uncorrelated Helcim event");
-    const customerId = event.customerId;
     if (
       !verifyHelcimWebhook(body, {
         "webhook-id": webhookId,
@@ -226,6 +222,17 @@ router.post("/payment/webhook", async (req, res): Promise<void> => {
     ) {
       throw new InvalidWebhookSignatureError();
     }
+    const event = parseHelcimEvent(req.body);
+    // Acknowledge signed events we don't act on so Helcim stops redelivering.
+    if (!allowedEvents.has(event.eventType) || !event.customerId) {
+      logger.info(
+        { webhookId, eventType: event.eventType },
+        "Helcim webhook ignored",
+      );
+      res.json({ received: true, ignored: true });
+      return;
+    }
+    const customerId = event.customerId;
     const referencedUser = verifyCustomerReference(customerId);
     const [knownSubscription] = await db
       .select({ userId: subscriptionsTable.userId })
@@ -304,7 +311,17 @@ router.post("/payment/webhook", async (req, res): Promise<void> => {
       }
       if (!subscription) throw new Error("Unable to correlate subscription");
 
-      const end = periodEnd(event.data);
+      // An event without a period end (e.g. invoice.payment_failed, or a
+      // cancellation) keeps the period already paid for. A renewal or payment
+      // without one must not re-apply a period that has already ended, or
+      // rowIsActive() would lock out a paying user.
+      const storedEnd = subscription.currentPeriodEnd ?? null;
+      const activating = statusFor(event.eventType, null) === "active";
+      const end =
+        periodEnd(event.data) ??
+        (activating && storedEnd && storedEnd.getTime() <= Date.now()
+          ? null
+          : storedEnd);
       const status = statusFor(event.eventType, end);
       // Strictly older only: a distinct event with the same timestamp (replays
       // are already deduplicated by webhook-id) must still be applied.

@@ -149,6 +149,7 @@ export default function Reminders() {
   }
 
   async function handleSave() {
+    if (invalid) return;
     setSaving(true);
     setError(null);
     try {
@@ -200,7 +201,12 @@ export default function Reminders() {
     "w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
 
   const smsNeedsPhone = form.smsEnabled && !form.phone.trim();
-  const noChannel = !form.smsEnabled && !form.emailEnabled;
+  // With every reminder off, no channel is fine: that's how reminders are
+  // switched off entirely.
+  const anyReminderOn =
+    form.morningEnabled || form.medicationEnabled || form.eveningEnabled;
+  const noChannel = anyReminderOn && !form.smsEnabled && !form.emailEnabled;
+  const invalid = smsNeedsPhone || noChannel;
 
   return (
     <div className="space-y-6 pb-12">
@@ -401,15 +407,17 @@ export default function Reminders() {
             ? error
             : noChannel
               ? "Turn on text or email to receive reminders."
-              : dirty
-                ? "You have unsaved changes."
-                : savedAt
-                  ? "All changes saved."
-                  : "Up to date."}
+              : smsNeedsPhone
+                ? "Add a phone number to receive text reminders."
+                : dirty
+                  ? "You have unsaved changes."
+                  : savedAt
+                    ? "All changes saved."
+                    : "Up to date."}
         </p>
         <button
           onClick={handleSave}
-          disabled={saving || !dirty}
+          disabled={saving || !dirty || invalid}
           className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           data-testid="reminders-save"
         >

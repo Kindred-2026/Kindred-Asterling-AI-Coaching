@@ -5,7 +5,7 @@ import {
   type Response,
   type NextFunction,
 } from "express";
-import { eq, and, desc, isNull } from "@workspace/db";
+import { eq, and, desc } from "@workspace/db";
 import {
   db,
   usersTable,
@@ -186,10 +186,9 @@ router.post("/beta/revoke", async (req, res): Promise<void> => {
     .select()
     .from(betaGrantsTable)
     .where(
-      and(
-        eq(betaGrantsTable.userId, userId),
-        isNull(betaGrantsTable.revokedAt),
-      ),
+      // An expired grant that was never revoked must not be picked instead
+      // of the active one.
+      and(eq(betaGrantsTable.userId, userId), activeBetaGrant()),
     )
     .limit(1);
 
