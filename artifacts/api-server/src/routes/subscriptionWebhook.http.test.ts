@@ -229,6 +229,46 @@ describe("POST /api/payment/webhook", () => {
     expect(row?.status).toBe("past_due");
   });
 
+  it("acknowledges a signed event type it does not handle", async () => {
+    const body = eventBody("customer.updated", { customerCode });
+    const res = await post(
+      "/api/payment/webhook",
+      body,
+      signedHeaders(body, `wh_${Math.random()}`),
+    );
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ received: true, ignored: true });
+
+    const [row] = await db
+      .select()
+      .from(subscriptionsTable)
+      .where(eq(subscriptionsTable.userId, userId));
+    expect(row).toBeUndefined();
+  });
+
+  it("acknowledges a signed event with no customer", async () => {
+    const body = JSON.stringify({
+      eventType: "invoice.paid",
+      createdAt: new Date().toISOString(),
+      data: {},
+    });
+    const res = await post(
+      "/api/payment/webhook",
+      body,
+      signedHeaders(body, `wh_${Math.random()}`),
+    );
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ received: true, ignored: true });
+  });
+
+  it("checks the signature before the event type", async () => {
+    const body = eventBody("customer.updated", { customerCode });
+    const headers = signedHeaders(body, `wh_${Math.random()}`);
+    headers["webhook-signature"] = "v1,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    const res = await post("/api/payment/webhook", body, headers);
+    expect(res.status).toBe(401);
+  });
+
   it("returns received:true without crashing when webhook headers are missing", async () => {
     const body = eventBody("subscription.created", { customerCode });
     const res = await fetch(`${baseUrl}/api/payment/webhook`, {

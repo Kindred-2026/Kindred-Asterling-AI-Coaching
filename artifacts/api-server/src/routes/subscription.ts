@@ -213,10 +213,6 @@ router.post("/payment/webhook", async (req, res): Promise<void> => {
     return;
   }
   try {
-    const event = parseHelcimEvent(req.body);
-    if (!allowedEvents.has(event.eventType) || !event.customerId)
-      throw new Error("Unsupported or uncorrelated Helcim event");
-    const customerId = event.customerId;
     if (
       !verifyHelcimWebhook(body, {
         "webhook-id": webhookId,
@@ -226,6 +222,17 @@ router.post("/payment/webhook", async (req, res): Promise<void> => {
     ) {
       throw new InvalidWebhookSignatureError();
     }
+    const event = parseHelcimEvent(req.body);
+    // Acknowledge signed events we don't act on so Helcim stops redelivering.
+    if (!allowedEvents.has(event.eventType) || !event.customerId) {
+      logger.info(
+        { webhookId, eventType: event.eventType },
+        "Helcim webhook ignored",
+      );
+      res.json({ received: true, ignored: true });
+      return;
+    }
+    const customerId = event.customerId;
     const referencedUser = verifyCustomerReference(customerId);
     const [knownSubscription] = await db
       .select({ userId: subscriptionsTable.userId })
