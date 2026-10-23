@@ -185,7 +185,9 @@ export default function Reminders() {
   const dirty =
     loaded &&
     (form.phone !== (user.phone ?? "") ||
-      form.timezone !== (user.timezone ?? "") ||
+      // Compare against what the form was hydrated with, including the
+      // detected fallback, so a fresh load isn't "unsaved".
+      form.timezone !== (user.timezone || detectTimezone()) ||
       form.morningEnabled !== settings.morningEnabled ||
       form.morningTime !== settings.morningTime ||
       form.medicationEnabled !== settings.medicationEnabled ||
