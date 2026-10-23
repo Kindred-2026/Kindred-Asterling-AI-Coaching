@@ -52,7 +52,13 @@ const SIDEBAR_STORAGE_KEY = "kindred:sidebar-collapsed";
 function useSidebarCollapsed(): [boolean, (v: boolean) => void] {
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1";
+    // Storage can throw (privacy modes, blocked site data); never let that
+    // take down the whole signed-in layout.
+    try {
+      return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1";
+    } catch {
+      return false;
+    }
   });
   useEffect(() => {
     try {
@@ -147,7 +153,8 @@ function ProfilePanel({
 }) {
   if (!user) return null;
   const name = user.preferredName || user.firstName || user.email || "You";
-  const initials = (name.match(/\b\w/g) ?? [])
+  // Unicode-aware: \b\w only matches ASCII, so non-Latin names went blank.
+  const initials = (name.match(/(?<![\p{L}\p{N}])[\p{L}\p{N}]/gu) ?? [])
     .slice(0, 2)
     .join("")
     .toUpperCase();
