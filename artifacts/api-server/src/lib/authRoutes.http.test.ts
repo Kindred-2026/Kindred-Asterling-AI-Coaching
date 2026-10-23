@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { randomBytes } from "node:crypto";
 import type { AddressInfo } from "net";
 import type { Server } from "http";
 import { eq } from "@workspace/db";
@@ -97,7 +98,8 @@ describe("GET /auth/user emailVerifiedAt", () => {
   it("returns only public profile fields, never internal columns", async () => {
     await db
       .update(usersTable)
-      .set({ passwordHash: "legacy-hash", clerkUserId: `clerk-${suffix}` })
+      // Generated per run so no secret-like literal sits in source.
+      .set({ passwordHash: randomBytes(16).toString("hex"), clerkUserId: `clerk-${suffix}` })
       .where(eq(usersTable.id, userId));
     const res = await fetch(`${baseUrl}/auth/user`, {
       headers: { authorization: `Bearer ${token}` },
