@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { createAuth0ProfileLoader } from "./auth0Profile";
-import { Auth0UserinfoRequestFailed, Auth0SubjectMismatch } from "./auth0Profile";
+import {
+  Auth0UserinfoRequestFailed,
+  Auth0SubjectMismatch,
+  Auth0TokenRejected,
+} from "./auth0Profile";
 
 function fixture() {
   let time = 1_000_000;
@@ -97,6 +101,16 @@ describe("Auth0 UserInfo request cache", () => {
       );
     }
   });
+  it.each([401, 403])(
+    "classifies a %s from /userinfo as a rejected token",
+    async (status) => {
+      const { load, profileFetch } = fixture();
+      profileFetch.mockResolvedValueOnce(new Response("", { status }));
+      await expect(load("one", "auth0|one", 2_000_000)).rejects.toBeInstanceOf(
+        Auth0TokenRejected,
+      );
+    },
+  );
   it("classifies thrown fetch failure as auth0_userinfo_request_failed", async () => {
     const { load, profileFetch } = fixture();
     profileFetch.mockRejectedValueOnce(new Error("fetch failed"));

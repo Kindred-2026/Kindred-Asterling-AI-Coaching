@@ -10,6 +10,7 @@ import {
 import {
   Auth0UserinfoRequestFailed,
   Auth0SubjectMismatch,
+  Auth0TokenRejected,
 } from "../lib/auth0Profile";
 
 export { IdentityLinkRequiredError } from "../lib/auth0Identity";
@@ -29,6 +30,11 @@ export function classifyAuth0IdentityError(err: unknown): {
   if (err instanceof IdentityLinkRequiredError) {
     return { status: 409, errorCategory: "account_link_required" };
   }
+  // A revoked or under-scoped token will never succeed on retry, so answer
+  // 401 (sign in again) instead of 503 (try again later).
+  if (err instanceof Auth0TokenRejected) {
+    return { status: 401, errorCategory: "auth0_token_rejected" };
+  }
   if (err instanceof Auth0UserinfoRequestFailed) {
     return { status: 503, errorCategory: "auth0_userinfo_request_failed" };
   }
@@ -40,6 +46,7 @@ export function classifyAuth0IdentityError(err: unknown): {
 
 type ErrorResponseBody =
   | { error: "account_link_required"; message: string }
+  | { error: "Unauthorized" }
   | { error: "Authentication temporarily unavailable" };
 
 export function createAuth0ErrorResponse(err: unknown): {
@@ -58,6 +65,7 @@ export function createAuth0ErrorResponse(err: unknown): {
     };
   }
   logger.warn({ errorCategory }, "Auth0 identity resolution failed");
+  if (status === 401) return { status: 401, body: { error: "Unauthorized" } };
   return {
     status: 503,
     body: { error: "Authentication temporarily unavailable" },
@@ -160,6 +168,8 @@ async function resolveIdentity(
     next();
   } catch (err) {
     const { status, body } = createAuth0ErrorResponse(err);
+    if (status === 401)
+      res.set("WWW-Authenticate", 'Bearer error="invalid_token"');
     res.status(status).json(body);
   }
 }

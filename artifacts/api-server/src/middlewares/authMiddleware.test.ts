@@ -6,7 +6,11 @@ import {
   IdentityLinkRequiredError,
   Auth0IdentitySyncFailed,
 } from "./authMiddleware";
-import { Auth0UserinfoRequestFailed, Auth0SubjectMismatch } from "../lib/auth0Profile";
+import {
+  Auth0UserinfoRequestFailed,
+  Auth0SubjectMismatch,
+  Auth0TokenRejected,
+} from "../lib/auth0Profile";
 
 describe("authMiddleware error classification", () => {
   it("classifies non-2xx /userinfo response as auth0_userinfo_request_failed", () => {
@@ -63,6 +67,12 @@ describe("authMiddleware error response shape", () => {
     const { status: s2, body: b2 } = createAuth0ErrorResponse(err2);
     expect(s2).toBe(503);
     expect(b2).toEqual({ error: "Authentication temporarily unavailable" });
+  });
+
+  it("a token Auth0 rejects produces 401 so the client signs in again", () => {
+    const { status, body } = createAuth0ErrorResponse(new Auth0TokenRejected());
+    expect(status).toBe(401);
+    expect(body).toEqual({ error: "Unauthorized" });
   });
 
   it("unknown identity-sync failure produces generic 503 with no error details", () => {

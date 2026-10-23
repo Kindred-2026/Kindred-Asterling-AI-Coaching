@@ -9,6 +9,15 @@ export class Auth0UserinfoRequestFailed extends Error {
   }
 }
 
+/** Auth0 rejected the token itself (401/403): a real auth failure, not an outage. */
+export class Auth0TokenRejected extends Error {
+  readonly category = "auth0_token_rejected" as const;
+  constructor() {
+    super("Auth0 rejected the access token");
+    this.name = "Auth0TokenRejected";
+  }
+}
+
 export class Auth0SubjectMismatch extends Error {
   readonly category = "auth0_subject_mismatch" as const;
   constructor() {
@@ -57,6 +66,8 @@ export function createAuth0ProfileLoader(options: {
       } catch {
         throw new Auth0UserinfoRequestFailed();
       }
+      if (response.status === 401 || response.status === 403)
+        throw new Auth0TokenRejected();
       if (!response.ok) throw new Auth0UserinfoRequestFailed();
       const profile = (await response.json()) as Record<string, unknown>;
       if (profile.sub !== subject) throw new Auth0SubjectMismatch();
