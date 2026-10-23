@@ -80,11 +80,9 @@ describe("GET /api/account/intercom", () => {
     const body = (await response.json()) as {
       appId: string;
       userJwt: string;
-      name: string | null;
       createdAt: number;
     };
     expect(body.appId).toBe("test-app");
-    expect(body.name).toBe("Ada Lovelace");
     expect(Number.isInteger(body.createdAt)).toBe(true);
 
     const [header, payload, signature] = body.userJwt.split(".");
@@ -97,6 +95,8 @@ describe("GET /api/account/intercom", () => {
     const claims = JSON.parse(Buffer.from(payload, "base64url").toString());
     expect(claims.user_id).toBe(id);
     expect(claims.email).toBe(`${id}@example.test`);
+    expect(claims.name).toBe("Ada Lovelace");
+    expect(body).not.toHaveProperty("name");
     expect(claims.exp).toBeGreaterThan(Date.now() / 1000);
   });
 });

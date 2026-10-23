@@ -18,7 +18,6 @@ let widgetLoaded = false;
 
 export interface IntercomUser {
   userJwt: string;
-  name: string | null;
   createdAt: number;
 }
 
@@ -31,17 +30,14 @@ export function IntercomMessenger({
   user?: IntercomUser;
 }) {
   const userJwt = user?.userJwt;
-  const name = user?.name ?? undefined;
   const createdAt = user?.createdAt;
 
   useEffect(() => {
     if (!appId) return;
-    // Who the user is travels only inside the signed token.
+    // Who the user is (ID, email, name) travels only inside the signed token.
     const settings = {
       app_id: appId,
-      ...(userJwt
-        ? { intercom_user_jwt: userJwt, name, created_at: createdAt }
-        : {}),
+      ...(userJwt ? { intercom_user_jwt: userJwt, created_at: createdAt } : {}),
     };
     if (widgetLoaded) {
       // The widget script is already on the page; shutdown() only hid it.
@@ -51,7 +47,7 @@ export function IntercomMessenger({
       widgetLoaded = true;
     }
     return () => shutdown();
-  }, [appId, userJwt, name, createdAt]);
+  }, [appId, userJwt, createdAt]);
 
   return null;
 }

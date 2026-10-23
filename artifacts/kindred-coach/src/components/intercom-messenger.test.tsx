@@ -62,13 +62,13 @@ describe("IntercomMessenger", () => {
     expect(mocks.boot).toHaveBeenCalledWith({ app_id: "test-app" });
   });
 
-  it("boots a signed-in user with the signed token and display details", () => {
+  it("boots a signed-in user with the signed token and sign-up date", () => {
     const userJwt = crypto.randomUUID();
     act(() =>
       root.render(
         createElement(IntercomMessenger, {
           appId: "test-app",
-          user: { userJwt, name: "Ada", createdAt: 1700000000 },
+          user: { userJwt, createdAt: 1700000000 },
         }),
       ),
     );
@@ -76,11 +76,11 @@ describe("IntercomMessenger", () => {
     expect(settings).toEqual({
       app_id: "test-app",
       intercom_user_jwt: userJwt,
-      name: "Ada",
       created_at: 1700000000,
     });
     expect(settings).not.toHaveProperty("user_id");
     expect(settings).not.toHaveProperty("email");
+    expect(settings).not.toHaveProperty("name");
   });
 
   it("shuts the session down on sign-out once the widget has loaded", () => {

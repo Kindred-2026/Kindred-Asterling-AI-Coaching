@@ -42,11 +42,7 @@ export function AccountSupportChat() {
   return (
     <IntercomMessenger
       appId={settings.appId}
-      user={{
-        userJwt: settings.userJwt,
-        name: settings.name,
-        createdAt: settings.createdAt,
-      }}
+      user={{ userJwt: settings.userJwt, createdAt: settings.createdAt }}
     />
   );
 }

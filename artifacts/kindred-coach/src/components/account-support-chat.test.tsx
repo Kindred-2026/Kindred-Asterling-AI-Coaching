@@ -62,14 +62,13 @@ describe("AccountSupportChat", () => {
       Response.json({
         appId: "test-app",
         userJwt,
-        name: "Ada",
         createdAt: 1700000000,
       }),
     );
     await render();
     expect(mocks.messenger).toHaveBeenLastCalledWith({
       appId: "test-app",
-      user: { userJwt, name: "Ada", createdAt: 1700000000 },
+      user: { userJwt, createdAt: 1700000000 },
     });
   });
 });

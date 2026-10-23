@@ -25,7 +25,7 @@ const base64url = (value: string | Buffer) =>
   Buffer.from(value).toString("base64url");
 
 export function signIntercomUserJwt(
-  claims: { user_id: string; email?: string },
+  claims: { user_id: string; email?: string; name?: string },
   secret: string,
   nowSeconds = Math.floor(Date.now() / 1000),
 ): string {

@@ -21,7 +21,7 @@ describe("signIntercomUserJwt", () => {
   it("signs the user with HS256 and a short expiry", () => {
     const secret = crypto.randomBytes(32).toString("hex");
     const jwt = signIntercomUserJwt(
-      { user_id: "user-1", email: "a@example.test" },
+      { user_id: "user-1", email: "a@example.test", name: "Ada" },
       secret,
       1_000,
     );
@@ -33,6 +33,7 @@ describe("signIntercomUserJwt", () => {
     expect(JSON.parse(Buffer.from(payload, "base64url").toString())).toEqual({
       user_id: "user-1",
       email: "a@example.test",
+      name: "Ada",
       exp: 1_000 + INTERCOM_JWT_TTL_SECONDS,
     });
     expect(signature).toBe(

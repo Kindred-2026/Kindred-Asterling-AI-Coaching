@@ -26,8 +26,8 @@ router.get(
   },
 );
 // Boot settings for the support Messenger on the Account page. Who the user is
-// travels only inside the signed token; name and sign-up date are unsigned
-// display details.
+// (ID, email and name) travels only inside the signed token, so Intercom can
+// protect those fields; the sign-up date is an unsigned display detail.
 router.get(
   "/account/intercom",
   requireAuth,
@@ -49,14 +49,14 @@ router.get(
       return;
     }
     const { id, email, firstName, lastName } = req.user!;
-    const fullName = [firstName, lastName].filter(Boolean).join(" ");
+    const name =
+      [firstName, lastName].filter(Boolean).join(" ") || row.preferredName;
     res.json({
       appId: config.appId,
       userJwt: signIntercomUserJwt(
-        { user_id: id, ...(email ? { email } : {}) },
+        { user_id: id, ...(email ? { email } : {}), ...(name ? { name } : {}) },
         config.secret,
       ),
-      name: fullName || row.preferredName || null,
       createdAt: Math.floor(row.createdAt.getTime() / 1000),
     });
   },
