@@ -23,23 +23,13 @@ vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: mocks.toast }),
 }));
 
-vi.mock("@workspace/api-client-react", () => ({
-  getListMorningLogsQueryKey: () => ["/api/morning-logs"],
-  getGetTodaySummaryQueryKey: () => ["/api/dashboard/today"],
-  useListMorningLogs: () => ({ data: [], isLoading: false }),
-  useCreateMorningLog: () =>
-    useMutation({
-      mutationFn: () => Promise.reject(new TypeError("Failed to fetch")),
-    }),
-}));
-
 import Morning from "./morning";
 
 let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
-  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.clearAllMocks();
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -48,22 +38,27 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount());
   container.remove();
-  vi.unstubAllGlobals();
-  mocks.toast.mockReset();
 });
 
-function typeInto(el: HTMLInputElement, value: string) {
-  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(el, value);
-  el.dispatchEvent(new Event("input", { bubbles: true }));
+async function waitFor(check: () => boolean) {
+  for (let i = 0; i < 50 && !check(); i++) {
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 10)));
+  }
+  expect(check()).toBe(true);
 }
 
-describe("Morning save failure", () => {
-  it("shows a destructive toast when the save fails", async () => {
+describe("Morning check-in", () => {
+  it("tells the user when the save fails", async () => {
+    mocks.createMorningLog.mockRejectedValue(new Error("network down"));
     await act(async () =>
       root.render(
         createElement(
           QueryClientProvider,
-          { client: new QueryClient() },
+          {
+            client: new QueryClient({
+              defaultOptions: { mutations: { retry: false } },
+            }),
+          },
           createElement(Morning),
         ),
       ),
