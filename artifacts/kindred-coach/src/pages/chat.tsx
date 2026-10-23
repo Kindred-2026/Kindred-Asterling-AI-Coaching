@@ -149,6 +149,15 @@ export default function Chat() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const onboarded = !!authUser?.onboardedAt;
   const storedMessages: ChatMessage[] = conv?.messages ?? [];
+  // Determine onboarding step from current profile state.
+  const currentStep: OnboardingStep | null = useMemo(() => {
+    if (onboarded || !authUser) return null;
+    for (const step of ONBOARDING) {
+      if (!authUser[step.key]) return step;
+    }
+    return null;
+  }, [onboarded, authUser]);
+
   // When the user hasn't completed onboarding and no messages have been stored
   // yet, render the first onboarding prompt as a static client-side bubble.
   // This avoids having GET /chat/active perform DB writes (which would be a
@@ -162,7 +171,9 @@ export default function Chat() {
             id: -1,
             conversationId: -1,
             role: "assistant",
-            content: ONBOARDING[0].prompt(authUser),
+            // The real current step, not always the first: a profile can
+            // already hold earlier answers when the conversation is empty.
+            content: (currentStep ?? ONBOARDING[0]).prompt(authUser),
             createdAt: new Date().toISOString(),
           } as ChatMessage,
         ]
@@ -176,15 +187,6 @@ export default function Chat() {
     !onboarded &&
     !!authUser &&
     storedMessages[storedMessages.length - 1]?.role === "crisis_support";
-
-  // Determine onboarding step from current profile state.
-  const currentStep: OnboardingStep | null = useMemo(() => {
-    if (onboarded || !authUser) return null;
-    for (const step of ONBOARDING) {
-      if (!authUser[step.key]) return step;
-    }
-    return null;
-  }, [onboarded, authUser]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -246,18 +248,30 @@ export default function Chat() {
         // Ordering profile update before the message append means a network failure
         // can't leave the chat showing an answer that wasn't saved.
         const value = text;
-        await updateProfile({ [currentStep.key]: value });
-        const answer = await appendChatMessage({ role: "user", content: text });
-        const crisisId = crisisMessageId(answer);
-        if (crisisId !== null) {
-          // Don't follow crisis resources with the next getting-to-know-you
-          // question; onboarding pauses until they choose to continue.
-          setLiveCrisisId(crisisId);
-        } else {
-          await advanceOnboarding({
-            ...(authUser as AuthUser),
-            [currentStep.key]: value,
+        try {
+          await updateProfile({ [currentStep.key]: value });
+          const answer = await appendChatMessage({
+            role: "user",
+            content: text,
           });
+          const crisisId = crisisMessageId(answer);
+          if (crisisId !== null) {
+            // Don't follow crisis resources with the next getting-to-know-you
+            // question; onboarding pauses until they choose to continue.
+            setLiveCrisisId(crisisId);
+          } else {
+            await advanceOnboarding({
+              ...(authUser as AuthUser),
+              [currentStep.key]: value,
+            });
+          }
+        } catch (err: unknown) {
+          // Same recovery as a failed chat turn: keep what they typed so they
+          // can retry, and show whatever did get saved.
+          setSendError(chatSendErrorMessage(err));
+          setDraft(text);
+          await qc.invalidateQueries({ queryKey: getGetActiveChatQueryKey() });
+          return;
         }
         await refetchUser();
         await qc.invalidateQueries({ queryKey: getGetActiveChatQueryKey() });
@@ -267,10 +281,9 @@ export default function Chat() {
           const crisisId = crisisMessageId(turn);
           if (crisisId !== null) setLiveCrisisId(crisisId);
         } catch (err: unknown) {
-          // Server didn't persist the user message? It did — /chat/send
-          // saves the user turn before calling Ollama, so refetch so the
-          // user's message still shows, then surface a transient banner
-          // so they can retry without losing what they typed.
+          // /chat/send removes the user turn when the model call fails, so
+          // restore the draft and surface a transient banner; the refetch
+          // keeps the history in step with the server.
           setSendError(chatSendErrorMessage(err));
           setDraft(text);
           await qc.invalidateQueries({ queryKey: getGetActiveChatQueryKey() });

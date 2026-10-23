@@ -333,3 +333,40 @@ describe("onboarding after a crisis turn", () => {
     expect(card()!.getAttribute("role")).toBeNull();
   });
 });
+
+describe("onboarding first bubble and send failures", () => {
+  it("asks the real current step when earlier answers are already saved", async () => {
+    mocks.user = {
+      id: "user-1",
+      firstName: "Sam",
+      preferredName: "Sam",
+      birthday: "1990-01-01",
+      onboardedAt: null,
+    };
+    mocks.updateProfile.mockResolvedValue({});
+    mocks.appendChatMessage.mockResolvedValue({ messages: [] });
+    await render();
+
+    expect(container.textContent).toContain("What feels heavy for you");
+    expect(container.textContent).not.toContain("What should I call you?");
+
+    await send("work stress");
+    expect(mocks.updateProfile).toHaveBeenCalledWith({
+      struggles: "work stress",
+    });
+  });
+
+  it("keeps the answer and shows an error when an onboarding save fails", async () => {
+    mocks.user = { id: "user-1", firstName: "Sam", onboardedAt: null };
+    mocks.updateProfile.mockRejectedValue(new Error("network down"));
+    await render();
+
+    await send("Sammy");
+    await waitFor(
+      () =>
+        container.querySelector('[data-testid="chat-send-error"]') !== null,
+    );
+    expect(input()!.value).toBe("Sammy");
+    expect(mocks.appendChatMessage).not.toHaveBeenCalled();
+  });
+});
