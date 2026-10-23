@@ -13,6 +13,7 @@ import { marketingSiteOrigin, marketingSiteRedirect } from "./middlewares/market
 import router from "./routes";
 import healthRouter from "./routes/health";
 import { logger } from "./lib/logger";
+import { intercomConfig } from "./lib/intercom";
 
 const app: Express = express();
 app.use(helmet());
@@ -23,7 +24,7 @@ const auth0Origins = process.env.AUTH0_DOMAIN ? [`https://${process.env.AUTH0_DO
 
 // Security headers go first so every response, health checks included,
 // carries HSTS and the rest.
-app.use(securityHeaders(auth0Origins));
+app.use(securityHeaders(auth0Origins, { intercom: intercomConfig() !== null }));
 
 // Health routes must respond without Auth0 credentials (used in CI/verification
 // environments where Auth0 values may not be configured).
