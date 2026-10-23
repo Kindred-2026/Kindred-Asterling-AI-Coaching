@@ -194,10 +194,7 @@ export async function getHelcimCustomerEmail(
     const response = await fetch(
       `${API_ROOT}/customers/${encodeURIComponent(customerId)}`,
       {
-        headers: {
-          Authorization: `Bearer ${apiKey()}`,
-          Accept: "application/json",
-        },
+        headers: helcimRequestHeaders(),
       },
     );
     if (!response.ok) return null;

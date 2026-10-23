@@ -750,13 +750,17 @@ export const createMedicationBodyTimesMax = 12;
 
 export const createMedicationBodyNotesMax = 500;
 
+export const createMedicationBodyTzOffsetMin = -840;
+export const createMedicationBodyTzOffsetMax = 840;
+
 
 
 export const CreateMedicationBody = zod.object({
   "name": zod.string().min(1).max(createMedicationBodyNameMax),
   "dosage": zod.string().min(1).max(createMedicationBodyDosageMax),
   "times": zod.array(zod.string().regex(createMedicationBodyTimesItemRegExp)).min(1).max(createMedicationBodyTimesMax),
-  "notes": zod.string().max(createMedicationBodyNotesMax).nullish()
+  "notes": zod.string().max(createMedicationBodyNotesMax).nullish(),
+  "tzOffset": zod.number().int().min(createMedicationBodyTzOffsetMin).max(createMedicationBodyTzOffsetMax).optional().describe('Client time-zone offset in minutes as returned by JavaScript Date.getTimezoneOffset() (UTC minus local; e.g. 300 for UTC-5). Used to resolve "today" in the user\'s local day when dating the schedule entry. Defaults to 0 (UTC).\n')
 })
 
 export const createMedicationResponseTimesItemRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
@@ -789,13 +793,17 @@ export const updateMedicationBodyTimesMax = 12;
 
 export const updateMedicationBodyNotesMax = 500;
 
+export const updateMedicationBodyTzOffsetMin = -840;
+export const updateMedicationBodyTzOffsetMax = 840;
+
 
 
 export const UpdateMedicationBody = zod.object({
   "name": zod.string().min(1).max(updateMedicationBodyNameMax),
   "dosage": zod.string().min(1).max(updateMedicationBodyDosageMax),
   "times": zod.array(zod.string().regex(updateMedicationBodyTimesItemRegExp)).min(1).max(updateMedicationBodyTimesMax),
-  "notes": zod.string().max(updateMedicationBodyNotesMax).nullish()
+  "notes": zod.string().max(updateMedicationBodyNotesMax).nullish(),
+  "tzOffset": zod.number().int().min(updateMedicationBodyTzOffsetMin).max(updateMedicationBodyTzOffsetMax).optional().describe('Client time-zone offset in minutes as returned by JavaScript Date.getTimezoneOffset() (UTC minus local; e.g. 300 for UTC-5). Used to resolve "today" in the user\'s local day when dating the schedule entry. Defaults to 0 (UTC).\n')
 })
 
 export const updateMedicationResponseTimesItemRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');

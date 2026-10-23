@@ -76,3 +76,34 @@ describe("app authentication path", () => {
     expect(res.status).toBe(200);
   });
 });
+
+describe("GET /auth/user emailVerifiedAt", () => {
+  async function fetchUser(t: string): Promise<{ emailVerifiedAt: string | null; createdAt: string }> {
+    const res = await fetch(`${baseUrl}/auth/user`, {
+      headers: { authorization: `Bearer ${t}` },
+    });
+    expect(res.status).toBe(200);
+    return ((await res.json()) as { user: { emailVerifiedAt: string | null; createdAt: string } }).user;
+  }
+
+  it("reports the stored verification time, not the account creation time", async () => {
+    const verifiedAt = new Date("2026-01-02T03:04:05.000Z");
+    await db.update(usersTable).set({ emailVerifiedAt: verifiedAt }).where(eq(usersTable.id, userId));
+    const user = await fetchUser(token);
+    expect(user.emailVerifiedAt).toBe(verifiedAt.toISOString());
+    expect(user.emailVerifiedAt).not.toBe(user.createdAt);
+  });
+
+  it("reports null for a user whose email was never verified", async () => {
+    const unverifiedId = `test-auth-unverified-${suffix}`;
+    await db.insert(usersTable).values({ id: unverifiedId, emailVerifiedAt: null });
+    const unverifiedToken = registerTestClerkIdentity({ id: unverifiedId });
+    try {
+      const user = await fetchUser(unverifiedToken);
+      expect(user.emailVerifiedAt).toBeNull();
+    } finally {
+      revokeTestClerkIdentity(unverifiedToken);
+      await db.delete(usersTable).where(eq(usersTable.id, unverifiedId));
+    }
+  });
+});

@@ -251,7 +251,7 @@ router.post("/medications", requireAuth, async (req, res): Promise<void> => {
       times,
       notes: parsed.data.notes ?? null,
     },
-    todayDateStr(),
+    todayDateStr(normalizeTzOffset(parsed.data.tzOffset)),
   );
   res.status(201).json(JSON.parse(JSON.stringify(created)));
 });
@@ -281,7 +281,7 @@ router.patch(
         times,
         notes: parsed.data.notes ?? null,
       },
-      todayDateStr(),
+      todayDateStr(normalizeTzOffset(parsed.data.tzOffset)),
     );
     if (!updated) {
       res.status(404).json({ error: "Not found" });

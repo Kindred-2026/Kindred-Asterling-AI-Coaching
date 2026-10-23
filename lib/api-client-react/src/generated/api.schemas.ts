@@ -483,6 +483,12 @@ export interface MedicationInput {
      * @nullable
      */
   notes?: string | null;
+  /**
+     * Client time-zone offset in minutes as returned by JavaScript Date.getTimezoneOffset() (UTC minus local; e.g. 300 for UTC-5). Used to resolve "today" in the user's local day when dating the schedule entry. Defaults to 0 (UTC).
+     * @minimum -840
+     * @maximum 840
+     */
+  tzOffset?: number;
 }
 
 export interface MedicationDoseStatus {

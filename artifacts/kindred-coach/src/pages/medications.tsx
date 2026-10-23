@@ -145,6 +145,7 @@ export default function Medications() {
         dosage: form.dosage.trim(),
         times,
         notes: form.notes.trim() ? form.notes.trim() : null,
+        tzOffset: new Date().getTimezoneOffset(),
       };
       if (editingId === "new") {
         await createMedication(payload);

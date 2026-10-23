@@ -45,9 +45,7 @@ router.get("/auth/user", requireAuth, async (req: Request, res: Response) => {
     lastName: req.user!.lastName,
     profileImageUrl: req.user!.profileImageUrl,
     createdAt: row.createdAt.toISOString(),
-    emailVerifiedAt: req.user!.emailVerified
-      ? row.createdAt.toISOString()
-      : null,
+    emailVerifiedAt: row.emailVerifiedAt?.toISOString() ?? null,
     onboardedAt: row.onboardedAt?.toISOString() ?? null,
     birthday: row.birthday ?? null,
     isOwner: ownerIds().has(row.id),
