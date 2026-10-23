@@ -22,7 +22,7 @@ jobs:
           {
             "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
             "assertion": "$JWT",
-            "federation_rule_id": "fdrl_01CWiMyMVS46HTX4Xk2v1Jwh",
+            "federation_rule_id": "fdrl_01DjwA1WFJjSTPhL9AszgV1j",
             "organization_id": "f8b7cc20-772a-47f0-aba6-938f2661725f",
             "service_account_id": "svac_01Fwf6DWWJRSNmM9ogD3LPj7",
             "workspace_id": "wrkspc_0132Sz9XzzNgpbQ65vXb2dtB"
