@@ -328,6 +328,34 @@ describe("POST /api/payment/webhook", () => {
     expect(row?.currentPeriodEnd?.getTime()).toBe(periodEnd.getTime());
   });
 
+  it("does not re-apply an ended period on a renewal that carries none", async () => {
+    const created = eventBody("subscription.created", {
+      subscriptionId: "sub_7",
+      currentPeriodEnd: new Date(Date.now() - 86_400_000).toISOString(),
+    });
+    await post(
+      "/api/payment/webhook",
+      created,
+      signedHeaders(created, `wh_${Math.random()}`),
+    );
+
+    const renewed = eventBody("subscription.renewed", {
+      subscriptionId: "sub_7",
+    });
+    await post(
+      "/api/payment/webhook",
+      renewed,
+      signedHeaders(renewed, `wh_${Math.random()}`),
+    );
+
+    const [row] = await db
+      .select()
+      .from(subscriptionsTable)
+      .where(eq(subscriptionsTable.userId, userId));
+    expect(row?.status).toBe("active");
+    expect(row?.currentPeriodEnd).toBeNull();
+  });
+
   it("returns received:true without crashing when webhook headers are missing", async () => {
     const body = eventBody("subscription.created", { customerCode });
     const res = await fetch(`${baseUrl}/api/payment/webhook`, {
