@@ -395,14 +395,17 @@ describe("account deletion across Helcim, Auth0 and Amplitude", () => {
     ).toHaveLength(3);
   });
 
-  it("does not call Helcim once renewal is already cancelled", async () => {
-    const { id } = await seedYearlySubscriber("cancelled");
-    providers = mockExternalProviders();
+  it.each(["cancelled", "cancel_at_period_end"] as const)(
+    "does not call Helcim once renewal is already stopped (%s)",
+    async (stoppedStatus) => {
+      const { id } = await seedYearlySubscriber(stoppedStatus);
+      providers = mockExternalProviders();
 
-    await expect(deleteAccount(id)).resolves.toBe(true);
-    expect(providers.of("helcim")).toHaveLength(0);
-    expect(providers.of("auth0").length).toBeGreaterThan(0);
-  });
+      await expect(deleteAccount(id)).resolves.toBe(true);
+      expect(providers.of("helcim")).toHaveLength(0);
+      expect(providers.of("auth0").length).toBeGreaterThan(0);
+    },
+  );
 
   it("still deletes the account when Auth0 and Amplitude stay down", async () => {
     const { id, customerCode } = await seedYearlySubscriber();

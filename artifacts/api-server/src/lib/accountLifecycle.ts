@@ -167,7 +167,11 @@ export async function exportAccount(userId: string) {
 }
 
 /** Billing already stopped at Helcim; nothing to cancel. */
-const BILLING_STOPPED = new Set(["cancelled", "expired"]);
+const BILLING_STOPPED = new Set([
+  "cancelled",
+  "expired",
+  "cancel_at_period_end",
+]);
 
 /**
  * Deletion was refused because a recurring Helcim subscription could not be
