@@ -849,6 +849,7 @@ components:
           phone,
           timezone,
           onboardedAt,
+          birthdaySkippedAt,
         ]
       properties:
         id:
@@ -897,6 +898,11 @@ components:
           type: string
           nullable: true
           format: date-time
+        birthdaySkippedAt:
+          type: string
+          nullable: true
+          format: date-time
+          description: Set when the user skipped the optional birthday onboarding step.
     AuthUserEnvelope:
       type: object
       required: [user]
@@ -1080,6 +1086,8 @@ components:
           maxLength: 500
         targetDays:
           type: integer
+          minimum: 1
+          maximum: 365
         startDate:
           type: string
 
@@ -1095,6 +1103,8 @@ components:
           maxLength: 500
         targetDays:
           type: integer
+          minimum: 1
+          maximum: 365
 
     HabitEntry:
       type: object
@@ -1221,6 +1231,10 @@ components:
           maxLength: 64
           description: IANA timezone name (e.g. America/New_York) used to schedule reminders.
         onboardedAt:
+          type: string
+          nullable: true
+          format: date-time
+        birthdaySkippedAt:
           type: string
           nullable: true
           format: date-time
@@ -1490,6 +1504,15 @@ components:
           type: string
           nullable: true
           maxLength: 500
+        tzOffset:
+          type: integer
+          minimum: -840
+          maximum: 840
+          description: >
+            Client time-zone offset in minutes as returned by JavaScript
+            Date.getTimezoneOffset() (UTC minus local; e.g. 300 for UTC-5).
+            Used to resolve "today" in the user's local day when dating the
+            schedule entry. Defaults to 0 (UTC).
 
     MedicationDoseStatus:
       type: object

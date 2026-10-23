@@ -72,6 +72,11 @@ export interface AuthUser {
   timezone: string | null;
   /** @nullable */
   onboardedAt: string | null;
+  /**
+     * Set when the user skipped the optional birthday onboarding step.
+     * @nullable
+     */
+  birthdaySkippedAt: string | null;
 }
 
 export interface AuthUserEnvelope {
@@ -181,6 +186,10 @@ export interface HabitInput {
   name: string;
   /** @maxLength 500 */
   description?: string;
+  /**
+     * @minimum 1
+     * @maximum 365
+     */
   targetDays: number;
   startDate?: string;
 }
@@ -193,6 +202,10 @@ export interface HabitUpdate {
   name?: string;
   /** @maxLength 500 */
   description?: string;
+  /**
+     * @minimum 1
+     * @maximum 365
+     */
   targetDays?: number;
 }
 
@@ -280,6 +293,8 @@ export interface ProfileUpdateInput {
   timezone?: string | null;
   /** @nullable */
   onboardedAt?: string | null;
+  /** @nullable */
+  birthdaySkippedAt?: string | null;
 }
 
 export interface ReminderSettings {
@@ -483,6 +498,12 @@ export interface MedicationInput {
      * @nullable
      */
   notes?: string | null;
+  /**
+     * Client time-zone offset in minutes as returned by JavaScript Date.getTimezoneOffset() (UTC minus local; e.g. 300 for UTC-5). Used to resolve "today" in the user's local day when dating the schedule entry. Defaults to 0 (UTC).
+     * @minimum -840
+     * @maximum 840
+     */
+  tzOffset?: number;
 }
 
 export interface MedicationDoseStatus {

@@ -145,6 +145,7 @@ export default function Medications() {
         dosage: form.dosage.trim(),
         times,
         notes: form.notes.trim() ? form.notes.trim() : null,
+        tzOffset: new Date().getTimezoneOffset(),
       };
       if (editingId === "new") {
         await createMedication(payload);
@@ -160,8 +161,8 @@ export default function Medications() {
     }
   }
 
+  // Only reached from the AlertDialog's confirm action.
   async function handleDelete(id: number) {
-    if (!confirm("Delete this medication?")) return;
     setBusy(true);
     try {
       await deleteMedication(id);

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SECONDARY_NAV_ITEMS } from "./navigation";
 import {
   canonicalPathname,
   isSafeReturnDestination,
@@ -7,6 +8,7 @@ import {
   protectedDestination,
   protectedRouteLoginTarget,
   PRICING_RETURN_PATH,
+  signedInPage,
 } from "./routing";
 
 // Pure unit tests for the same-origin return-destination helpers. No DOM,
@@ -148,5 +150,20 @@ describe("pricing to login", () => {
     expect(
       resolveReturnDestination(new URLSearchParams(target.split("?")[1]).get("returnTo")),
     ).toBe("/pricing");
+  });
+});
+
+describe("signedInPage", () => {
+  it("titles every secondary destination the navigation links to", () => {
+    for (const item of SECONDARY_NAV_ITEMS) {
+      expect(signedInPage(item.href), item.href).not.toBeNull();
+    }
+  });
+
+  it("titles the beta checklist", () => {
+    expect(signedInPage("/app/beta-checklist")).toEqual({
+      canonicalPath: "/app/beta-checklist",
+      title: "Beta checklist",
+    });
   });
 });

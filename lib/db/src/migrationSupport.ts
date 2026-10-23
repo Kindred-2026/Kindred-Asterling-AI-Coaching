@@ -122,10 +122,15 @@ function canonical(value: unknown): string {
 export class OrderIndependentDigest {
   private readonly value = Buffer.alloc(32);
 
+  // 256-bit addition modulo 2^256 (big-endian). Unlike XOR, an even number of
+  // identical rows does not cancel out to zero.
   add(document: Document): void {
     const rowHash = createHash("sha256").update(canonical(document)).digest();
-    for (let index = 0; index < this.value.length; index += 1) {
-      this.value[index] ^= rowHash[index]!;
+    let carry = 0;
+    for (let index = this.value.length - 1; index >= 0; index -= 1) {
+      const sum = this.value[index]! + rowHash[index]! + carry;
+      this.value[index] = sum & 0xff;
+      carry = sum >> 8;
     }
   }
 

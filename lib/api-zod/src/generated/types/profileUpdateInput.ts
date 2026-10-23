@@ -53,4 +53,6 @@ export interface ProfileUpdateInput {
   timezone?: string | null;
   /** @nullable */
   onboardedAt?: Date | null;
+  /** @nullable */
+  birthdaySkippedAt?: Date | null;
 }

@@ -208,6 +208,27 @@ describe("POST /api/payment/webhook", () => {
     expect(afterOlder?.status).toBe("cancelled");
   });
 
+  it("applies a distinct event that shares the previous event's timestamp", async () => {
+    const createdAt = new Date().toISOString();
+    for (const eventType of ["invoice.paid", "invoice.payment_failed"]) {
+      const body = JSON.stringify({
+        eventType,
+        createdAt,
+        data: { customer: { customerCode }, subscriptionId: "sub_4" },
+      });
+      await post(
+        "/api/payment/webhook",
+        body,
+        signedHeaders(body, `wh_${Math.random()}`),
+      );
+    }
+    const [row] = await db
+      .select()
+      .from(subscriptionsTable)
+      .where(eq(subscriptionsTable.userId, userId));
+    expect(row?.status).toBe("past_due");
+  });
+
   it("returns received:true without crashing when webhook headers are missing", async () => {
     const body = eventBody("subscription.created", { customerCode });
     const res = await fetch(`${baseUrl}/api/payment/webhook`, {

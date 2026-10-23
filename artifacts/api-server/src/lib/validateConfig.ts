@@ -25,7 +25,7 @@ export function validateRuntimeConfig(): void {
   } else if (databaseProvider === "postgres") {
     requireValue("POSTGRES_URL");
     const uri = process.env.POSTGRES_URL?.trim();
-    if (uri && !/^postgres(?:ql):\/\//i.test(uri)) {
+    if (uri && !/^postgres(?:ql)?:\/\//i.test(uri)) {
       throw new Error("POSTGRES_URL must use postgres:// or postgresql://");
     }
   } else {

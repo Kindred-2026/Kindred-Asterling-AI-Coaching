@@ -45,6 +45,7 @@ const timestamps = new Set([
   "clerkDeletedAt",
   "emailVerifiedAt",
   "onboardedAt",
+  "birthdaySkippedAt",
   "createdAt",
   "updatedAt",
   "grantedAt",

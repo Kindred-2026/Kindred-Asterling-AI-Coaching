@@ -306,9 +306,11 @@ router.post("/payment/webhook", async (req, res): Promise<void> => {
 
       const end = periodEnd(event.data);
       const status = statusFor(event.eventType, end);
+      // Strictly older only: a distinct event with the same timestamp (replays
+      // are already deduplicated by webhook-id) must still be applied.
       const reordered = Boolean(
         subscription.providerEventAt &&
-        event.occurredAt <= subscription.providerEventAt,
+        event.occurredAt < subscription.providerEventAt,
       );
       if (!reordered) {
         await tx

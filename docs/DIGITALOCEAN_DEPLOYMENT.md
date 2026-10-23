@@ -273,6 +273,7 @@ unavailable, and anything they type is lost.
    pg_restore --dbname="$DO_DB" --use-list=kindred-cutover.list --clean --if-exists \
      --exit-on-error --single-transaction --no-owner --no-acl --no-comments kindred-cutover.dump
    psql "$DO_DB" -v ON_ERROR_STOP=1 -f lib/db/migrations-postgres/0003_users_beta_checklist.sql
+   psql "$DO_DB" -v ON_ERROR_STOP=1 -f lib/db/migrations-postgres/0004_users_birthday_skipped.sql
    psql "$DO_DB" -v ON_ERROR_STOP=1 -f .do/grant-app-role.sql
    ```
 
@@ -280,8 +281,9 @@ unavailable, and anything they type is lost.
    already exists in the new database. The restore copies Fly's schema as it
    is. It is not recorded whether Fly's database has the `0003` beta
    checklist column, and the app refuses to start without it, so `0003` runs
-   again; it is safe to re-run. Do the same for any later migration that is
-   safe to re-run.
+   again; it is safe to re-run. `0004` (the `birthday_skipped_at` column) is
+   likewise required and safe to re-run. Do the same for any later migration
+   that is safe to re-run.
 
 5. **Compare row counts.** The two files must be identical:
 

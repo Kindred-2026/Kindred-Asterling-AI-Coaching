@@ -65,24 +65,24 @@ export interface KindredUserContext {
 const SOURCE_PATTERNS: Record<KindredContextSource, RegExp[]> = {
   morning_assessments: [
     /\bmorning(s)?\b/i,
-    /\bwoke|wake|start(ed|ing)? (my|the) day\b/i,
+    /\b(?:woke|wake|start(?:ed|ing)? (?:my|the) day)\b/i,
     /\bmental load\b/i,
     /\bmini[- ]?goal/i,
   ],
   evening_assessments: [
-    /\bevening(s)?|tonight\b/i,
+    /\b(?:evening(s)?|tonight)\b/i,
     /\bhow (my|the) day (went|was)\b/i,
-    /\bwin(s)?|challenge(s)?|tomorrow'?s intention\b/i,
+    /\b(?:win(?:s)?|challenge(?:s)?|tomorrow'?s intention)\b/i,
     /\breflect(ion|ing)?\b/i,
   ],
   habit_tracking: [
-    /\bhabit(s)?|routine(s)?|streak(s)?\b/i,
-    /\bconsisten(cy|t)|daily practice|progress\b/i,
+    /\b(?:habit(?:s)?|routine(?:s)?|streak(?:s)?)\b/i,
+    /\b(?:consisten(?:cy|t)|daily practice|progress)\b/i,
   ],
   body_scans: [
-    /\bbody scan(s)?|physical sensation(s)?\b/i,
-    /\benergy level|tension|tense|fatigue|drained\b/i,
-    /\bmy body|physically\b/i,
+    /\b(?:body scan(?:s)?|physical sensation(?:s)?)\b/i,
+    /\b(?:energy level|tension|tense|fatigue|drained)\b/i,
+    /\b(?:my body|physically)\b/i,
   ],
 };
 

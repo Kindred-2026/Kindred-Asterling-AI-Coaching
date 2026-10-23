@@ -30,14 +30,24 @@ export async function syncAuth0Identity(identity: AuthIdentity) {
       .where(eq(usersTable.auth0UserId, identity.id))
       .limit(1);
     const email = identity.email?.trim().toLowerCase() || null;
-    if (!existing && email) {
+    if (email && email !== existing?.email) {
       const [emailOwner] = await tx
         .select()
         .from(usersTable)
         .where(eq(usersTable.email, email))
         .limit(1);
-      if (emailOwner) throw new IdentityLinkRequiredError();
+      // Also covers an existing account whose Auth0 email changed to one that
+      // another account owns (otherwise a unique-index error and a retry loop).
+      if (emailOwner && emailOwner.id !== existing?.id)
+        throw new IdentityLinkRequiredError();
     }
+    // Keep the original verification time while the verified email is
+    // unchanged, instead of moving it to every sign-in.
+    const emailVerifiedAt = identity.emailVerified
+      ? existing?.email === email && existing.emailVerifiedAt
+        ? existing.emailVerifiedAt
+        : now
+      : null;
     created = !existing;
     const [user] = await tx
       .insert(usersTable)
@@ -48,7 +58,7 @@ export async function syncAuth0Identity(identity: AuthIdentity) {
         firstName: identity.firstName,
         lastName: identity.lastName,
         profileImageUrl: identity.profileImageUrl,
-        emailVerifiedAt: identity.emailVerified ? now : null,
+        emailVerifiedAt,
       })
       .onConflictDoUpdate({
         target: usersTable.auth0UserId,
@@ -57,7 +67,7 @@ export async function syncAuth0Identity(identity: AuthIdentity) {
           firstName: identity.firstName,
           lastName: identity.lastName,
           profileImageUrl: identity.profileImageUrl,
-          emailVerifiedAt: identity.emailVerified ? now : null,
+          emailVerifiedAt,
           updatedAt: now,
         },
       })

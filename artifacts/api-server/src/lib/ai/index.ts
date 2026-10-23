@@ -2,6 +2,7 @@ import type { AIProvider } from "./types";
 import { OllamaProvider } from "./ollamaProvider";
 import { OpenAIProvider } from "./openAIProvider";
 import {
+  ANTHROPIC_EFFORTS,
   AnthropicProvider,
   DEFAULT_ANTHROPIC_MODEL,
   type AnthropicEffort,
@@ -12,6 +13,13 @@ export * from "./errors";
 
 let override: AIProvider | null | undefined;
 
+function anthropicEffort(): AnthropicEffort {
+  const raw = process.env.ANTHROPIC_EFFORT?.trim().toLowerCase();
+  return ANTHROPIC_EFFORTS.includes(raw as AnthropicEffort)
+    ? (raw as AnthropicEffort)
+    : "low";
+}
+
 export function getAIProvider(): AIProvider | null {
   if (override !== undefined) return override;
   const selection = (process.env.AI_PROVIDER || "ollama").toLowerCase();
@@ -21,8 +29,7 @@ export function getAIProvider(): AIProvider | null {
     return new AnthropicProvider(
       process.env.ANTHROPIC_API_KEY || "",
       process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_ANTHROPIC_MODEL,
-      (process.env.ANTHROPIC_EFFORT?.trim().toLowerCase() ||
-        "low") as AnthropicEffort,
+      anthropicEffort(),
       {
         baseURL: process.env.ANTHROPIC_BASE_URL,
         gatewayToken: process.env.CLOUDFLARE_AI_GATEWAY_TOKEN,

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { randomBytes } from "node:crypto";
 import type { AddressInfo } from "net";
 import type { Server } from "http";
 import { eq } from "@workspace/db";
@@ -74,5 +75,52 @@ describe("app authentication path", () => {
   it("reaches protected handlers for valid authenticated requests", async () => {
     const res = await get("/habits", { token });
     expect(res.status).toBe(200);
+  });
+});
+
+describe("GET /auth/user emailVerifiedAt", () => {
+  async function fetchUser(t: string): Promise<{ emailVerifiedAt: string | null; createdAt: string }> {
+    const res = await fetch(`${baseUrl}/auth/user`, {
+      headers: { authorization: `Bearer ${t}` },
+    });
+    expect(res.status).toBe(200);
+    return ((await res.json()) as { user: { emailVerifiedAt: string | null; createdAt: string } }).user;
+  }
+
+  it("reports the stored verification time, not the account creation time", async () => {
+    const verifiedAt = new Date("2026-01-02T03:04:05.000Z");
+    await db.update(usersTable).set({ emailVerifiedAt: verifiedAt }).where(eq(usersTable.id, userId));
+    const user = await fetchUser(token);
+    expect(user.emailVerifiedAt).toBe(verifiedAt.toISOString());
+    expect(user.emailVerifiedAt).not.toBe(user.createdAt);
+  });
+
+  it("returns only public profile fields, never internal columns", async () => {
+    await db
+      .update(usersTable)
+      // Generated per run so no secret-like literal sits in source.
+      .set({ passwordHash: randomBytes(16).toString("hex"), clerkUserId: `clerk-${suffix}` })
+      .where(eq(usersTable.id, userId));
+    const res = await fetch(`${baseUrl}/auth/user`, {
+      headers: { authorization: `Bearer ${token}` },
+    });
+    const { user } = (await res.json()) as { user: Record<string, unknown> };
+    for (const key of ["passwordHash", "clerkUserId", "auth0UserId", "clerkDeletedAt", "updatedAt"]) {
+      expect(user).not.toHaveProperty(key);
+    }
+    expect(user).toMatchObject({ id: userId, preferredName: null, timezone: null });
+  });
+
+  it("reports null for a user whose email was never verified", async () => {
+    const unverifiedId = `test-auth-unverified-${suffix}`;
+    await db.insert(usersTable).values({ id: unverifiedId, emailVerifiedAt: null });
+    const unverifiedToken = registerTestClerkIdentity({ id: unverifiedId });
+    try {
+      const user = await fetchUser(unverifiedToken);
+      expect(user.emailVerifiedAt).toBeNull();
+    } finally {
+      revokeTestClerkIdentity(unverifiedToken);
+      await db.delete(usersTable).where(eq(usersTable.id, unverifiedId));
+    }
   });
 });

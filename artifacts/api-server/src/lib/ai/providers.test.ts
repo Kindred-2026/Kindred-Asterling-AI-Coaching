@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AIProviderError } from "./errors";
 import { OllamaProvider } from "./ollamaProvider";
 import { OpenAIProvider } from "./openAIProvider";
+import { getAIProvider } from "./index";
 
 const request = {
   system: "coach",
@@ -255,6 +256,28 @@ describe("normalized AI provider contract", () => {
     ]);
   });
 
+  it("treats tool_calls: null as a plain reply with no tool calls", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                finish_reason: "stop",
+                message: { content: "Hi", tool_calls: null },
+              },
+            ],
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+    await expect(
+      new OpenAIProvider("secret", "model").chat(request),
+    ).resolves.toEqual({ content: "Hi", toolCalls: [], finishReason: "stop" });
+  });
+
   it("categorizes malformed responses without exposing their body", async () => {
     vi.stubGlobal(
       "fetch",
@@ -310,6 +333,34 @@ describe("normalized AI provider contract", () => {
     );
   });
 
+  it("applies the deadline to a body that stalls after the headers", async () => {
+    // Real fetch errors the body stream when its signal aborts; mirror that.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url, init: RequestInit) => {
+        const body = new ReadableStream<Uint8Array>({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode('{"message":'));
+            init.signal?.addEventListener("abort", () =>
+              controller.error(
+                Object.assign(new Error("aborted"), { name: "AbortError" }),
+              ),
+            );
+          },
+        });
+        return new Response(body, { status: 200 });
+      }),
+    );
+    const promise = new OllamaProvider("http://ollama", "model").chat({
+      ...request,
+      timeoutMs: 5,
+    });
+    await expect(promise).rejects.toMatchObject({
+      category: "timeout",
+      retryable: true,
+    });
+  }, 2_000);
+
   it("honors caller cancellation", async () => {
     const controller = new AbortController();
     vi.stubGlobal(
@@ -335,4 +386,26 @@ describe("normalized AI provider contract", () => {
       retryable: false,
     });
   });
+});
+
+describe("getAIProvider Anthropic effort", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  function effortFor(value: string | undefined): unknown {
+    vi.stubEnv("AI_PROVIDER", "anthropic");
+    vi.stubEnv("ANTHROPIC_API_KEY", "secret");
+    vi.stubEnv("ANTHROPIC_EFFORT", value);
+    return (getAIProvider() as unknown as { effort: unknown }).effort;
+  }
+
+  it("uses a valid configured effort", () => {
+    expect(effortFor(" High ")).toBe("high");
+  });
+
+  it.each(["bogus", "", undefined])(
+    "falls back to low for %j",
+    (value) => {
+      expect(effortFor(value)).toBe("low");
+    },
+  );
 });

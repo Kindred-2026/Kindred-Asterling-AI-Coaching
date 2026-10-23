@@ -51,7 +51,8 @@ export const GetCurrentAuthUserResponse = zod.object({
   "motivationalQuote": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "timezone": zod.string().nullable(),
-  "onboardedAt": zod.coerce.date().nullable()
+  "onboardedAt": zod.coerce.date().nullable(),
+  "birthdaySkippedAt": zod.coerce.date().nullable().describe('Set when the user skipped the optional birthday onboarding step.')
 }),zod.null()])
 })
 
@@ -250,12 +251,14 @@ export const createHabitBodyNameMax = 100;
 
 export const createHabitBodyDescriptionMax = 500;
 
+export const createHabitBodyTargetDaysMax = 365;
+
 
 
 export const CreateHabitBody = zod.object({
   "name": zod.string().min(1).max(createHabitBodyNameMax),
   "description": zod.string().max(createHabitBodyDescriptionMax).optional(),
-  "targetDays": zod.number().int(),
+  "targetDays": zod.number().int().min(1).max(createHabitBodyTargetDaysMax),
   "startDate": zod.string().optional()
 })
 
@@ -281,12 +284,14 @@ export const updateHabitBodyNameMax = 100;
 
 export const updateHabitBodyDescriptionMax = 500;
 
+export const updateHabitBodyTargetDaysMax = 365;
+
 
 
 export const UpdateHabitBody = zod.object({
   "name": zod.string().min(1).max(updateHabitBodyNameMax).optional(),
   "description": zod.string().max(updateHabitBodyDescriptionMax).optional(),
-  "targetDays": zod.number().int().optional()
+  "targetDays": zod.number().int().min(1).max(updateHabitBodyTargetDaysMax).optional()
 })
 
 export const UpdateHabitResponse = zod.object({
@@ -417,7 +422,8 @@ export const UpdateProfileBody = zod.object({
   "motivationalQuote": zod.string().max(updateProfileBodyMotivationalQuoteMax).nullish(),
   "phone": zod.string().max(updateProfileBodyPhoneMax).nullish().describe('Phone number in E.164 format (e.g. +14155550123) for SMS reminders.'),
   "timezone": zod.string().max(updateProfileBodyTimezoneMax).nullish().describe('IANA timezone name (e.g. America/New_York) used to schedule reminders.'),
-  "onboardedAt": zod.coerce.date().nullish()
+  "onboardedAt": zod.coerce.date().nullish(),
+  "birthdaySkippedAt": zod.coerce.date().nullish()
 })
 
 export const UpdateProfileResponse = zod.object({
@@ -435,7 +441,8 @@ export const UpdateProfileResponse = zod.object({
   "motivationalQuote": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "timezone": zod.string().nullable(),
-  "onboardedAt": zod.coerce.date().nullable()
+  "onboardedAt": zod.coerce.date().nullable(),
+  "birthdaySkippedAt": zod.coerce.date().nullable().describe('Set when the user skipped the optional birthday onboarding step.')
 })
 
 
@@ -750,13 +757,17 @@ export const createMedicationBodyTimesMax = 12;
 
 export const createMedicationBodyNotesMax = 500;
 
+export const createMedicationBodyTzOffsetMin = -840;
+export const createMedicationBodyTzOffsetMax = 840;
+
 
 
 export const CreateMedicationBody = zod.object({
   "name": zod.string().min(1).max(createMedicationBodyNameMax),
   "dosage": zod.string().min(1).max(createMedicationBodyDosageMax),
   "times": zod.array(zod.string().regex(createMedicationBodyTimesItemRegExp)).min(1).max(createMedicationBodyTimesMax),
-  "notes": zod.string().max(createMedicationBodyNotesMax).nullish()
+  "notes": zod.string().max(createMedicationBodyNotesMax).nullish(),
+  "tzOffset": zod.number().int().min(createMedicationBodyTzOffsetMin).max(createMedicationBodyTzOffsetMax).optional().describe('Client time-zone offset in minutes as returned by JavaScript Date.getTimezoneOffset() (UTC minus local; e.g. 300 for UTC-5). Used to resolve "today" in the user\'s local day when dating the schedule entry. Defaults to 0 (UTC).\n')
 })
 
 export const createMedicationResponseTimesItemRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
@@ -789,13 +800,17 @@ export const updateMedicationBodyTimesMax = 12;
 
 export const updateMedicationBodyNotesMax = 500;
 
+export const updateMedicationBodyTzOffsetMin = -840;
+export const updateMedicationBodyTzOffsetMax = 840;
+
 
 
 export const UpdateMedicationBody = zod.object({
   "name": zod.string().min(1).max(updateMedicationBodyNameMax),
   "dosage": zod.string().min(1).max(updateMedicationBodyDosageMax),
   "times": zod.array(zod.string().regex(updateMedicationBodyTimesItemRegExp)).min(1).max(updateMedicationBodyTimesMax),
-  "notes": zod.string().max(updateMedicationBodyNotesMax).nullish()
+  "notes": zod.string().max(updateMedicationBodyNotesMax).nullish(),
+  "tzOffset": zod.number().int().min(updateMedicationBodyTzOffsetMin).max(updateMedicationBodyTzOffsetMax).optional().describe('Client time-zone offset in minutes as returned by JavaScript Date.getTimezoneOffset() (UTC minus local; e.g. 300 for UTC-5). Used to resolve "today" in the user\'s local day when dating the schedule entry. Defaults to 0 (UTC).\n')
 })
 
 export const updateMedicationResponseTimesItemRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');

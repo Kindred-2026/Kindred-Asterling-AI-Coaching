@@ -500,6 +500,8 @@ function StreaksSection({
   isLoading: boolean;
   isError: boolean;
 }) {
+  // A broken streak (currentStreak 0) isn't active; HabitCard hides it too.
+  const active = streaks?.filter((streak) => streak.currentStreak > 0);
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -520,9 +522,9 @@ function StreaksSection({
             Streaks couldn't load just now.
           </CardContent>
         </Card>
-      ) : streaks && streaks.length > 0 ? (
+      ) : active && active.length > 0 ? (
         <div className="space-y-3">
-          {streaks.map((streak) => (
+          {active.map((streak) => (
             <Card key={streak.habitId} className="border-border shadow-none">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="space-y-1">

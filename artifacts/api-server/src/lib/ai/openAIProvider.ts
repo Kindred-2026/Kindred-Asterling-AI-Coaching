@@ -152,7 +152,8 @@ function toOpenAIMessage(message: AIRequest["messages"][number]) {
 }
 
 function parseToolCalls(value: unknown): AIToolCall[] {
-  if (value === undefined) return [];
+  // OpenAI-compatible gateways often send `tool_calls: null` for plain replies.
+  if (value === undefined || value === null) return [];
   if (!Array.isArray(value))
     throw new AIProviderError(
       "malformed_response",

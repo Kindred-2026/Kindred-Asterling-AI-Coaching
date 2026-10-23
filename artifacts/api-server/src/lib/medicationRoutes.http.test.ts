@@ -296,6 +296,31 @@ describe("PATCH /medications/:id", () => {
   });
 });
 
+describe("schedule dating uses the client's local day", () => {
+  // UTC-14 and UTC+14 are 28 hours apart, so they never share a calendar day.
+  function localDay(tzOffset: number): string {
+    return new Date(Date.now() - tzOffset * 60_000).toISOString().split("T")[0];
+  }
+
+  it("dates create and update schedule entries with the sent tzOffset", async () => {
+    const created = await api("POST", "/medications", {
+      token: tokenA,
+      body: { name: "Tz", dosage: "1mg", times: ["08:00"], tzOffset: 840 },
+    });
+    expect(created.status).toBe(201);
+    expect(reconcileSpy.mock.calls.at(-1)?.[4]).toBe(localDay(840));
+
+    const id = (created.body as { id: number }).id;
+    const updated = await api("PATCH", `/medications/${id}`, {
+      token: tokenA,
+      body: { name: "Tz", dosage: "1mg", times: ["09:00"], tzOffset: -840 },
+    });
+    expect(updated.status).toBe(200);
+    expect(reconcileSpy.mock.calls.at(-1)?.[4]).toBe(localDay(-840));
+    expect(localDay(840)).not.toBe(localDay(-840));
+  });
+});
+
 describe("DELETE /medications/:id", () => {
   it("deletes a medication the caller owns", async () => {
     const id = await createMed(tokenA);

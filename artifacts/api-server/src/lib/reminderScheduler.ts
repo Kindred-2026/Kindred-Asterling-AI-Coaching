@@ -32,12 +32,23 @@ function hmToMin(hm: string): number | null {
   return h * 60 + min;
 }
 
-// True if `scheduledMin` is due within the catch-up window ending at `nowMin`
-// (i.e. scheduled time was 0..WINDOW_MIN minutes ago, same local day). We clamp
-// at the start of the day so the window never crosses midnight into yesterday.
-function isDueInWindow(scheduledMin: number, nowMin: number): boolean {
+// Which local day's occurrence of `scheduledMin` is due within the catch-up
+// window ending at `nowMin`: 0 for today, -1 for yesterday (a late-evening time
+// caught up just after midnight), or null when nothing is due. The occurrence's
+// day keys the deliveries ledger, so yesterday's 23:59 caught up at 00:01 never
+// collides with tonight's 23:59.
+function dueDayOffset(scheduledMin: number, nowMin: number): 0 | -1 | null {
   const delta = nowMin - scheduledMin;
-  return delta >= 0 && delta <= WINDOW_MIN;
+  if (delta >= 0 && delta <= WINDOW_MIN) return 0;
+  if (delta < 0 && delta + 24 * 60 <= WINDOW_MIN) return -1;
+  return null;
+}
+
+// The local calendar day before `date` ("YYYY-MM-DD").
+function previousDate(date: string): string {
+  const d = new Date(`${date}T00:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().split("T")[0];
 }
 
 interface DueReminder {
@@ -47,6 +58,8 @@ interface DueReminder {
   doseTime: string;
   // Human text describing what's due (e.g. medication names), used in messages.
   detail?: string;
+  // The local day this occurrence belongs to (keys the deliveries ledger).
+  localDate: string;
 }
 
 // Compute the user's local "HH:MM" and "YYYY-MM-DD" in their timezone.
@@ -113,7 +126,7 @@ function buildMessage(
   };
 }
 
-type Dose = { doseTime: string; names: string[] };
+type Dose = { doseTime: string; names: string[]; localDate: string };
 
 // Find medication doses whose schedule is active today and whose scheduled time
 // is due within the catch-up window ending at `nowMin`. Returns one entry per
@@ -156,7 +169,7 @@ async function medsDueInWindow(
     const name = namesById.get(r.medicationId);
     if (!name) continue;
     const sMin = hmToMin(r.scheduledTime);
-    if (sMin === null || !isDueInWindow(sMin, nowMin)) continue;
+    if (sMin === null || dueDayOffset(sMin, nowMin) !== 0) continue;
     const set = byTime.get(r.scheduledTime) ?? new Set<string>();
     set.add(name);
     byTime.set(r.scheduledTime, set);
@@ -164,6 +177,7 @@ async function medsDueInWindow(
   return Array.from(byTime.entries()).map(([doseTime, names]) => ({
     doseTime,
     names: Array.from(names),
+    localDate,
   }));
 }
 
@@ -242,27 +256,34 @@ async function processUser(
   if (nowMin === null) return;
   const name = row.preferredName || row.firstName || null;
 
+  const occurrenceDate = (offset: 0 | -1) =>
+    offset === 0 ? date : previousDate(date);
   const due: DueReminder[] = [];
   const morningMin = hmToMin(row.morningTime);
-  if (
-    row.morningEnabled &&
-    morningMin !== null &&
-    isDueInWindow(morningMin, nowMin)
-  )
-    due.push({ type: "morning", doseTime: "" });
+  const morningDay =
+    morningMin === null ? null : dueDayOffset(morningMin, nowMin);
+  if (row.morningEnabled && morningDay !== null)
+    due.push({
+      type: "morning",
+      doseTime: "",
+      localDate: occurrenceDate(morningDay),
+    });
   const eveningMin = hmToMin(row.eveningTime);
-  if (
-    row.eveningEnabled &&
-    eveningMin !== null &&
-    isDueInWindow(eveningMin, nowMin)
-  )
-    due.push({ type: "evening", doseTime: "" });
+  const eveningDay =
+    eveningMin === null ? null : dueDayOffset(eveningMin, nowMin);
+  if (row.eveningEnabled && eveningDay !== null)
+    due.push({
+      type: "evening",
+      doseTime: "",
+      localDate: occurrenceDate(eveningDay),
+    });
   if (row.medicationEnabled) {
     for (const dose of medsDue)
       due.push({
         type: "medication",
         doseTime: dose.doseTime,
         detail: dose.names.join(", "),
+        localDate: dose.localDate,
       });
   }
   if (due.length === 0) return;
@@ -278,7 +299,7 @@ async function processUser(
   for (const d of due) {
     for (const c of channels) {
       promises.push(
-        deliverOnce(row.userId, d, date, c.ch, c.to, name).catch((err) => {
+        deliverOnce(row.userId, d, d.localDate, c.ch, c.to, name).catch((err) => {
           logger.error(
             { err, userId: row.userId, type: d.type, channel: c.ch },
             "Reminder delivery failed",
@@ -363,13 +384,16 @@ async function processSettingsBatch(
       const uTime = userTimes.get(r.userId);
       if (!uTime) continue; // Should not happen, but safeguard
 
-      // Apply date bounds check
-      if (r.startDate > uTime.date) continue;
-      if (r.endDate !== null && r.endDate <= uTime.date) continue;
-
-      // Apply window check
+      // Apply window check; the occurrence may be yesterday's (just after
+      // midnight), and its own day decides whether the schedule was active.
       const sMin = hmToMin(r.scheduledTime);
-      if (sMin === null || !isDueInWindow(sMin, uTime.nowMin)) continue;
+      const day = sMin === null ? null : dueDayOffset(sMin, uTime.nowMin);
+      if (day === null) continue;
+      const occurrenceDate = day === 0 ? uTime.date : previousDate(uTime.date);
+
+      // Apply date bounds check
+      if (r.startDate > occurrenceDate) continue;
+      if (r.endDate !== null && r.endDate <= occurrenceDate) continue;
 
       // Valid dose
       let userMeds = medsByUser.get(r.userId);
@@ -380,7 +404,7 @@ async function processSettingsBatch(
 
       let dose = userMeds.find((d) => d.doseTime === r.scheduledTime);
       if (!dose) {
-        dose = { doseTime: r.scheduledTime, names: [] };
+        dose = { doseTime: r.scheduledTime, names: [], localDate: occurrenceDate };
         userMeds.push(dose);
       }
       if (!dose.names.includes(medication.name)) {

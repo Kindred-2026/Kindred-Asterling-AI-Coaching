@@ -228,17 +228,18 @@ async function getHabitsWithStreaks(userId: string): Promise<unknown> {
     let currentStreak = 0;
     let longestStreak = 0;
     let tempStreak = 0;
+    let counting = true;
     const completedDates = entries.map((e) => e.date);
     for (let i = 0; i < HABIT_ENTRY_LOOKBACK_DAYS; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
       const ds = d.toISOString().split("T")[0];
       if (completedDates.includes(ds)) {
-        if (i === 0 || currentStreak > 0) currentStreak++;
+        if (counting && (i === 0 || i === 1 || currentStreak > 0)) currentStreak++;
         tempStreak++;
         if (tempStreak > longestStreak) longestStreak = tempStreak;
       } else {
-        if (i > 0 && currentStreak > 0) break;
+        if (i > 0 && currentStreak > 0) counting = false;
         tempStreak = 0;
       }
     }

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   getToken: vi.fn(),
-  authUser: null,
+  authUser: null as unknown,
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -212,6 +212,26 @@ describe("AppLayout", () => {
       expect(link.getAttribute("aria-label")?.length).toBeGreaterThan(0);
     }
     expect(render.container.querySelector('[data-testid="sidebar-toggle"]')?.getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("still renders when localStorage throws on read", async () => {
+    const getItem = vi
+      .spyOn(Storage.prototype, "getItem")
+      .mockImplementation(() => {
+        throw new DOMException("blocked", "SecurityError");
+      });
+    try {
+      await act(async () => render.root.render(render.tree));
+      expect(render.container.querySelector('[data-testid="sidebar-toggle"]')).not.toBeNull();
+    } finally {
+      getItem.mockRestore();
+    }
+  });
+
+  it("shows initials for non-Latin names", async () => {
+    mocks.authUser = { user: { id: "u1", preferredName: "Иван Петров", email: null } };
+    await act(async () => render.root.render(render.tree));
+    expect(render.container.querySelector("aside")?.textContent).toContain("ИП");
   });
 
   it("moves focus into content after navigation", async () => {

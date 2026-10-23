@@ -36,4 +36,9 @@ export interface AuthUser {
   timezone: string | null;
   /** @nullable */
   onboardedAt: Date | null;
+  /**
+     * Set when the user skipped the optional birthday onboarding step.
+     * @nullable
+     */
+  birthdaySkippedAt: Date | null;
 }

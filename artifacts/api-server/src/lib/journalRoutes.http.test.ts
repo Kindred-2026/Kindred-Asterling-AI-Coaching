@@ -212,6 +212,31 @@ describe("POST/GET /habits", () => {
     const list = await api("GET", "/habits", { token: tokenA });
     expect(list.body).toHaveLength(0);
   });
+
+  it.each([0, -5, 366, 1000])(
+    "rejects targetDays %s outside 1-365 with 400",
+    async (targetDays) => {
+      const res = await api("POST", "/habits", {
+        token: tokenA,
+        body: { name: "Out of range", targetDays, startDate: TODAY },
+      });
+      expect(res.status).toBe(400);
+    },
+  );
+
+  it("rejects an out-of-range targetDays on update", async () => {
+    const created = await api("POST", "/habits", {
+      token: tokenA,
+      body: { name: "Bounded", targetDays: 365, startDate: TODAY },
+    });
+    expect(created.status).toBe(201);
+    const res = await api(
+      "PATCH",
+      `/habits/${(created.body as { id: number }).id}`,
+      { token: tokenA, body: { targetDays: -1 } },
+    );
+    expect(res.status).toBe(400);
+  });
 });
 
 describe("POST/GET /habits/:id/entries", () => {
@@ -396,6 +421,19 @@ describe("PATCH /profile", () => {
     expect((res.body as { preferredName: string }).preferredName).toBe("Sam");
   });
 
+  it("records a skipped birthday and reports it on /auth/user", async () => {
+    const skippedAt = "2026-09-08T12:00:00.000Z";
+    const res = await api("PATCH", "/profile", {
+      token: tokenA,
+      body: { birthdaySkippedAt: skippedAt },
+    });
+    expect(res.status).toBe(200);
+    const me = await api("GET", "/auth/user", { token: tokenA });
+    expect(me.body).toMatchObject({
+      user: { birthday: null, birthdaySkippedAt: skippedAt },
+    });
+  });
+
   it("only updates the caller's own profile, not another user's", async () => {
     const res = await api("PATCH", "/profile", {
       token: tokenA,
@@ -464,6 +502,40 @@ describe("Today progression after journal saves", () => {
       }
     },
   );
+
+  it("includes timestamp-form entries from the last day of the mood trend", async () => {
+    const clock = vi
+      .spyOn(Date, "now")
+      .mockReturnValue(Date.parse("2026-09-08T12:00:00Z"));
+    try {
+      await api("POST", "/morning-logs", {
+        token: tokenA,
+        body: {
+          date: "2026-09-08T09:30:00.000Z",
+          mentalLoadLevel: "clear",
+          miniGoals: [],
+        },
+      });
+      await api("POST", "/evening-reports", {
+        token: tokenA,
+        body: { date: "2026-09-08T21:00:00.000Z", medicationEffectiveness: 4 },
+      });
+      const trend = await api("GET", "/dashboard/mood-trend", { token: tokenA });
+      expect(trend.status).toBe(200);
+      const days = trend.body as {
+        date: string;
+        mentalLoadLevel: string | null;
+        medicationEffectiveness: number | null;
+      }[];
+      expect(days.at(-1)).toMatchObject({
+        date: "2026-09-08",
+        mentalLoadLevel: "clear",
+        medicationEffectiveness: 4,
+      });
+    } finally {
+      clock.mockRestore();
+    }
+  });
 
   it.each([
     [360, "2026-09-09T02:00:00Z", "2026-09-08", "2026-09-08T06:00:00Z"],

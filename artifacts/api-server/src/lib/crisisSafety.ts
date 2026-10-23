@@ -23,8 +23,11 @@ const EXPLICIT_DENIALS = [
 ];
 
 export function detectCrisis(text: string): boolean {
-  if (EXPLICIT_DENIALS.some((pattern) => pattern.test(text))) return false;
-  return CRISIS_PATTERNS.some((pattern) => pattern.test(text));
+  const stripped = EXPLICIT_DENIALS.reduce(
+    (t, pattern) => t.replace(new RegExp(pattern.source, "gi"), " "),
+    text,
+  );
+  return CRISIS_PATTERNS.some((pattern) => pattern.test(stripped));
 }
 
 /** Emit only a non-identifying control event. Never add request/user fields. */
