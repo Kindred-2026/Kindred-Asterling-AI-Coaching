@@ -17,6 +17,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
+import { failureDescription } from "@/lib/failure-description";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -92,6 +93,13 @@ export default function Scans() {
           setEnergyLevel(5);
           setPhysicalSensations("");
           setNotes("");
+        },
+        onError: (err) => {
+          toast({
+            title: "Couldn't save body scan",
+            description: failureDescription(err),
+            variant: "destructive",
+          });
         },
       },
     );

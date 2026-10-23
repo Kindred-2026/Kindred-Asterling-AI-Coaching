@@ -28,6 +28,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
+import { failureDescription } from "@/lib/failure-description";
 import { useQueryClient } from "@tanstack/react-query";
 import { Sunrise, CheckCircle2, Loader2 } from "lucide-react";
 import { format } from "date-fns";
@@ -91,10 +92,10 @@ export default function Morning() {
             queryKey: getGetTodaySummaryQueryKey(),
           });
         },
-        onError: () => {
+        onError: (err) => {
           toast({
             title: "Couldn't save morning log",
-            description: "Check your connection and try again.",
+            description: failureDescription(err),
             variant: "destructive",
           });
         },
