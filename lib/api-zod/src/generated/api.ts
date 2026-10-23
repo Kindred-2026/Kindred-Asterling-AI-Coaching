@@ -250,12 +250,14 @@ export const createHabitBodyNameMax = 100;
 
 export const createHabitBodyDescriptionMax = 500;
 
+export const createHabitBodyTargetDaysMax = 365;
+
 
 
 export const CreateHabitBody = zod.object({
   "name": zod.string().min(1).max(createHabitBodyNameMax),
   "description": zod.string().max(createHabitBodyDescriptionMax).optional(),
-  "targetDays": zod.number().int(),
+  "targetDays": zod.number().int().min(1).max(createHabitBodyTargetDaysMax),
   "startDate": zod.string().optional()
 })
 
@@ -281,12 +283,14 @@ export const updateHabitBodyNameMax = 100;
 
 export const updateHabitBodyDescriptionMax = 500;
 
+export const updateHabitBodyTargetDaysMax = 365;
+
 
 
 export const UpdateHabitBody = zod.object({
   "name": zod.string().min(1).max(updateHabitBodyNameMax).optional(),
   "description": zod.string().max(updateHabitBodyDescriptionMax).optional(),
-  "targetDays": zod.number().int().optional()
+  "targetDays": zod.number().int().min(1).max(updateHabitBodyTargetDaysMax).optional()
 })
 
 export const UpdateHabitResponse = zod.object({

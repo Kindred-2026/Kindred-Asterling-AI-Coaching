@@ -35,6 +35,12 @@ import { ListTodo, Plus, Trash2, CheckCircle2, Circle, Flame } from "lucide-reac
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
+// Whole days in [1, 365] (the input's own bounds); anything else uses 90.
+export function parseTargetDays(raw: string): number {
+  const n = Number(raw.trim());
+  return Number.isInteger(n) && n >= 1 && n <= 365 ? n : 90;
+}
+
 function HabitCard({ habit, streaks }: { habit: any; streaks: any[] }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -176,7 +182,7 @@ export default function Habits() {
         data: {
           name: newName.trim(),
           description: newDescription.trim() || undefined,
-          targetDays: parseInt(targetDays, 10) || 90,
+          targetDays: parseTargetDays(targetDays),
           startDate: format(new Date(), "yyyy-MM-dd"),
         },
       },

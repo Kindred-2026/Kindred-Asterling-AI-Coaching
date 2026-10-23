@@ -1080,6 +1080,8 @@ components:
           maxLength: 500
         targetDays:
           type: integer
+          minimum: 1
+          maximum: 365
         startDate:
           type: string
 
@@ -1095,6 +1097,8 @@ components:
           maxLength: 500
         targetDays:
           type: integer
+          minimum: 1
+          maximum: 365
 
     HabitEntry:
       type: object

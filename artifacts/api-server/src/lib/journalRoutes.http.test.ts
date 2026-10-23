@@ -212,6 +212,31 @@ describe("POST/GET /habits", () => {
     const list = await api("GET", "/habits", { token: tokenA });
     expect(list.body).toHaveLength(0);
   });
+
+  it.each([0, -5, 366, 1000])(
+    "rejects targetDays %s outside 1-365 with 400",
+    async (targetDays) => {
+      const res = await api("POST", "/habits", {
+        token: tokenA,
+        body: { name: "Out of range", targetDays, startDate: TODAY },
+      });
+      expect(res.status).toBe(400);
+    },
+  );
+
+  it("rejects an out-of-range targetDays on update", async () => {
+    const created = await api("POST", "/habits", {
+      token: tokenA,
+      body: { name: "Bounded", targetDays: 365, startDate: TODAY },
+    });
+    expect(created.status).toBe(201);
+    const res = await api(
+      "PATCH",
+      `/habits/${(created.body as { id: number }).id}`,
+      { token: tokenA, body: { targetDays: -1 } },
+    );
+    expect(res.status).toBe(400);
+  });
 });
 
 describe("POST/GET /habits/:id/entries", () => {

@@ -14,5 +14,9 @@ export interface HabitUpdate {
   name?: string;
   /** @maxLength 500 */
   description?: string;
+  /**
+     * @minimum 1
+     * @maximum 365
+     */
   targetDays?: number;
 }
