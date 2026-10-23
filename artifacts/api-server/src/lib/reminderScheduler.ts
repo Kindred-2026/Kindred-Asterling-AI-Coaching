@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import cron, { type ScheduledTask } from "node-cron";
 import { and, eq, isNull, lte, or, gt, inArray } from "@workspace/db";
 import {
@@ -89,9 +90,7 @@ function localParts(timezone: string, now: Date): { hm: string; date: string } {
 function appUrl(path: string): string {
   const base =
     process.env.APP_PUBLIC_URL ||
-    (process.env.REPLIT_DOMAINS
-      ? `https://${process.env.REPLIT_DOMAINS.split(",")[0]}`
-      : "");
+    (process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS.split(",")[0]}` : "");
   if (!base) return "";
   return `${base.replace(/\/$/, "")}${path}`;
 }
@@ -100,10 +99,7 @@ function greeting(name: string | null): string {
   return name ? `, ${name}` : "";
 }
 
-function buildMessage(
-  due: DueReminder,
-  name: string | null,
-): { subject: string; text: string } {
+function buildMessage(due: DueReminder, name: string | null): { subject: string; text: string } {
   const hi = greeting(name);
   if (due.type === "morning") {
     const link = appUrl("/app/morning");
@@ -156,10 +152,7 @@ async function medsDueInWindow(
         .select()
         .from(medicationsTable)
         .where(
-          and(
-            eq(medicationsTable.userId, userId),
-            inArray(medicationsTable.id, medicationIds),
-          ),
+          and(eq(medicationsTable.userId, userId), inArray(medicationsTable.id, medicationIds)),
         )
     : [];
   const namesById = new Map(medications.map((row) => [row.id, row.name]));
@@ -223,9 +216,7 @@ async function deliverOnce(
       : await sendEmail(destination, subject, text);
   if (!ok) {
     // Release the reservation so it can be retried within the catch-up window.
-    await db
-      .delete(reminderDeliveriesTable)
-      .where(eq(reminderDeliveriesTable.id, reserved[0]!.id));
+    await db.delete(reminderDeliveriesTable).where(eq(reminderDeliveriesTable.id, reserved[0]!.id));
     return;
   }
   logger.info({ userId, type: due.type, channel }, "Reminder sent");
@@ -256,12 +247,10 @@ async function processUser(
   if (nowMin === null) return;
   const name = row.preferredName || row.firstName || null;
 
-  const occurrenceDate = (offset: 0 | -1) =>
-    offset === 0 ? date : previousDate(date);
+  const occurrenceDate = (offset: 0 | -1) => (offset === 0 ? date : previousDate(date));
   const due: DueReminder[] = [];
   const morningMin = hmToMin(row.morningTime);
-  const morningDay =
-    morningMin === null ? null : dueDayOffset(morningMin, nowMin);
+  const morningDay = morningMin === null ? null : dueDayOffset(morningMin, nowMin);
   if (row.morningEnabled && morningDay !== null)
     due.push({
       type: "morning",
@@ -269,8 +258,7 @@ async function processUser(
       localDate: occurrenceDate(morningDay),
     });
   const eveningMin = hmToMin(row.eveningTime);
-  const eveningDay =
-    eveningMin === null ? null : dueDayOffset(eveningMin, nowMin);
+  const eveningDay = eveningMin === null ? null : dueDayOffset(eveningMin, nowMin);
   if (row.eveningEnabled && eveningDay !== null)
     due.push({
       type: "evening",
@@ -289,8 +277,7 @@ async function processUser(
   if (due.length === 0) return;
 
   const channels: Array<{ ch: "sms" | "email"; to: string }> = [];
-  if (row.smsEnabled && isSmsConfigured() && row.phone)
-    channels.push({ ch: "sms", to: row.phone });
+  if (row.smsEnabled && isSmsConfigured() && row.phone) channels.push({ ch: "sms", to: row.phone });
   if (row.emailEnabled && isEmailConfigured() && row.email)
     channels.push({ ch: "email", to: row.email });
   if (channels.length === 0) return;
@@ -342,10 +329,7 @@ async function processSettingsBatch(
 
   // Compute local time and catch-up window for each user.
   // Also batch fetch medication schedules to avoid N+1 queries.
-  const userTimes = new Map<
-    string,
-    { hm: string; date: string; nowMin: number }
-  >();
+  const userTimes = new Map<string, { hm: string; date: string; nowMin: number }>();
   const medUserIds: string[] = [];
 
   for (const row of rowsWithIdentity) {
@@ -366,14 +350,9 @@ async function processSettingsBatch(
       .select()
       .from(medicationScheduleEntriesTable)
       .where(inArray(medicationScheduleEntriesTable.userId, medUserIds));
-    const medicationIds = [
-      ...new Set(allSchedules.map((row) => row.medicationId)),
-    ];
+    const medicationIds = [...new Set(allSchedules.map((row) => row.medicationId))];
     const allMedications = medicationIds.length
-      ? await db
-          .select()
-          .from(medicationsTable)
-          .where(inArray(medicationsTable.id, medicationIds))
+      ? await db.select().from(medicationsTable).where(inArray(medicationsTable.id, medicationIds))
       : [];
     const medicationsById = new Map(allMedications.map((row) => [row.id, row]));
 
@@ -421,44 +400,59 @@ async function processSettingsBatch(
   }
 }
 
+// Sentry Cron Monitor for the tick. Passing the config creates the monitor
+// on the first check-in and keeps it in sync with this code after that. A
+// tick longer than the catch-up window means reminders were skipped, so that
+// is the max runtime. Check-ins are no-ops when SENTRY_DSN is unset.
+export const REMINDER_MONITOR_SLUG = "reminder-tick";
+const REMINDER_MONITOR_CONFIG = {
+  schedule: { type: "crontab", value: "* * * * *" },
+  checkinMargin: 5,
+  maxRuntime: WINDOW_MIN,
+  timezone: "UTC",
+} as const;
+
 let ticking = false;
 
 export async function runReminderTick(now: Date = new Date()): Promise<void> {
   if (ticking) return; // don't overlap if a tick runs long
   ticking = true;
   try {
-    const enabled = and(
-      or(
-        eq(reminderSettingsTable.morningEnabled, true),
-        eq(reminderSettingsTable.eveningEnabled, true),
-        eq(reminderSettingsTable.medicationEnabled, true),
-      ),
-      or(
-        eq(reminderSettingsTable.smsEnabled, true),
-        eq(reminderSettingsTable.emailEnabled, true),
-      ),
+    // Errors must reach withMonitor so the check-in is marked "error"; they
+    // are caught and logged below.
+    await Sentry.withMonitor(
+      REMINDER_MONITOR_SLUG,
+      () => tickReminders(now),
+      REMINDER_MONITOR_CONFIG,
     );
-    let afterUserId: string | null = null;
-    while (true) {
-      const settings = await db
-        .select()
-        .from(reminderSettingsTable)
-        .where(
-          afterUserId
-            ? and(enabled, gt(reminderSettingsTable.userId, afterUserId))
-            : enabled,
-        )
-        .orderBy(reminderSettingsTable.userId)
-        .limit(REMINDER_BATCH_SIZE);
-      if (settings.length === 0) break;
-      await processSettingsBatch(settings, now);
-      if (settings.length < REMINDER_BATCH_SIZE) break;
-      afterUserId = settings.at(-1)!.userId;
-    }
   } catch (err) {
     logger.error({ err }, "Reminder tick failed");
   } finally {
     ticking = false;
+  }
+}
+
+async function tickReminders(now: Date): Promise<void> {
+  const enabled = and(
+    or(
+      eq(reminderSettingsTable.morningEnabled, true),
+      eq(reminderSettingsTable.eveningEnabled, true),
+      eq(reminderSettingsTable.medicationEnabled, true),
+    ),
+    or(eq(reminderSettingsTable.smsEnabled, true), eq(reminderSettingsTable.emailEnabled, true)),
+  );
+  let afterUserId: string | null = null;
+  while (true) {
+    const settings = await db
+      .select()
+      .from(reminderSettingsTable)
+      .where(afterUserId ? and(enabled, gt(reminderSettingsTable.userId, afterUserId)) : enabled)
+      .orderBy(reminderSettingsTable.userId)
+      .limit(REMINDER_BATCH_SIZE);
+    if (settings.length === 0) break;
+    await processSettingsBatch(settings, now);
+    if (settings.length < REMINDER_BATCH_SIZE) break;
+    afterUserId = settings.at(-1)!.userId;
   }
 }
 
@@ -469,10 +463,7 @@ let task: ScheduledTask | null = null;
 // unchanged; the local development launcher sets it to avoid accidental
 // background messages during development.
 export function reminderSchedulerDisabled(): boolean {
-  return (
-    process.env.NODE_ENV === "test" ||
-    process.env.REMINDER_SCHEDULER_DISABLED === "true"
-  );
+  return process.env.NODE_ENV === "test" || process.env.REMINDER_SCHEDULER_DISABLED === "true";
 }
 
 // Start the once-a-minute scheduler. Idempotent. Skips entirely in test.
