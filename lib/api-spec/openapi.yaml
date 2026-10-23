@@ -849,6 +849,7 @@ components:
           phone,
           timezone,
           onboardedAt,
+          birthdaySkippedAt,
         ]
       properties:
         id:
@@ -897,6 +898,11 @@ components:
           type: string
           nullable: true
           format: date-time
+        birthdaySkippedAt:
+          type: string
+          nullable: true
+          format: date-time
+          description: Set when the user skipped the optional birthday onboarding step.
     AuthUserEnvelope:
       type: object
       required: [user]
@@ -1225,6 +1231,10 @@ components:
           maxLength: 64
           description: IANA timezone name (e.g. America/New_York) used to schedule reminders.
         onboardedAt:
+          type: string
+          nullable: true
+          format: date-time
+        birthdaySkippedAt:
           type: string
           nullable: true
           format: date-time

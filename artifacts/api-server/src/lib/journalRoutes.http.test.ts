@@ -421,6 +421,19 @@ describe("PATCH /profile", () => {
     expect((res.body as { preferredName: string }).preferredName).toBe("Sam");
   });
 
+  it("records a skipped birthday and reports it on /auth/user", async () => {
+    const skippedAt = "2026-09-08T12:00:00.000Z";
+    const res = await api("PATCH", "/profile", {
+      token: tokenA,
+      body: { birthdaySkippedAt: skippedAt },
+    });
+    expect(res.status).toBe(200);
+    const me = await api("GET", "/auth/user", { token: tokenA });
+    expect(me.body).toMatchObject({
+      user: { birthday: null, birthdaySkippedAt: skippedAt },
+    });
+  });
+
   it("only updates the caller's own profile, not another user's", async () => {
     const res = await api("PATCH", "/profile", {
       token: tokenA,

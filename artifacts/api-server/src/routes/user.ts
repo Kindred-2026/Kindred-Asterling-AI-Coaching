@@ -23,6 +23,7 @@ interface PublicUser {
   timezone: string | null;
   emailVerifiedAt: string | null;
   onboardedAt: string | null;
+  birthdaySkippedAt: string | null;
   createdAt: string;
   isOwner: boolean;
 }
@@ -57,6 +58,7 @@ router.get("/auth/user", requireAuth, async (req: Request, res: Response) => {
     createdAt: row.createdAt.toISOString(),
     emailVerifiedAt: row.emailVerifiedAt?.toISOString() ?? null,
     onboardedAt: row.onboardedAt?.toISOString() ?? null,
+    birthdaySkippedAt: row.birthdaySkippedAt?.toISOString() ?? null,
     birthday: row.birthday ?? null,
     isOwner: ownerIds().has(row.id),
   };

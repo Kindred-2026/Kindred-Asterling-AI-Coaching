@@ -72,6 +72,11 @@ export interface AuthUser {
   timezone: string | null;
   /** @nullable */
   onboardedAt: string | null;
+  /**
+     * Set when the user skipped the optional birthday onboarding step.
+     * @nullable
+     */
+  birthdaySkippedAt: string | null;
 }
 
 export interface AuthUserEnvelope {
@@ -288,6 +293,8 @@ export interface ProfileUpdateInput {
   timezone?: string | null;
   /** @nullable */
   onboardedAt?: string | null;
+  /** @nullable */
+  birthdaySkippedAt?: string | null;
 }
 
 export interface ReminderSettings {

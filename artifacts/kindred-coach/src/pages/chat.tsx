@@ -28,6 +28,8 @@ interface OnboardingStep {
   prompt: (user: AuthUser | null) => string;
   placeholder: string;
   inputType?: "date" | "text";
+  /** Optional steps offer a Skip control; the skip is stored on the profile. */
+  skippedField?: "birthdaySkippedAt";
 }
 
 const ONBOARDING: OnboardingStep[] = [
@@ -43,6 +45,7 @@ const ONBOARDING: OnboardingStep[] = [
       "Lovely to meet you. When's your birthday? (You can skip if you'd rather not say.)",
     placeholder: "YYYY-MM-DD",
     inputType: "date",
+    skippedField: "birthdaySkippedAt",
   },
   {
     key: "struggles",
@@ -63,6 +66,11 @@ const ONBOARDING: OnboardingStep[] = [
     placeholder: "What you love...",
   },
 ];
+
+// A step is done once it has an answer, or the person chose to skip it.
+function stepDone(user: AuthUser, step: OnboardingStep): boolean {
+  return !!user[step.key] || (!!step.skippedField && !!user[step.skippedField]);
+}
 
 // The server stores a crisis_support message after a user turn that matched
 // its crisis detector; return its id so the card can be announced.
@@ -153,7 +161,7 @@ export default function Chat() {
   const currentStep: OnboardingStep | null = useMemo(() => {
     if (onboarded || !authUser) return null;
     for (const step of ONBOARDING) {
-      if (!authUser[step.key]) return step;
+      if (!stepDone(authUser, step)) return step;
     }
     return null;
   }, [onboarded, authUser]);
@@ -207,7 +215,7 @@ export default function Chat() {
   // Write the next scripted onboarding prompt, or finish onboarding once every
   // step has an answer. `user` must already include the latest answer.
   async function advanceOnboarding(user: AuthUser) {
-    const nextStep = ONBOARDING.find((s) => !user[s.key]);
+    const nextStep = ONBOARDING.find((s) => !stepDone(user, s));
     if (nextStep) {
       await appendChatMessage({
         role: "assistant",
@@ -291,6 +299,30 @@ export default function Chat() {
         }
         await qc.invalidateQueries({ queryKey: getGetActiveChatQueryKey() });
       }
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleSkip() {
+    const step = currentStep;
+    if (!step?.skippedField || sending) return;
+    setSending(true);
+    setSendError(null);
+    try {
+      const skippedAt = new Date().toISOString();
+      await updateProfile({ [step.skippedField]: skippedAt });
+      await appendChatMessage({ role: "user", content: "I'd rather not say." });
+      await advanceOnboarding({
+        ...(authUser as AuthUser),
+        [step.skippedField]: skippedAt,
+      });
+      setDraft("");
+      await refetchUser();
+      await qc.invalidateQueries({ queryKey: getGetActiveChatQueryKey() });
+    } catch (err: unknown) {
+      setSendError(chatSendErrorMessage(err));
+      await qc.invalidateQueries({ queryKey: getGetActiveChatQueryKey() });
     } finally {
       setSending(false);
     }
@@ -467,6 +499,17 @@ export default function Chat() {
                 style={{ maxHeight: TEXTAREA_MAX_HEIGHT_PX }}
                 data-testid="chat-input"
               />
+            )}
+            {currentStep?.skippedField && (
+              <button
+                type="button"
+                onClick={handleSkip}
+                disabled={sending}
+                className="flex min-h-11 items-center rounded-full border border-border px-4 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                data-testid="onboarding-skip"
+              >
+                Skip
+              </button>
             )}
             <button
               type="submit"

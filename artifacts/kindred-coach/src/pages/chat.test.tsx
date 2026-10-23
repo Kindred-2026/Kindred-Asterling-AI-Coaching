@@ -370,3 +370,50 @@ describe("onboarding first bubble and send failures", () => {
     expect(mocks.appendChatMessage).not.toHaveBeenCalled();
   });
 });
+
+describe("onboarding birthday skip", () => {
+  const skip = () =>
+    container.querySelector<HTMLButtonElement>('[data-testid="onboarding-skip"]');
+
+  it("records the skip and moves on to the next question", async () => {
+    mocks.user = { id: "user-1", firstName: "Sam", preferredName: "Sam", onboardedAt: null };
+    mocks.updateProfile.mockResolvedValue({});
+    mocks.appendChatMessage.mockResolvedValue({ messages: [] });
+    await render();
+    expect(container.textContent).toContain("When's your birthday?");
+
+    await act(async () => skip()!.click());
+
+    expect(mocks.updateProfile).toHaveBeenCalledWith({
+      birthdaySkippedAt: expect.any(String),
+    });
+    expect(mocks.appendChatMessage).toHaveBeenCalledWith({
+      role: "user",
+      content: "I'd rather not say.",
+    });
+    expect(mocks.appendChatMessage).toHaveBeenLastCalledWith({
+      role: "assistant",
+      content: expect.stringContaining("What feels heavy for you"),
+    });
+  });
+
+  it("stays past the birthday step after a reload once it was skipped", async () => {
+    mocks.user = {
+      id: "user-1",
+      firstName: "Sam",
+      preferredName: "Sam",
+      birthdaySkippedAt: "2026-10-01T00:00:00.000Z",
+      onboardedAt: null,
+    };
+    await render();
+    expect(container.textContent).toContain("What feels heavy for you");
+    expect(skip()).toBeNull();
+  });
+
+  it("offers no skip on required steps", async () => {
+    mocks.user = { id: "user-1", firstName: "Sam", onboardedAt: null };
+    await render();
+    expect(container.textContent).toContain("What should I call you?");
+    expect(skip()).toBeNull();
+  });
+});

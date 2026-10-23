@@ -26,6 +26,11 @@ router.patch("/profile", requireAuth, async (req, res): Promise<void> => {
   if (data.onboardedAt !== undefined) {
     updates.onboardedAt = data.onboardedAt ? new Date(data.onboardedAt) : null;
   }
+  if (data.birthdaySkippedAt !== undefined) {
+    updates.birthdaySkippedAt = data.birthdaySkippedAt
+      ? new Date(data.birthdaySkippedAt)
+      : null;
+  }
 
   const updated = await updateProfileTx(userId, updates);
 

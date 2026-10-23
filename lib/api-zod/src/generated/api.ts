@@ -51,7 +51,8 @@ export const GetCurrentAuthUserResponse = zod.object({
   "motivationalQuote": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "timezone": zod.string().nullable(),
-  "onboardedAt": zod.coerce.date().nullable()
+  "onboardedAt": zod.coerce.date().nullable(),
+  "birthdaySkippedAt": zod.coerce.date().nullable().describe('Set when the user skipped the optional birthday onboarding step.')
 }),zod.null()])
 })
 
@@ -421,7 +422,8 @@ export const UpdateProfileBody = zod.object({
   "motivationalQuote": zod.string().max(updateProfileBodyMotivationalQuoteMax).nullish(),
   "phone": zod.string().max(updateProfileBodyPhoneMax).nullish().describe('Phone number in E.164 format (e.g. +14155550123) for SMS reminders.'),
   "timezone": zod.string().max(updateProfileBodyTimezoneMax).nullish().describe('IANA timezone name (e.g. America/New_York) used to schedule reminders.'),
-  "onboardedAt": zod.coerce.date().nullish()
+  "onboardedAt": zod.coerce.date().nullish(),
+  "birthdaySkippedAt": zod.coerce.date().nullish()
 })
 
 export const UpdateProfileResponse = zod.object({
@@ -439,7 +441,8 @@ export const UpdateProfileResponse = zod.object({
   "motivationalQuote": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "timezone": zod.string().nullable(),
-  "onboardedAt": zod.coerce.date().nullable()
+  "onboardedAt": zod.coerce.date().nullable(),
+  "birthdaySkippedAt": zod.coerce.date().nullable().describe('Set when the user skipped the optional birthday onboarding step.')
 })
 
 
