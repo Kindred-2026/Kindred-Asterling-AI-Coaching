@@ -29,6 +29,13 @@ router.get(
     const start = new Date();
     start.setDate(start.getDate() - 7);
     const startDate = toYMD(start);
+    // Scans are filtered by instant, so start at local midnight of the same
+    // day the YYYY-MM-DD bound uses (new Date(startDate) would be UTC midnight).
+    const windowStart = new Date(
+      start.getFullYear(),
+      start.getMonth(),
+      start.getDate(),
+    );
 
     const monthDay: Intl.DateTimeFormatOptions = {
       month: "short",
@@ -69,7 +76,7 @@ router.get(
       .where(
         and(
           eq(bodyScansTable.userId, userId),
-          gte(bodyScansTable.scannedAt, new Date(startDate)),
+          gte(bodyScansTable.scannedAt, windowStart),
         ),
       )
       .limit(50);

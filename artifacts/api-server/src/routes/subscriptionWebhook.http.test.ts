@@ -229,6 +229,133 @@ describe("POST /api/payment/webhook", () => {
     expect(row?.status).toBe("past_due");
   });
 
+  it("acknowledges a signed event type it does not handle", async () => {
+    const body = eventBody("customer.updated", { customerCode });
+    const res = await post(
+      "/api/payment/webhook",
+      body,
+      signedHeaders(body, `wh_${Math.random()}`),
+    );
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ received: true, ignored: true });
+
+    const [row] = await db
+      .select()
+      .from(subscriptionsTable)
+      .where(eq(subscriptionsTable.userId, userId));
+    expect(row).toBeUndefined();
+  });
+
+  it("acknowledges a signed event with no customer", async () => {
+    const body = JSON.stringify({
+      eventType: "invoice.paid",
+      createdAt: new Date().toISOString(),
+      data: {},
+    });
+    const res = await post(
+      "/api/payment/webhook",
+      body,
+      signedHeaders(body, `wh_${Math.random()}`),
+    );
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ received: true, ignored: true });
+  });
+
+  it("checks the signature before the event type", async () => {
+    const body = eventBody("customer.updated", { customerCode });
+    const headers = signedHeaders(body, `wh_${Math.random()}`);
+    headers["webhook-signature"] = "v1,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    const res = await post("/api/payment/webhook", body, headers);
+    expect(res.status).toBe(401);
+  });
+
+  it("keeps the paid period when a cancellation carries no period end", async () => {
+    const periodEnd = new Date(Date.now() + 10 * 86_400_000);
+    const created = eventBody("subscription.created", {
+      subscriptionId: "sub_5",
+      currentPeriodEnd: periodEnd.toISOString(),
+    });
+    await post(
+      "/api/payment/webhook",
+      created,
+      signedHeaders(created, `wh_${Math.random()}`),
+    );
+
+    const cancelled = eventBody("subscription.cancelled", {
+      subscriptionId: "sub_5",
+    });
+    const res = await post(
+      "/api/payment/webhook",
+      cancelled,
+      signedHeaders(cancelled, `wh_${Math.random()}`),
+    );
+    expect(res.status).toBe(200);
+
+    const [row] = await db
+      .select()
+      .from(subscriptionsTable)
+      .where(eq(subscriptionsTable.userId, userId));
+    expect(row?.status).toBe("cancel_at_period_end");
+    expect(row?.currentPeriodEnd?.getTime()).toBe(periodEnd.getTime());
+  });
+
+  it("keeps the stored period end when a payment failure carries none", async () => {
+    const periodEnd = new Date(Date.now() + 10 * 86_400_000);
+    const paid = eventBody("invoice.paid", {
+      subscriptionId: "sub_6",
+      currentPeriodEnd: periodEnd.toISOString(),
+    });
+    await post(
+      "/api/payment/webhook",
+      paid,
+      signedHeaders(paid, `wh_${Math.random()}`),
+    );
+
+    const failed = eventBody("invoice.payment_failed", {
+      subscriptionId: "sub_6",
+    });
+    await post(
+      "/api/payment/webhook",
+      failed,
+      signedHeaders(failed, `wh_${Math.random()}`),
+    );
+
+    const [row] = await db
+      .select()
+      .from(subscriptionsTable)
+      .where(eq(subscriptionsTable.userId, userId));
+    expect(row?.status).toBe("past_due");
+    expect(row?.currentPeriodEnd?.getTime()).toBe(periodEnd.getTime());
+  });
+
+  it("does not re-apply an ended period on a renewal that carries none", async () => {
+    const created = eventBody("subscription.created", {
+      subscriptionId: "sub_7",
+      currentPeriodEnd: new Date(Date.now() - 86_400_000).toISOString(),
+    });
+    await post(
+      "/api/payment/webhook",
+      created,
+      signedHeaders(created, `wh_${Math.random()}`),
+    );
+
+    const renewed = eventBody("subscription.renewed", {
+      subscriptionId: "sub_7",
+    });
+    await post(
+      "/api/payment/webhook",
+      renewed,
+      signedHeaders(renewed, `wh_${Math.random()}`),
+    );
+
+    const [row] = await db
+      .select()
+      .from(subscriptionsTable)
+      .where(eq(subscriptionsTable.userId, userId));
+    expect(row?.status).toBe("active");
+    expect(row?.currentPeriodEnd).toBeNull();
+  });
+
   it("returns received:true without crashing when webhook headers are missing", async () => {
     const body = eventBody("subscription.created", { customerCode });
     const res = await fetch(`${baseUrl}/api/payment/webhook`, {

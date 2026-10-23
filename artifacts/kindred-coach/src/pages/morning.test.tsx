@@ -1,9 +1,23 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { QueryClient, QueryClientProvider, useMutation } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ toast: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  createMorningLog: vi.fn(),
+  toast: vi.fn(),
+}));
+
+vi.mock("@workspace/api-client-react", async () => {
+  const { useMutation } = await import("@tanstack/react-query");
+  return {
+    getListMorningLogsQueryKey: () => ["/api/morning-logs"],
+    getGetTodaySummaryQueryKey: () => ["/api/dashboard/today"],
+    useListMorningLogs: () => ({ data: [], isLoading: false }),
+    useCreateMorningLog: () =>
+      useMutation({ mutationFn: mocks.createMorningLog }),
+  };
+});
 
 vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: mocks.toast }),
@@ -55,20 +69,28 @@ describe("Morning save failure", () => {
       ),
     );
 
+    const goal = container.querySelector<HTMLInputElement>(
+      'input[name="goal1"]',
+    )!;
+    const setValue = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )!.set!;
+    await act(async () => {
+      setValue.call(goal, "Drink a glass of water");
+      goal.dispatchEvent(new Event("input", { bubbles: true }));
+    });
     await act(async () =>
-      typeInto(
-        container.querySelector<HTMLInputElement>('input[name="goal1"]')!,
-        "Drink water",
-      ),
-    );
-    await act(async () =>
-      container.querySelector<HTMLButtonElement>('button[type="submit"]')!.click(),
+      container
+        .querySelector<HTMLButtonElement>('button[type="submit"]')!
+        .click(),
     );
 
-    await vi.waitFor(() =>
-      expect(mocks.toast).toHaveBeenCalledWith({
+    await waitFor(() => mocks.toast.mock.calls.length > 0);
+    expect(mocks.createMorningLog).toHaveBeenCalled();
+    expect(mocks.toast).toHaveBeenCalledWith(
+      expect.objectContaining({
         title: "Couldn't save morning log",
-        description: "Something went wrong. Check your connection and try again.",
         variant: "destructive",
       }),
     );

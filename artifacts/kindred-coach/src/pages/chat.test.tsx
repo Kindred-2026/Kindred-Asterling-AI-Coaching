@@ -316,6 +316,34 @@ describe("onboarding after a crisis turn", () => {
     });
   });
 
+  it("shows an error and stays paused when continuing fails", async () => {
+    mocks.user = {
+      id: "user-1",
+      firstName: "Sam",
+      preferredName: "Sam",
+      birthday: "1990-01-01",
+      struggles: "honestly I think about suicide a lot",
+      onboardedAt: null,
+    };
+    mocks.conversation = crisisTurn("honestly I think about suicide a lot");
+    mocks.appendChatMessage.mockRejectedValueOnce(new Error("network down"));
+    await render();
+
+    await resume();
+    await waitFor(
+      () =>
+        container.querySelector('[data-testid="chat-send-error"]') !== null,
+    );
+    expect(paused()).not.toBeNull();
+    expect(
+      (
+        container.querySelector(
+          '[data-testid="onboarding-resume"]',
+        ) as HTMLButtonElement
+      ).disabled,
+    ).toBe(false);
+  });
+
   it("stays paused after a reload until they choose to continue", async () => {
     mocks.user = {
       id: "user-1",
