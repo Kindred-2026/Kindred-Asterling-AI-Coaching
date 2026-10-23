@@ -1,4 +1,4 @@
-import { afterAll, afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import {
   affirmationsTable,
   and,
@@ -34,6 +34,36 @@ afterEach(async () => {
 
 afterAll(async () => {
   await closeDatabase();
+});
+
+describe("MongoDB connection", () => {
+  it("shares one connection between concurrent first callers", async () => {
+    // api-server has no direct mongodb dependency, so reach MongoClient
+    // through an existing Db.
+    const MongoClientPrototype = Object.getPrototypeOf(
+      (await getMongoDatabase()).client,
+    );
+    await closeDatabase();
+    const connect = vi.spyOn(MongoClientPrototype, "connect");
+    try {
+      await Promise.all(Array.from({ length: 5 }, () => getMongoDatabase()));
+      expect(connect).toHaveBeenCalledTimes(1);
+    } finally {
+      connect.mockRestore();
+    }
+  });
+
+  it("retries the connection after a failed attempt", async () => {
+    await closeDatabase();
+    const uri = process.env.MONGODB_URI;
+    delete process.env.MONGODB_URI;
+    try {
+      await expect(getMongoDatabase()).rejects.toThrow(/MONGODB_URI/);
+    } finally {
+      process.env.MONGODB_URI = uri;
+    }
+    await expect(getMongoDatabase()).resolves.toBeDefined();
+  });
 });
 
 describe("MongoDB data API semantics", () => {

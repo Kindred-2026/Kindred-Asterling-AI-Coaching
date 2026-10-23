@@ -177,11 +177,12 @@ function requiredConfiguration(): { uri: string; databaseName: string } {
 let client: MongoClient | null = null;
 let database: Db | null = null;
 let indexesPromise: Promise<void> | null = null;
+// Shared by concurrent first callers so only one MongoClient is ever created.
+let connecting: Promise<Db> | null = null;
 
-export async function getMongoDatabase(): Promise<Db> {
-  if (database) return database;
+async function connectMongoDatabase(): Promise<Db> {
   const { uri, databaseName } = requiredConfiguration();
-  client = new MongoClient(uri, {
+  const next = new MongoClient(uri, {
     appName: "kindred-api",
     maxPoolSize: 20,
     minPoolSize: 0,
@@ -190,10 +191,26 @@ export async function getMongoDatabase(): Promise<Db> {
     waitQueueTimeoutMS: 5_000,
     retryWrites: true,
   });
-  await client.connect();
-  database = client.db(databaseName);
-  await database.command({ ping: 1 });
-  return database;
+  try {
+    await next.connect();
+    const connected = next.db(databaseName);
+    await connected.command({ ping: 1 });
+    client = next;
+    database = connected;
+    return connected;
+  } catch (error) {
+    await next.close().catch(() => {});
+    throw error;
+  }
+}
+
+export async function getMongoDatabase(): Promise<Db> {
+  if (database) return database;
+  connecting ??= connectMongoDatabase().catch((error) => {
+    connecting = null;
+    throw error;
+  });
+  return connecting;
 }
 
 function collectionName(table: Table): string {
@@ -349,6 +366,7 @@ export async function closeDatabase(): Promise<void> {
   await client?.close();
   client = null;
   database = null;
+  connecting = null;
   indexesPromise = null;
 }
 
