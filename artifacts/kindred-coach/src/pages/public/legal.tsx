@@ -102,7 +102,7 @@ function renderLegacyContent(content: ReactNode | LegalBlock): ReactNode {
 
 /** Bump both whenever any published legal text changes. */
 export const LEGAL_VERSION = "1.4";
-export const LEGAL_EFFECTIVE_DATE = "October 20, 2026";
+export const LEGAL_EFFECTIVE_DATE = "October 24, 2026";
 
 function LegalPage({
   published = false,
