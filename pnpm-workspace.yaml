@@ -36,6 +36,7 @@ onlyBuiltDependencies:
   - esbuild
 
 overrides:
+  "@amplitude/ai>zod": ^4.6.6
   "@babel/core": ">=7.29.6"
   "@esbuild-kit/esm-loader": npm:tsx@^4.21.0
   "@modelcontextprotocol/sdk": ">=1.31.0"

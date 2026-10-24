@@ -56,6 +56,7 @@ catalogs:
       version: 4.6.6
 
 overrides:
+  '@amplitude/ai>zod': ^4.6.6
   '@babel/core': '>=7.29.6'
   '@esbuild-kit/esm-loader': npm:tsx@^4.21.0
   '@modelcontextprotocol/sdk': '>=1.31.0'
@@ -105,8 +106,8 @@ importers:
   artifacts/api-server:
     dependencies:
       '@amplitude/ai':
-        specifier: ^0.22.1
-        version: 0.22.1(@anthropic-ai/sdk@0.135.0(zod@4.6.6))(@cfworker/json-schema@4.1.1)(@opentelemetry/api@1.9.1)
+        specifier: ^0.24.1
+        version: 0.24.1(@anthropic-ai/sdk@0.135.0(zod@4.6.6))(@cfworker/json-schema@4.1.1)(@opentelemetry/api@1.9.1)
       '@anthropic-ai/sdk':
         specifier: ^0.135.0
         version: 0.135.0(zod@4.6.6)
@@ -389,8 +390,8 @@ importers:
 
 packages:
 
-  '@amplitude/ai@0.22.1':
-    resolution: {integrity: sha512-BIkbPP6XyIZbjYGyIX32js+cXUKYiPIHRX0b0CakqrqJV4oqz/1xfqbOyccJ8fcQKf53Wz8nAO6DdVfqPXxfCQ==}
+  '@amplitude/ai@0.24.1':
+    resolution: {integrity: sha512-pe/ZuHftn7YgDSFpz8zaMLcorQasQ93jDdWytVx4uGmiUEzVbnIHdTEr8M31u48e3fZ4W5qiGW7wJbykwBgLgA==}
     hasBin: true
     peerDependencies:
       '@amplitude/analytics-node': '>=1.3.0 <2.0.0'
@@ -4121,15 +4122,12 @@ packages:
     peerDependencies:
       zod: ^3.25.28 || ^4
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
-
   zod@4.6.6:
     resolution: {integrity: sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==}
 
 snapshots:
 
-  '@amplitude/ai@0.22.1(@anthropic-ai/sdk@0.135.0(zod@4.6.6))(@cfworker/json-schema@4.1.1)(@opentelemetry/api@1.9.1)':
+  '@amplitude/ai@0.24.1(@anthropic-ai/sdk@0.135.0(zod@4.6.6))(@cfworker/json-schema@4.1.1)(@opentelemetry/api@1.9.1)':
     dependencies:
       '@pydantic/genai-prices': 0.1.9
     optionalDependencies:
@@ -4138,7 +4136,7 @@ snapshots:
       '@opentelemetry/api': 1.9.1
       acorn: 8.18.0
       acorn-typescript: 1.4.13(acorn@8.18.0)
-      zod: 3.25.76
+      zod: 4.6.6
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - supports-color
@@ -7440,8 +7438,5 @@ snapshots:
   zod-to-json-schema@3.25.2(zod@4.6.6):
     dependencies:
       zod: 4.6.6
-
-  zod@3.25.76:
-    optional: true
 
   zod@4.6.6: {}
