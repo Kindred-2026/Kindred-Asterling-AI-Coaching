@@ -270,6 +270,10 @@ function catalogPool(catalog: ReturnType<typeof requiredPostgresSchemaCatalog>) 
   return {
     async query(sql: string) {
       if (sql === "SELECT 1") return { rows: [] };
+      // Migration SQL (DDL statements run before schema validation) — accept silently.
+      if (sql.includes("CREATE TABLE") || sql.includes("ALTER TABLE") || sql.includes("DROP TABLE")) {
+        return { rows: [] };
+      }
       if (sql.includes("information_schema.tables")) {
         return { rows: catalog.tables.map((table_name) => ({ table_name })) };
       }

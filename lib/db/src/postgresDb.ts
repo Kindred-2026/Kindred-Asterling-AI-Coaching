@@ -11,6 +11,7 @@ import {
 } from "./mongoSchema";
 import { snakeCase, camelCase } from "./migrationSupport";
 import { validatePostgresSchemaCatalog } from "./postgresSchema";
+import { readPostgresMigrations } from "./postgresMigrations";
 import type { Condition as SharedCondition, SortExpression as SharedSortExpression } from "./mongoSchema";
 
 type Row = Record<string, any>;
@@ -204,6 +205,10 @@ export async function initializePostgresDatabase(options?: PostgresOptions): Pro
   // A managed database restart/failover can reset connections for a short
   // window; retry only connectivity so real schema errors still fail fast.
   await waitForPostgres(current);
+  // Apply all checked-in migrations before validating the schema. Every
+  // migration uses IF NOT EXISTS / IF EXISTS guards so re-running on an
+  // already-migrated database is safe.
+  await current.query(await readPostgresMigrations());
   const [tables, columns, constraints] = await Promise.all([
     current.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"),
     current.query("SELECT table_name, column_name, data_type, udt_name FROM information_schema.columns WHERE table_schema = 'public'"),
